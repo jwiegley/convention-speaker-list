@@ -1,0 +1,1 @@
+Please read the project description in @prd.txt and produce a full and complete Product Requirements Document (PRD) in a Markdown file prd.md that I can use to build the full application.
