@@ -1,0 +1,43 @@
+# Dependencies
+node_modules
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist
+build
+out
+coverage
+.next
+.nuxt
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+.gitignore
+
+# Docker
+docker/data
+
+# Logs
+*.log
+
+# Database files
+*.sql
+*.sqlite
+
+# Generated files
+*.generated.ts
+*.generated.js
+
+# Temporary files
+tmp
+temp
+*.tmp
+
+# Task Master files
+.taskmaster/tasks/tasks.json

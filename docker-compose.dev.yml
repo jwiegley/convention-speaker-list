@@ -1,0 +1,19 @@
+version: '3.9'
+
+# Development-specific overrides
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: convention_db_dev
+      POSTGRES_USER: convention_user
+      POSTGRES_PASSWORD: convention_pass_dev
+
+  redis:
+    ports:
+      - "6379:6379"
+
+  # For development, we run the app locally, not in Docker
+  # This configuration only runs the database services
+  # Remove or comment out the app service for local development

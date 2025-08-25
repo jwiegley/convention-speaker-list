@@ -1,0 +1,1398 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Project Infrastructure",
+        "description": "Set up the Node.js/TypeScript project with React frontend, Express backend, PostgreSQL database configuration, and Docker containers as specified in the PRD",
+        "details": "Create package.json with dependencies: React 18+, TypeScript 5+, Express, Socket.io, PostgreSQL client (pg), Redis client. Set up tsconfig.json for both frontend and backend. Create Docker Compose file with services for PostgreSQL, Redis, and the application. Initialize folder structure: /frontend (React app), /backend (Express API), /database (migrations), /shared (types/interfaces). Set up environment variables configuration with .env files for database connection, Redis URL, and Socket.io configuration.",
+        "testStrategy": "Verify npm install completes successfully. Ensure TypeScript compilation works. Test Docker containers start without errors using docker-compose up. Validate database connection with a simple health check endpoint.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Root Project Structure and Monorepo Configuration",
+            "description": "Initialize the project root with package.json for workspace configuration and create the base directory structure for the monorepo",
+            "dependencies": [],
+            "details": "Create root package.json with npm workspaces configuration pointing to /frontend, /backend, /shared packages. Set up base folder structure: /frontend, /backend, /shared, /database, /docker. Create root-level configuration files: .gitignore, .editorconfig, prettier.config.js, and .eslintrc.js. Initialize git repository and create initial README.md with project structure documentation.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Set Up Backend Package with Express and TypeScript",
+            "description": "Initialize the backend workspace with Express server, TypeScript configuration, and required dependencies",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Navigate to /backend and run npm init. Install dependencies: express, @types/express, typescript, ts-node, nodemon, cors, @types/cors, socket.io, pg, @types/pg, redis, dotenv. Create backend tsconfig.json with strict mode, ES2022 target, and proper module resolution. Set up src folder structure: /controllers, /services, /routes, /middleware, /utils. Create index.ts with basic Express server setup on port 3001.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Initialize React Frontend with Vite and TypeScript",
+            "description": "Create the React frontend application using Vite with TypeScript template and configure for development",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Navigate to /frontend and initialize Vite project with React TypeScript template. Install additional dependencies: socket.io-client, @tanstack/react-query, react-router-dom, @types/react-router-dom, axios. Configure vite.config.ts with proxy settings for backend API (/api -> localhost:3001). Update tsconfig.json with path aliases (@components, @hooks, @utils). Create src folder structure: /components, /pages, /hooks, /services, /styles, /utils.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Shared Types Package",
+            "description": "Set up the shared TypeScript types and interfaces package that will be used by both frontend and backend",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Navigate to /shared and create package.json with name '@convention/shared'. Create tsconfig.json with declaration: true and composite: true for project references. Define TypeScript interfaces: IDelegate, ISession, IQueue, ISpeakingInstance, ISocketEvents. Create enums for Gender, AgeBracket, RaceCategory, QueueStatus. Export all types from index.ts. Configure build script to compile to /dist folder.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Configure Docker Compose with PostgreSQL and Redis",
+            "description": "Create Docker Compose configuration with PostgreSQL database, Redis cache, and application services",
+            "dependencies": [
+              "1.1"
+            ],
+            "details": "Create docker-compose.yml in /docker directory with services: postgres (image: postgres:15-alpine, port 5432, volume for data persistence), redis (image: redis:7-alpine, port 6379), app (build from Dockerfile, depends on postgres and redis). Create Dockerfile for Node.js application with multi-stage build. Set up docker-compose.dev.yml for development with hot reload. Configure health checks for all services. Create init.sql for initial database setup.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Set Up Environment Configuration",
+            "description": "Configure environment variables and dotenv setup for different environments",
+            "dependencies": [
+              "1.2",
+              "1.3"
+            ],
+            "details": "Create .env.example with all required variables: DATABASE_URL, REDIS_URL, PORT, NODE_ENV, SOCKET_IO_CORS_ORIGIN. Create .env.development with local development values. Create .env.docker for Docker environment. Set up dotenv configuration in backend/src/config/index.ts with type-safe environment variable access. Create frontend/.env with VITE_API_URL and VITE_WS_URL. Add .env files to .gitignore.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Configure TypeScript Paths and Build Scripts",
+            "description": "Set up TypeScript path mappings, project references, and npm scripts for building and running the application",
+            "dependencies": [
+              "1.2",
+              "1.3",
+              "1.4"
+            ],
+            "details": "Update root tsconfig.json with project references to all workspaces. Configure path mappings in backend tsconfig.json: @shared -> ../shared/src. Configure frontend tsconfig.json paths: @shared -> ../shared/src. Create npm scripts in root package.json: dev (concurrently run all services), build (build all packages), test, lint, typecheck. Set up ts-node with tsconfig-paths for runtime path resolution. Configure nodemon.json for backend hot reload.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create Initial Project Documentation",
+            "description": "Generate README files and initial documentation for project setup and development workflow",
+            "dependencies": [
+              "1.1",
+              "1.5",
+              "1.6",
+              "1.7"
+            ],
+            "details": "Create root README.md with project overview, tech stack, and getting started instructions. Document Docker commands for running services. Create CONTRIBUTING.md with development workflow and coding standards. Add README.md in each workspace with specific setup instructions. Document environment variable configuration. Create docs folder with architecture diagram. Add npm scripts documentation. Include troubleshooting section for common setup issues.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Design and Implement Database Schema",
+        "description": "Create PostgreSQL database schema with tables for Delegates, Sessions, Queue, and SpeakingInstances as defined in section 6.2 of the PRD",
+        "details": "Create SQL migration files for: 1) Delegates table with UUID id, unique integer number, name, location, gender enum (Male/Female/Other), age_bracket enum (20s/30s/40s/50s/60s/70s+), race_category enum (White_Persian/Non_White_Non_Persian), has_spoken boolean, timestamps. 2) Sessions table with UUID id, name, start/end timestamps, is_tracked boolean, garden_state integer (0-32). 3) Queue table with UUID id, session_id FK, delegate_id FK, position integer, added_at timestamp, status enum (waiting/on_deck/speaking/completed). 4) SpeakingInstances table with UUID id, delegate_id FK, session_id FK, start/end timestamps, duration_seconds, position_in_queue, is_tracked boolean. Add indexes on frequently queried columns.",
+        "testStrategy": "Run migrations against test database. Insert sample data and verify constraints work correctly. Test foreign key relationships. Verify unique constraints on delegate numbers. Test enum validations.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up database migration framework",
+            "description": "Install and configure node-pg-migrate or similar migration tool, create initial migration structure and database connection configuration",
+            "dependencies": [],
+            "details": "Install node-pg-migrate package, create migrations directory structure, set up database connection configuration for development/test/production environments, create npm scripts for running migrations up/down, configure migration table name and schema, test migration tool with a simple test migration",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create Delegates table with enums and constraints",
+            "description": "Design and implement the Delegates table with all required enum types for gender, age_bracket, and race_category, plus unique constraints",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "Create migration for Delegates table with UUID primary key, unique integer delegate number constraint, name and location fields, gender enum (Male/Female/Other), age_bracket enum (20s/30s/40s/50s/60s/70s+), race_category enum (White_Persian/Non_White_Non_Persian), has_spoken boolean with default false, created_at and updated_at timestamps with automatic updates",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Create Sessions table with garden state tracking",
+            "description": "Implement Sessions table with garden state integer field for tracking performance visualization state from 0 (desert) to 32 (garden)",
+            "dependencies": [
+              "2.1"
+            ],
+            "details": "Create migration for Sessions table with UUID primary key, session name field, start_time and end_time timestamps, is_tracked boolean for active tracking status, garden_state integer with check constraint (0-32), created_at and updated_at timestamps, add index on is_tracked field for quick active session queries",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement Queue table with position management",
+            "description": "Create Queue table with position tracking, status enum, and foreign key relationships to Delegates and Sessions",
+            "dependencies": [
+              "2.2",
+              "2.3"
+            ],
+            "details": "Create migration for Queue table with UUID primary key, session_id foreign key to Sessions table with ON DELETE CASCADE, delegate_id foreign key to Delegates table with ON DELETE CASCADE, position integer for queue ordering, added_at timestamp, status enum (waiting/on_deck/speaking/completed), unique constraint on (session_id, delegate_id, status) to prevent duplicates, index on (session_id, status, position) for efficient queue queries",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create SpeakingInstances table for history tracking",
+            "description": "Build SpeakingInstances table to maintain complete speaking history with duration tracking and queue position recording",
+            "dependencies": [
+              "2.2",
+              "2.3"
+            ],
+            "details": "Create migration for SpeakingInstances table with UUID primary key, delegate_id foreign key to Delegates table, session_id foreign key to Sessions table, start_time and end_time timestamps, duration_seconds calculated field, position_in_queue integer to record original queue position, is_tracked boolean for analytics inclusion, created_at timestamp, indexes on (delegate_id, session_id) and (session_id, start_time) for performance",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Add foreign key relationships and performance indexes",
+            "description": "Create all foreign key constraints between tables and add indexes on frequently queried columns for optimal performance",
+            "dependencies": [
+              "2.4",
+              "2.5"
+            ],
+            "details": "Create migration to add foreign key constraints with appropriate cascade rules, add composite indexes for common query patterns: (session_id, position) on Queue for ordered retrieval, (delegate_id, has_spoken) on Delegates for first-time speaker checks, (session_id, is_tracked) for active session queries, create partial index on Queue where status != 'completed' for active queue queries, add check constraints for data validation",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Create seed data and database initialization scripts",
+            "description": "Develop seed data generation scripts for testing and initial database setup with realistic delegate and session data",
+            "dependencies": [
+              "2.6"
+            ],
+            "details": "Create seed data script with 200+ sample delegates with diverse demographics matching enum values, generate 5 sample sessions with varying garden states, populate Queue table with sample queue entries in different statuses, add historical SpeakingInstances records for testing analytics, create npm scripts for seeding development and test databases, implement database reset script for clean testing environment",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Build Core Backend API Layer",
+        "description": "Implement Express REST API endpoints for delegate management, session management, and basic CRUD operations",
+        "details": "Create Express router structure with /api/delegates, /api/sessions, /api/queue endpoints. Implement delegate endpoints: GET /delegates (list all), GET /delegates/:id, POST /delegates (create), PUT /delegates/:id (update), DELETE /delegates/:id, POST /delegates/bulk (import), GET /delegates/export (CSV export). Implement session endpoints: POST /sessions/start, PUT /sessions/:id/end, GET /sessions/current. Add input validation middleware using express-validator. Implement error handling middleware. Set up CORS configuration for frontend access.",
+        "testStrategy": "Write unit tests for each endpoint using Jest/Supertest. Test CRUD operations with valid and invalid data. Verify error responses have correct status codes. Test bulk import with CSV files. Validate export format.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Express server with TypeScript configuration",
+            "description": "Initialize Express application with TypeScript support, configure tsconfig.json, set up development environment with nodemon and ts-node",
+            "dependencies": [],
+            "details": "Install Express, TypeScript, and required type definitions (@types/express, @types/node). Configure tsconfig.json with strict mode and appropriate compiler options for Node.js. Set up nodemon.json for development hot-reloading. Create src/server.ts as main entry point with basic Express app initialization. Configure package.json scripts for dev, build, and start commands. Set up environment variables handling with dotenv.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create database connection pool and query builder setup",
+            "description": "Establish PostgreSQL connection pool using pg library and implement query builder utilities for database operations",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Install pg and @types/pg packages. Create src/db/connection.ts with connection pool configuration using environment variables. Implement query builder helpers in src/db/queryBuilder.ts for common operations (select, insert, update, delete). Create database service layer in src/services/database.ts with connection health checks and graceful shutdown handling. Set up connection pooling with appropriate min/max connections and timeout settings.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement delegate CRUD endpoints with validation",
+            "description": "Create all delegate management REST endpoints with full CRUD operations and request validation",
+            "dependencies": [
+              "3.1",
+              "3.2"
+            ],
+            "details": "Create src/routes/delegates.ts router file. Implement GET /api/delegates with pagination and filtering support. Create GET /api/delegates/:id with proper 404 handling. Build POST /api/delegates with validation for required fields (number, name, location, gender, age_bracket, race_category). Implement PUT /api/delegates/:id for updates with partial field support. Add DELETE /api/delegates/:id with cascade handling. Create delegate controller in src/controllers/delegateController.ts with business logic separated from routes.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add bulk import/export functionality for delegates",
+            "description": "Implement CSV import and export endpoints for delegate data with proper parsing and validation",
+            "dependencies": [
+              "3.3"
+            ],
+            "details": "Install csv-parse and csv-stringify libraries. Create POST /api/delegates/bulk endpoint accepting multipart/form-data with CSV file upload using multer. Implement CSV parsing with validation for each row, collecting errors for bulk error reporting. Build GET /api/delegates/export endpoint generating CSV with all delegate data. Add support for custom field mapping in import. Implement transaction handling for bulk operations to ensure atomicity. Create progress tracking for large imports.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create session management endpoints",
+            "description": "Build REST endpoints for session lifecycle management including start, end, and current session retrieval",
+            "dependencies": [
+              "3.2"
+            ],
+            "details": "Create src/routes/sessions.ts router file. Implement POST /api/sessions/start with validation for session name and initial garden state. Build PUT /api/sessions/:id/end to close sessions with proper timestamp recording. Create GET /api/sessions/current to retrieve active session details. Add GET /api/sessions for listing all sessions with filtering by date range. Implement session controller in src/controllers/sessionController.ts. Ensure only one active session at a time with proper conflict handling.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement queue endpoints with business logic",
+            "description": "Create queue management API endpoints with priority rules and position handling logic",
+            "dependencies": [
+              "3.2",
+              "3.3",
+              "3.5"
+            ],
+            "details": "Create src/routes/queue.ts router file. Implement GET /api/queue to retrieve current queue state with delegate details joined. Build POST /api/queue/add with delegate number, implementing first-time speaker priority logic. Create PUT /api/queue/advance for moving queue forward with on-deck position handling. Add DELETE /api/queue/:id for removing delegates from queue. Implement PUT /api/queue/reorder for manual queue adjustments. Create queue service in src/services/queueService.ts with position calculation logic.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add error handling and logging middleware",
+            "description": "Implement comprehensive error handling middleware and structured logging system for the API",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Create src/middleware/errorHandler.ts with global error catching middleware. Implement custom error classes in src/errors/index.ts (ValidationError, NotFoundError, ConflictError). Set up winston logger in src/utils/logger.ts with file and console transports. Add request logging middleware using morgan. Create correlation ID middleware for request tracking. Implement error response standardization with consistent format. Add uncaught exception and unhandled rejection handlers.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Set up input validation with express-validator",
+            "description": "Create validation middleware using express-validator for all API endpoints with detailed error messages",
+            "dependencies": [
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6"
+            ],
+            "details": "Install express-validator package. Create src/validators/delegateValidator.ts with validation rules for delegate fields including enum validation for gender, age_bracket, race_category. Build src/validators/sessionValidator.ts for session endpoints. Create src/validators/queueValidator.ts with delegate number existence checks. Implement validation middleware in src/middleware/validate.ts to handle validation errors. Add custom validation messages for better user experience. Create reusable validation chains for common fields.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Configure CORS and security headers",
+            "description": "Set up CORS configuration for frontend access and implement security best practices with appropriate headers",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Install cors and helmet packages. Configure CORS in src/middleware/cors.ts with appropriate origin whitelist for frontend URLs. Implement helmet middleware for security headers (CSP, X-Frame-Options, etc.). Add rate limiting using express-rate-limit for API protection. Configure JSON body size limits. Implement API versioning strategy. Set up compression middleware for response optimization. Add request sanitization to prevent XSS and injection attacks.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Write comprehensive API tests",
+            "description": "Create unit and integration tests for all API endpoints using Jest and Supertest",
+            "dependencies": [
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6",
+              "3.7",
+              "3.8"
+            ],
+            "details": "Install jest, supertest, and @types packages. Configure jest.config.js for TypeScript support. Create src/__tests__/routes/delegates.test.ts with tests for all CRUD operations including edge cases. Write src/__tests__/routes/sessions.test.ts for session lifecycle testing. Build src/__tests__/routes/queue.test.ts with priority logic verification. Test error handling with invalid inputs and database failures. Create integration tests in src/__tests__/integration/ for end-to-end scenarios. Set up test database with migrations. Achieve minimum 80% code coverage.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Queue Management Logic",
+        "description": "Build the queue management system with priority rules for first-time speakers and on-deck position handling as specified in section 4.2",
+        "details": "Create QueueService class with methods: addToQueue(delegateNumber) - validates delegate exists, checks has_spoken status, inserts at correct position (top of general queue if first-time speaker). advanceQueue() - moves position 2 to 1, position 3 to 2, first in general queue to position 3, updates speaking status. removeFromQueue(delegateId). reorderQueue(newOrder). Implement position locking for on-deck positions (1-3). Add Redis caching for queue state to improve performance. Create queue state synchronization logic.",
+        "testStrategy": "Test first-time speaker priority placement. Verify on-deck positions remain fixed when new speakers join. Test queue advancement updates all positions correctly. Test concurrent queue operations. Verify Redis cache stays synchronized.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design QueueService Class Architecture",
+            "description": "Create the foundational QueueService class structure with TypeScript interfaces, dependency injection setup, and core method signatures",
+            "dependencies": [],
+            "details": "Define IQueueService interface with all public methods. Create QueueService class implementing the interface. Set up dependency injection for database and Redis connections. Define TypeScript types for QueueEntry, QueuePosition, QueueState. Create error classes for queue-specific exceptions (QueueFullError, InvalidPositionError, DuplicateEntryError). Establish logging framework integration.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement First-Time Speaker Priority Algorithm",
+            "description": "Build the logic to automatically place first-time speakers at the top of the general queue while maintaining existing queue order",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Create checkSpeakerStatus(delegateNumber) method to query has_spoken flag. Implement insertWithPriority() algorithm that places first-time speakers after position 3 but before any previous speakers. Handle edge cases when multiple first-time speakers join simultaneously. Maintain FIFO order among first-time speakers. Add logic to update has_spoken flag after speaking.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build On-Deck Position Locking Mechanism",
+            "description": "Implement the position locking system for positions 1-3 that prevents these slots from being reordered when new speakers join",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Create PositionLock class to manage locked positions 1, 2, and 3. Implement isPositionLocked(position) check. Build logic to insert new speakers starting from position 4. Create methods to manually unlock positions for admin overrides. Add safeguards to prevent accidental reordering of on-deck speakers. Implement position swap restrictions.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Queue Advancement Logic with State Transitions",
+            "description": "Develop the core queue advancement system that moves speakers through positions and updates their speaking status",
+            "dependencies": [
+              "4.1",
+              "4.3"
+            ],
+            "details": "Implement advanceQueue() method with atomic transaction support. Move position 2 to 1, position 3 to 2, first general queue to position 3. Update SpeakingInstances table when position 1 completes. Mark delegate as has_spoken=true. Handle empty queue scenarios. Create rollback mechanism for failed transitions. Add queue compaction to remove gaps.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Add Delegate Validation and Duplicate Checking",
+            "description": "Implement comprehensive validation to ensure delegates exist and prevent duplicate queue entries",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Create validateDelegate(delegateNumber) to check existence in database. Implement isDuplicateEntry(delegateId) to prevent double-queuing. Add validation for delegate active status. Check session constraints (delegate belongs to current session). Build error messages with specific validation failure reasons. Create batch validation for bulk operations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement Redis Caching Layer for Queue State",
+            "description": "Build Redis integration to cache queue state for improved performance and reduced database load",
+            "dependencies": [
+              "4.1",
+              "4.4"
+            ],
+            "details": "Set up Redis connection pool with retry logic. Implement cacheQueue(queueState) with TTL configuration. Create getQueueFromCache() with fallback to database. Build cache invalidation strategy on queue updates. Implement cache warming on application startup. Add cache consistency checks. Monitor cache hit/miss ratios.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Queue Reordering Functionality",
+            "description": "Create admin functionality to manually reorder queue positions while respecting position locks",
+            "dependencies": [
+              "4.1",
+              "4.3"
+            ],
+            "details": "Implement reorderQueue(newOrder) accepting array of delegate IDs. Validate new order maintains locked positions 1-3. Build drag-and-drop compatible data structure. Create batch position update with transaction support. Add undo/redo capability for reorder operations. Implement conflict resolution for concurrent reorders.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Handle Concurrent Queue Operations with Locks",
+            "description": "Implement distributed locking mechanism to prevent race conditions during concurrent queue modifications",
+            "dependencies": [
+              "4.6",
+              "4.7"
+            ],
+            "details": "Integrate Redis-based distributed locks using Redlock algorithm. Implement acquireLock(queueId) with timeout and retry logic. Create queue operation wrapper with automatic lock management. Handle deadlock detection and resolution. Add operation queuing for high concurrency scenarios. Implement optimistic locking fallback.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Create Queue Event Emitters for WebSocket",
+            "description": "Build event emission system to notify WebSocket connections of queue state changes in real-time",
+            "dependencies": [
+              "4.4",
+              "4.6"
+            ],
+            "details": "Create QueueEventEmitter extending EventEmitter. Define event types: queue-updated, speaker-advanced, speaker-added, speaker-removed. Implement emitQueueChange(changeType, data) method. Add event batching for rapid changes. Create event history buffer for reconnection scenarios. Build selective emission based on client subscriptions.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Add Queue Persistence and Recovery",
+            "description": "Implement queue state persistence to database and recovery mechanisms for system restarts",
+            "dependencies": [
+              "4.6",
+              "4.8"
+            ],
+            "details": "Create persistQueue() method to save state to database. Implement automatic persistence on every queue change. Build loadQueueFromDatabase() for startup recovery. Add queue state versioning for rollback capability. Create backup queue snapshots at intervals. Implement queue reconstruction from event log.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Write Extensive Unit Tests for All Edge Cases",
+            "description": "Develop comprehensive test suite covering all queue operations, edge cases, and error scenarios",
+            "dependencies": [
+              "4.2",
+              "4.3",
+              "4.4",
+              "4.5",
+              "4.7",
+              "4.8",
+              "4.9",
+              "4.10"
+            ],
+            "details": "Test first-time speaker priority with 0, 1, multiple speakers. Verify position locking under various scenarios. Test queue advancement with empty positions. Validate concurrent operation handling. Test Redis cache synchronization. Verify error handling and rollback mechanisms. Test performance with 1000+ queue entries. Mock database and Redis failures.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Create Real-time WebSocket Communication",
+        "description": "Implement Socket.io for real-time queue updates, timer synchronization, and live data streaming to all connected clients",
+        "details": "Set up Socket.io server with namespaces: /admin (authenticated admin connections), /spectator (authenticated spectator connections). Implement events: 'queue:updated' (broadcast queue changes), 'speaker:advanced' (notify position changes), 'timer:tick' (sync timer across clients), 'demographics:updated' (real-time balance changes), 'garden:stateChanged' (garden visualization updates). Add room management for session-based broadcasting. Implement connection authentication middleware. Add reconnection logic with state restoration.",
+        "testStrategy": "Test multiple client connections receive updates simultaneously. Verify latency is under 1 second for queue updates. Test reconnection restores correct state. Test authentication prevents unauthorized access. Load test with 200+ concurrent connections.",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up Socket.io server with TypeScript types",
+            "description": "Initialize Socket.io server with Express integration, configure CORS settings, and create comprehensive TypeScript type definitions for all WebSocket events, payloads, and namespace configurations",
+            "dependencies": [],
+            "details": "Install socket.io and @types/socket.io packages. Create socket server initialization in backend with proper CORS configuration for development and production. Define TypeScript interfaces for all event payloads: QueueUpdatePayload, SpeakerAdvancedPayload, TimerTickPayload, DemographicsUpdatePayload, GardenStatePayload. Create enum for event names. Set up middleware pipeline for Socket.io instance. Configure transport options and connection parameters.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create admin and spectator namespaces with authentication",
+            "description": "Implement separate Socket.io namespaces for admin and spectator connections with JWT-based authentication middleware to ensure secure access control",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Create /admin namespace for authenticated admin users with full control permissions. Create /spectator namespace for authenticated viewers with read-only access. Implement JWT validation middleware that checks tokens on connection and disconnects unauthorized clients. Add role-based access control to verify admin vs spectator permissions. Store authenticated user data in socket.data for use in event handlers. Handle authentication errors gracefully with appropriate error messages.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement queue update events and broadcasting",
+            "description": "Build the core queue-related WebSocket events including queue:updated and speaker:advanced with proper broadcasting logic to all connected clients",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Implement 'queue:updated' event that broadcasts full queue state changes to all clients when speakers are added, removed, or reordered. Create 'speaker:advanced' event to notify when on-deck positions change. Add 'queue:joined' and 'queue:left' events for individual speaker actions. Ensure events include timestamp and action type for client-side optimistic updates. Implement debouncing for rapid queue changes to prevent event flooding. Add queue snapshot event for initial connection state sync.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Add timer synchronization events",
+            "description": "Create timer-related WebSocket events for synchronized countdown timers across all connected clients with millisecond precision",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Implement 'timer:start' event with initial duration and server timestamp for synchronization. Create 'timer:tick' event broadcasting every second with remaining time. Add 'timer:pause', 'timer:resume', and 'timer:stop' events for timer control. Include server timestamp in all timer events to handle network latency. Implement timer state recovery for reconnecting clients. Add 'timer:expired' event for when countdown reaches zero. Ensure timer accuracy across different client time zones.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create demographic update streams",
+            "description": "Implement real-time demographic balance updates and garden visualization state changes with efficient data streaming",
+            "dependencies": [
+              "5.2"
+            ],
+            "details": "Create 'demographics:updated' event that streams balance percentages for Gender, Age, and Race indicators whenever speaking history changes. Implement 'garden:stateChanged' event broadcasting garden image index (0-32) based on timing performance. Add aggregation logic to batch rapid demographic changes. Include delta information in updates for smooth client animations. Implement selective broadcasting to only send updates to clients viewing demographic displays. Add caching layer for demographic calculations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Build room management for sessions",
+            "description": "Implement Socket.io room system for session-based broadcasting allowing multiple concurrent sessions with isolated event streams",
+            "dependencies": [
+              "5.3",
+              "5.4",
+              "5.5"
+            ],
+            "details": "Create room structure using session IDs to isolate different concurrent sessions. Implement join/leave room logic based on active session selection. Add room-specific event broadcasting for queue, timer, and demographic updates. Create session:created and session:ended events for room lifecycle. Implement room cleanup when last client disconnects. Add room participant tracking for admin dashboard. Ensure events only broadcast to clients in the same session room.\n<info added on 2025-08-25T04:35:51.492Z>\nImplementation complete:\n\n- Successfully created Socket.io namespace structure at `/api/v1/socket` with session-based room management\n- Room lifecycle fully implemented with automatic creation on first join and cleanup on last disconnect\n- Events properly scoped to session rooms: session:created, session:ended, session:participant:joined, session:participant:left\n- Added comprehensive participant tracking by role (admin/spectator) with real-time counts\n- Monitoring endpoints operational at `/api/v1/monitoring/sessions` showing active sessions, participant counts, and room details\n- Test script validates room isolation - events in one session don't leak to others\n- Memory-efficient implementation with automatic cleanup of empty sessions\n</info added on 2025-08-25T04:35:51.492Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Implement reconnection with state recovery",
+            "description": "Build robust reconnection logic that restores client state after network interruptions without losing data or causing inconsistencies",
+            "dependencies": [
+              "5.6"
+            ],
+            "details": "Configure Socket.io reconnection parameters with exponential backoff strategy. Implement server-side session state caching in Redis for quick recovery. Create 'connection:restored' event sending full state snapshot on reconnection. Add client-side queue for failed emissions during disconnection. Implement version tracking to handle state conflicts during offline periods. Add heartbeat mechanism to detect stale connections. Create connection status events for UI feedback.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Add connection pooling and scaling considerations",
+            "description": "Implement connection management strategies for handling high concurrent loads and prepare architecture for horizontal scaling",
+            "dependencies": [
+              "5.7"
+            ],
+            "details": "Configure Socket.io adapter for Redis to enable multi-server deployments. Implement connection pooling with maximum connection limits per IP. Add rate limiting for event emissions to prevent abuse. Create monitoring endpoints for active connections, rooms, and event throughput. Implement graceful shutdown handling for server restarts. Add load balancing logic for distributing connections. Configure sticky sessions for Socket.io compatibility with multiple servers.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Write integration tests for real-time events",
+            "description": "Create comprehensive test suite validating all WebSocket functionality including events, authentication, rooms, and reconnection scenarios",
+            "dependencies": [
+              "5.8"
+            ],
+            "details": "Write tests for namespace authentication accepting valid tokens and rejecting invalid ones. Test queue update events reach all connected clients in the same room. Verify timer synchronization maintains accuracy across multiple clients. Test demographic updates only sent when data changes. Validate reconnection restores correct state without duplicates. Test room isolation ensures events don't leak between sessions. Verify load handling with 200+ concurrent connections. Test graceful degradation under network issues.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Build Timer System with Auto-start Logic",
+        "description": "Implement the 3-minute speaking timer with automatic start/stop functionality and time tracking as defined in section 4.4",
+        "details": "Create TimerService with: startTimer(delegateId) - begins 3-minute countdown, records start_time in SpeakingInstances. pauseTimer() - pauses current timer, maintains elapsed time. resumeTimer() - continues from paused state. stopTimer() - ends timing, calculates duration_seconds, updates database. Auto-start logic: trigger when delegate moves to position 1. Auto-stop logic: trigger when queue advances. Calculate cumulative session time. Track individual and total speaking durations. Emit timer events via WebSocket every second.",
+        "testStrategy": "Test timer starts automatically on queue advancement. Verify pause/resume maintains correct elapsed time. Test timer stops and saves duration when speaker finishes. Verify cumulative calculations are accurate. Test timer state persists across server restarts.",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create TimerService Class with State Management",
+            "description": "Design and implement the core TimerService class with proper state management for tracking timer status, elapsed time, and current speaker",
+            "dependencies": [],
+            "details": "Create TimerService.ts with TypeScript interfaces for TimerState (status: idle/running/paused, startTime, pausedAt, elapsedTime, delegateId). Implement singleton pattern to ensure single timer instance. Add state getters/setters with validation. Create timer configuration constants (DEFAULT_DURATION = 180 seconds). Implement state persistence methods for recovery after crashes. Add error handling for invalid state transitions.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Countdown Timer with Pause/Resume",
+            "description": "Build the core countdown functionality with accurate timing, pause/resume capabilities, and elapsed time tracking",
+            "dependencies": [
+              "6.1"
+            ],
+            "details": "Implement startTimer(delegateId) using setInterval with 100ms precision for smooth updates. Create pauseTimer() to store elapsed time and clear interval. Build resumeTimer() to continue from paused duration. Add getRemainingTime() and getElapsedTime() helper methods. Implement timer tick callbacks for UI updates. Handle edge cases like multiple pause/resume cycles. Ensure accuracy by using Date.now() for time calculations rather than interval counts.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Add Auto-start Triggers on Queue Advancement",
+            "description": "Integrate timer auto-start logic when delegates move to speaking position 1 in the queue",
+            "dependencies": [
+              "6.2"
+            ],
+            "details": "Create QueueEventListener to monitor queue position changes. Implement onDelegateMovedToPosition1(delegateId) handler. Add logic to check if timer is already running before auto-start. Create startTime timestamp in SpeakingInstances table when timer begins. Implement safeguards against duplicate starts. Add configuration option to enable/disable auto-start. Emit 'timer-started' event for UI updates.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Build Auto-stop on Speaker Completion",
+            "description": "Implement automatic timer stopping when the current speaker finishes and queue advances",
+            "dependencies": [
+              "6.3"
+            ],
+            "details": "Create onQueueAdvance() handler to detect speaker completion. Implement stopTimer() to end current timing session. Calculate final duration_seconds from start_time to current time. Update SpeakingInstances record with end_time and duration_seconds. Mark delegate's has_spoken flag as true. Trigger auto-start for next speaker if applicable. Handle edge cases like manual queue skips or removals.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create Duration Calculation and Database Updates",
+            "description": "Implement precise duration calculations and ensure all timing data is properly saved to the database",
+            "dependencies": [
+              "6.4"
+            ],
+            "details": "Create calculateDuration() method accounting for pauses and resumes. Implement updateSpeakingInstance() to save start_time, end_time, duration_seconds. Add calculateCumulativeSessionTime() to sum all speaking durations for current session. Create updateDelegateStats() to track individual total speaking time across sessions. Implement database transaction wrapper for atomic updates. Add retry logic for failed database writes.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement WebSocket Timer Tick Events",
+            "description": "Build real-time timer updates using WebSocket to broadcast timer state to all connected clients",
+            "dependencies": [
+              "6.5"
+            ],
+            "details": "Set up WebSocket event emitter for 'timer-tick' events every second. Create TimerTickPayload with remaining_time, elapsed_time, delegate_id, status. Implement broadcast mechanism to send updates to all connected spectator and admin clients. Add throttling to prevent overwhelming clients (max 10 updates/second). Create 'timer-state-changed' events for start/pause/resume/stop. Implement client reconnection logic to sync timer state. Add heartbeat mechanism to detect disconnected clients.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add Timer Persistence for Recovery",
+            "description": "Implement timer state persistence to handle server restarts and ensure timer continuity",
+            "dependencies": [
+              "6.6"
+            ],
+            "details": "Create TimerPersistence service to save state to database or Redis. Implement saveTimerState() on every state change. Add loadTimerState() on service initialization. Store timer state in Sessions table with JSON column. Implement recovery logic to resume timer from saved state after crash. Add validation to ensure recovered state is consistent. Create cleanup job to remove old timer states. Add monitoring for persistence failures.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Write Tests for Timer Accuracy and Edge Cases",
+            "description": "Create comprehensive test suite to verify timer accuracy, state transitions, and edge case handling",
+            "dependencies": [
+              "6.7"
+            ],
+            "details": "Write unit tests for TimerService methods using Jest with fake timers. Test timer accuracy within 100ms tolerance over 3-minute duration. Verify pause/resume maintains correct elapsed time. Test auto-start and auto-stop triggers with mock queue events. Validate database updates occur correctly. Test recovery from various crash scenarios. Create integration tests for WebSocket event delivery. Add performance tests for timer under load. Test edge cases: rapid pause/resume, queue manipulation during timing.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Develop React Frontend Components",
+        "description": "Create the spectator and administrator views with responsive design, including queue display, speaker cards, and control interfaces",
+        "details": "Build SpectatorView component: CurrentSpeaker (large font, green #00FF00), NextSpeaker (medium, orange #FFA500), FollowingSpeaker (small, sky blue #87CEEB). QueueGrid showing positions 1-20 with names, 21-50 as number cards. SpeakerCard component with conditional styling (gold #FFD700 for first-time, royal blue #4169E1 for previous). Build AdminView with tabs: DelegateManagement (CRUD form, bulk import), QueueControl (number input, advance button, timer controls). Implement responsive breakpoints for mobile/tablet/desktop. Add keyboard navigation support. Use React Context for state management.",
+        "testStrategy": "Test responsive design on multiple screen sizes. Verify color contrast meets WCAG AA standards. Test keyboard navigation flow. Verify real-time updates render without flicker. Test component rendering performance with 50+ queue items.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up React project with TypeScript and routing",
+            "description": "Initialize React application with TypeScript configuration, install dependencies, and configure React Router for navigation between spectator and admin views",
+            "dependencies": [],
+            "details": "Create new React app with TypeScript template. Install required dependencies: react-router-dom, socket.io-client, axios. Set up folder structure: /components, /views, /contexts, /hooks, /utils. Configure TypeScript with strict mode. Set up ESLint and Prettier. Create basic routing structure with routes for /spectator and /admin paths. Configure environment variables for API endpoints.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create WebSocket context and connection management",
+            "description": "Build React Context for Socket.io connection management with automatic reconnection and event handling",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Create SocketContext using React Context API. Implement useSocket custom hook for component access. Set up Socket.io client with namespaces for /spectator and /admin. Add connection state management (connected/disconnected/reconnecting). Implement automatic reconnection with exponential backoff. Create event listener registration system. Add connection authentication using JWT tokens. Handle connection errors and display user notifications.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build CurrentSpeaker component with styling",
+            "description": "Create the CurrentSpeaker component displaying the active speaker with large font and green color scheme",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Create CurrentSpeaker.tsx component with TypeScript interfaces. Apply large font size (48px desktop, 32px mobile) with green color (#00FF00). Display delegate name and number prominently. Add speaking timer display showing elapsed time. Implement pulse animation for visual emphasis. Create loading and empty states. Add prop for speaker data from parent component. Style with CSS modules or styled-components.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Implement NextSpeaker and FollowingSpeaker components",
+            "description": "Build components for on-deck positions with appropriate styling and visual hierarchy",
+            "dependencies": [
+              "7.3"
+            ],
+            "details": "Create NextSpeaker component with medium font (32px desktop, 24px mobile) and orange color (#FFA500). Create FollowingSpeaker component with small font (24px desktop, 18px mobile) and sky blue (#87CEEB). Add position indicators (Position 2, Position 3). Implement fade-in animations when speakers change. Create shared styling utilities for consistent appearance. Add delegate information display (name, number, country). Handle empty position states.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create QueueGrid with 50-position display",
+            "description": "Build the queue grid component showing positions 1-20 with names and 21-50 as number cards",
+            "dependencies": [
+              "7.1"
+            ],
+            "details": "Create QueueGrid.tsx component with CSS Grid layout. Display positions 1-20 with delegate names and numbers. Show positions 21-50 as compact number cards. Implement virtual scrolling for performance with large queues. Add position numbers as badges on each card. Create hover effects showing delegate details. Implement smooth transitions when queue updates. Add empty position placeholders. Style with responsive grid columns (5 columns desktop, 3 tablet, 2 mobile).",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Build SpeakerCard with conditional styling",
+            "description": "Create reusable SpeakerCard component with gold styling for first-time speakers and blue for previous speakers",
+            "dependencies": [
+              "7.5"
+            ],
+            "details": "Create SpeakerCard.tsx with props for speaker data and speaking history. Apply gold border/background (#FFD700) for first-time speakers. Apply royal blue (#4169E1) for previous speakers. Display delegate name, number, and country flag. Add speaker count badge if previously spoken. Implement card flip animation for additional details. Create loading skeleton component. Add accessibility attributes (aria-labels, roles).",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Develop AdminView with tabbed interface",
+            "description": "Create the administrator dashboard with tab navigation for different management sections",
+            "dependencies": [
+              "7.1",
+              "7.2"
+            ],
+            "details": "Create AdminView.tsx as main container component. Implement tab navigation using React Router or state management. Create tabs: Delegate Management, Queue Control, Session Management, Settings. Add tab icons and active state styling. Implement tab content lazy loading for performance. Add breadcrumb navigation. Create admin authentication guard. Style with professional dashboard appearance. Add keyboard shortcuts for tab switching.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create DelegateManagement CRUD forms",
+            "description": "Build forms for creating, reading, updating, and deleting delegates with bulk import functionality",
+            "dependencies": [
+              "7.7"
+            ],
+            "details": "Create DelegateForm component with fields: name, number, country, gender, has_spoken. Implement form validation using react-hook-form or Formik. Add delegate list table with sorting and filtering. Create edit/delete actions with confirmation dialogs. Build CSV import component with drag-and-drop. Add bulk operations (select all, bulk delete). Implement search functionality. Create success/error notifications. Add form autosave functionality.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Build QueueControl with number input",
+            "description": "Implement queue control interface with delegate number input and queue management actions",
+            "dependencies": [
+              "7.7"
+            ],
+            "details": "Create QueueControl component with number pad input. Add delegate number validation against database. Implement Add to Queue button with loading state. Create Advance Queue button with animation. Add Remove from Queue functionality with confirmation. Display current queue statistics. Implement speaker timer with start/stop/reset. Add queue reordering with drag-and-drop. Create quick actions toolbar.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement responsive design system",
+            "description": "Create responsive layouts and breakpoints for mobile, tablet, and desktop views",
+            "dependencies": [
+              "7.3",
+              "7.4",
+              "7.5",
+              "7.6",
+              "7.7",
+              "7.8",
+              "7.9"
+            ],
+            "details": "Define breakpoints: mobile (<768px), tablet (768-1024px), desktop (>1024px). Create responsive grid system using CSS Grid and Flexbox. Implement mobile-first approach with progressive enhancement. Add hamburger menu for mobile navigation. Create responsive typography scale. Optimize touch targets for mobile (minimum 44x44px). Add landscape orientation support. Test on various devices and screen sizes. Create responsive utility classes.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Add keyboard navigation and accessibility",
+            "description": "Implement comprehensive keyboard support and WCAG AA accessibility standards",
+            "dependencies": [
+              "7.10"
+            ],
+            "details": "Add keyboard navigation for all interactive elements. Implement focus management and visible focus indicators. Add ARIA labels and roles for screen readers. Create skip navigation links. Implement keyboard shortcuts (Ctrl+K for search, Tab for navigation). Add live regions for dynamic content updates. Ensure color contrast meets WCAG AA (4.5:1 ratio). Test with screen readers (NVDA, JAWS). Add reduced motion support for animations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Create state management with Context/Zustand",
+            "description": "Implement centralized state management for queue data, session state, and user preferences",
+            "dependencies": [
+              "7.2"
+            ],
+            "details": "Choose between React Context or Zustand for state management. Create global store with slices: queue, delegates, session, user. Implement actions: updateQueue, addDelegate, removeDelegate, advanceQueue. Add middleware for logging and persistence. Create selectors for derived state. Implement optimistic updates for better UX. Add state persistence to localStorage. Create DevTools integration for debugging. Add state hydration from server.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implement Demographic Visualizations",
+        "description": "Create the three demographic balance indicators and garden visualization system as specified in sections 4.6.1 and 4.6.2",
+        "details": "Build BalanceIndicator component: vertical lever visualization, animated transitions, three instances for Gender/Age/Race. Calculate real-time percentages from speaking history. Create GardenVisualization component: load 33 WebP images (desert to garden), track cumulative time performance, calculate state changes based on formula: early finish moves toward garden (32), late finish toward desert (0). Implement smooth transitions between states. Add toggle control for spectator view demographics. Store garden state in session table. Update garden state on each speaker completion.",
+        "testStrategy": "Test balance indicators reflect accurate percentages. Verify garden state transitions correctly based on timing. Test image loading and caching performance. Verify animations are smooth and don't cause layout shifts. Test toggle functionality in spectator view.",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create BalanceIndicator Component Architecture",
+            "description": "Design and implement the base BalanceIndicator React component with SVG/Canvas rendering setup for vertical lever visualization",
+            "dependencies": [],
+            "details": "Set up React component structure with props for demographic type (Gender/Age/Race), current percentage value, and animation configuration. Choose between SVG or Canvas based on performance requirements. Create component skeleton with TypeScript interfaces for props and state. Set up coordinate system for vertical lever positioning (0-100% range). Define visual design constants: lever dimensions, colors, background styling.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Lever Animation System",
+            "description": "Build smooth animation logic for lever movements using CSS transitions or requestAnimationFrame for real-time updates",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Implement spring physics or easing functions for natural lever movement. Create animation queue to handle rapid percentage changes smoothly. Add CSS transitions for lever position updates with configurable duration (300-500ms). Implement requestAnimationFrame loop if using Canvas rendering. Add visual feedback effects: subtle glow when balanced (45-55% range), color shifts for extreme imbalances.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build Real-time Demographic Calculation Engine",
+            "description": "Create calculation service that processes speaking history and outputs current demographic percentages for all three categories",
+            "dependencies": [],
+            "details": "Create DemographicCalculator class with methods for each demographic type. Query SpeakingInstances table for current session speakers. Calculate percentages: Gender (Male/Female/Other counts), Age (bracket distributions), Race (category distributions). Implement efficient caching strategy with 5-second refresh interval. Create WebSocket events to push updates when new speaker completes. Handle edge cases: empty sessions, single speaker scenarios.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create GardenVisualization Component Structure",
+            "description": "Build the main garden visualization React component with state management and image display framework",
+            "dependencies": [],
+            "details": "Design component architecture with props for current garden state (0-32), session ID, and animation settings. Set up state management for current image index, transition status, and loading states. Create responsive container that maintains aspect ratio across screen sizes. Implement placeholder/skeleton screen while images load. Add accessibility features: alt text describing garden state, ARIA labels for screen readers.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement 33-State Image Loading and Caching",
+            "description": "Build efficient image preloading system for all 33 WebP garden state images with browser caching optimization",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "Create ImagePreloader service to load all 33 WebP images on component mount. Implement progressive loading: load visible state first, then adjacent states, then remaining. Use browser Cache API or IndexedDB for persistent storage. Add lazy loading for images outside current view range (±5 states). Implement fallback to JPEG if WebP not supported. Monitor loading progress with callback hooks for UI feedback.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Build Garden State Calculation Algorithm",
+            "description": "Implement the timing-based algorithm that determines garden state changes based on speaker completion times",
+            "dependencies": [
+              "8.3"
+            ],
+            "details": "Create GardenStateCalculator with formula: early finish (+1 toward 32), late finish (-1 toward 0). Define time thresholds: early (<90% allocated), on-time (90-110%), late (>110%). Track cumulative performance across all speakers in session. Implement bounds checking to keep state within 0-32 range. Add configurable sensitivity factor for state change rate. Store calculation history for debugging and analytics.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add Smooth Transitions Between Garden States",
+            "description": "Implement crossfade or morphing animations when transitioning between different garden state images",
+            "dependencies": [
+              "8.5",
+              "8.6"
+            ],
+            "details": "Create transition manager using CSS opacity crossfades or canvas-based morphing. Implement image double-buffering for seamless transitions. Add configurable transition duration (1-2 seconds default). Queue multiple state changes if they occur rapidly. Implement easing functions for natural-feeling transitions. Add particle effects or overlays for dramatic state improvements.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create Toggle Controls for Spectator View",
+            "description": "Build UI controls allowing spectators to show/hide demographic indicators while keeping garden always visible",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3"
+            ],
+            "details": "Design toggle switch component for demographic visibility control. Store toggle state in localStorage for persistence across sessions. Implement smooth show/hide animations for balance indicators. Position toggle in non-intrusive location (top-right corner). Add keyboard shortcuts for quick toggling (D key for demographics). Ensure garden visualization remains visible regardless of toggle state.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Optimize Rendering Performance",
+            "description": "Profile and optimize all visualization components for smooth 60fps animations even with multiple concurrent updates",
+            "dependencies": [
+              "8.2",
+              "8.7",
+              "8.8"
+            ],
+            "details": "Use React.memo and useMemo to prevent unnecessary re-renders. Implement virtual DOM batching for rapid demographic updates. Use CSS transform/opacity for animations (GPU-accelerated). Add performance monitoring with FPS counter in development mode. Implement adaptive quality: reduce animation complexity on low-end devices. Use Web Workers for heavy calculations if needed.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Build Analytics and Reporting System",
+        "description": "Implement comprehensive statistics tracking, real-time metrics display, and export capabilities as defined in section 4.7",
+        "details": "Create AnalyticsService: calculateParticipationRate() by demographics, getAverageSpeakingTime(), generateTimeDistribution(). Build real-time stats dashboard showing: session duration, unique speaker count, average time, queue length. Implement CSV export with columns: delegate info, speaking instances, durations, demographics. Create PDF report generator using puppeteer or similar: charts for demographic balance, time distribution graphs, participation heat maps. Add data aggregation queries with PostgreSQL window functions. Cache expensive calculations in Redis.",
+        "testStrategy": "Verify calculation accuracy against known test data. Test CSV export includes all required fields. Validate PDF generation completes without errors. Test performance with large datasets (1000+ speaking instances). Verify real-time stats update within 1 second.",
+        "priority": "low",
+        "dependencies": [
+          8
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create AnalyticsService with Core Calculation Methods",
+            "description": "Implement the foundational AnalyticsService class with primary calculation methods for participation rates, speaking times, and time distributions",
+            "dependencies": [],
+            "details": "Create src/services/AnalyticsService.ts with methods: calculateParticipationRate(demographic: string, value: string) to compute participation percentages by gender/age/race, getAverageSpeakingTime(delegateId?: string) for individual or overall averages, generateTimeDistribution() to create histogram data of speaking durations. Include helper methods for data normalization and percentage calculations. Add proper TypeScript interfaces for return types.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Demographic Participation Query System",
+            "description": "Implement complex SQL queries using PostgreSQL window functions to analyze participation patterns across different demographic groups",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Create demographic analysis queries using window functions: ROW_NUMBER() for ranking speakers by frequency, PERCENT_RANK() for participation distribution, LAG/LEAD for sequential analysis. Build queries to calculate: participation rate by gender/age/race combinations, speaking frequency distribution, demographic balance scores. Optimize queries with proper indexes on demographic columns. Create stored procedures for frequently used calculations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Time Distribution Analysis Engine",
+            "description": "Develop comprehensive time analysis functionality to track speaking patterns, duration distributions, and session timing metrics",
+            "dependencies": [
+              "9.1"
+            ],
+            "details": "Build time distribution analysis: create histogram buckets (0-1min, 1-2min, 2-3min, 3min+), calculate standard deviation of speaking times, identify peak speaking hours. Implement cumulative time tracking: total session duration, individual speaker totals, average time per demographic group. Add trend analysis: speaking time patterns over days/weeks, queue wait time analysis. Include outlier detection for unusual speaking patterns.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Real-time Statistics Dashboard Component",
+            "description": "Build React component displaying live statistics including session metrics, speaker counts, and queue information with auto-refresh",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3"
+            ],
+            "details": "Create StatsD ashboard component with real-time displays: session duration timer (HH:MM:SS format), unique speaker count with live updates, average speaking time with rolling calculation, current queue length indicator. Implement WebSocket connection for live updates. Add visual indicators: progress bars for time metrics, animated counters for numerical values, color-coded status indicators (green/yellow/red). Include refresh rate control (1-5 second intervals).",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Build CSV Export with Comprehensive Formatting",
+            "description": "Implement CSV export functionality with proper data formatting, column headers, and support for large datasets",
+            "dependencies": [
+              "9.2",
+              "9.3"
+            ],
+            "details": "Create CSV export service with columns: delegate_name, delegate_number, gender, age_range, race, speaking_instances (count), total_duration (seconds), average_duration, first_spoke_at, last_spoke_at. Implement streaming for large datasets using Node.js streams. Add data sanitization for CSV injection prevention. Include UTF-8 BOM for Excel compatibility. Create download endpoint with proper headers (Content-Type, Content-Disposition). Support date range filtering for exports.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement PDF Report Generator with Charts",
+            "description": "Create PDF generation system using Puppeteer to produce professional reports with charts, graphs, and participation visualizations",
+            "dependencies": [
+              "9.2",
+              "9.3",
+              "9.4"
+            ],
+            "details": "Set up Puppeteer for PDF generation: configure page size (A4/Letter), add headers/footers with page numbers, implement proper margins. Create chart components using Chart.js: demographic balance pie charts, time distribution bar graphs, participation heat maps by hour/day. Build report template with sections: executive summary, demographic analysis, time analysis, recommendations. Add logo/branding support. Implement batch generation for multiple sessions.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add Redis Caching for Expensive Calculations",
+            "description": "Implement Redis caching layer to optimize performance of complex analytics queries and reduce database load",
+            "dependencies": [
+              "9.1",
+              "9.2",
+              "9.3"
+            ],
+            "details": "Set up Redis connection with connection pooling and error handling. Implement caching strategy: cache participation rates (TTL: 5 minutes), cache time distributions (TTL: 2 minutes), cache demographic summaries (TTL: 10 minutes). Create cache invalidation logic triggered by new speaking instances. Add cache warming on application startup. Implement cache-aside pattern with fallback to database. Monitor cache hit rates and adjust TTL values. Create Redis pub/sub for cache invalidation across instances.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Create Scheduled Aggregation Jobs",
+            "description": "Implement background jobs for periodic data aggregation, report generation, and analytics preprocessing",
+            "dependencies": [
+              "9.6",
+              "9.7"
+            ],
+            "details": "Set up job scheduler using node-cron or similar: hourly aggregation of participation metrics, daily summary report generation, weekly trend analysis compilation. Create aggregation tables: hourly_stats, daily_summaries, weekly_trends. Implement incremental aggregation to avoid reprocessing. Add job monitoring with success/failure logging. Create cleanup jobs for old analytics data (>90 days). Implement job queue with retry logic for failed aggregations. Add manual trigger endpoints for on-demand processing.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement Security and Authentication",
+        "description": "Add password protection for admin and spectator interfaces, audit logging, and data encryption as specified in section 5.3",
+        "details": "Implement dual authentication: separate passwords for /admin and /spectator routes. Use bcrypt for password hashing. Add JWT tokens with 30-minute expiry, refresh token mechanism. Create audit log table: track all admin actions (queue changes, delegate edits) with timestamps and user info. Implement session timeout after 15 minutes of inactivity. Add rate limiting on API endpoints. Encrypt sensitive demographic data using AES-256. Set up HTTPS with SSL certificates. Add CSRF protection for form submissions.",
+        "testStrategy": "Test authentication blocks unauthorized access. Verify passwords are properly hashed. Test session timeout works correctly. Verify audit logs capture all admin actions. Test rate limiting prevents abuse. Validate encryption/decryption of sensitive data.",
+        "priority": "high",
+        "dependencies": [
+          9
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up bcrypt password hashing system",
+            "description": "Install bcrypt library and create utility functions for hashing passwords and comparing hashed passwords for authentication",
+            "dependencies": [],
+            "details": "Install bcrypt npm package. Create auth utility module with hashPassword() function using bcrypt.hash() with salt rounds of 10. Create comparePassword() function using bcrypt.compare(). Add password fields to database schema for admin and spectator accounts. Create initial setup script to generate hashed passwords for default admin/spectator accounts.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Create JWT token generation and validation",
+            "description": "Implement JWT token creation, signing, and verification middleware for API authentication",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Install jsonwebtoken package. Create token generation function with 30-minute expiry using jwt.sign(). Implement token verification middleware to validate JWT tokens in request headers. Create separate signing secrets for admin and spectator tokens. Store secrets in environment variables. Add token payload structure with user role, userId, and expiration timestamp.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement refresh token mechanism",
+            "description": "Build refresh token system to allow token renewal without re-authentication",
+            "dependencies": [
+              "10.2"
+            ],
+            "details": "Create refresh_tokens table in database with token hash, user_id, role, expiry, and revoked status. Generate secure random refresh tokens using crypto.randomBytes(). Implement /auth/refresh endpoint to exchange valid refresh token for new access token. Add refresh token rotation on use. Implement token revocation on logout. Set refresh token expiry to 7 days.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Build dual authentication for admin and spectator routes",
+            "description": "Create separate authentication flows and middleware for /admin and /spectator interfaces",
+            "dependencies": [
+              "10.3"
+            ],
+            "details": "Create /auth/admin/login and /auth/spectator/login endpoints with separate password validation. Implement role-based middleware to check JWT token role matches route requirements. Create login pages for both interfaces with password forms. Store role in JWT payload and validate on protected routes. Add logout endpoints to revoke tokens. Implement remember-me functionality using secure cookies.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create audit log table and tracking system",
+            "description": "Design and implement comprehensive audit logging for all administrative actions",
+            "dependencies": [
+              "10.4"
+            ],
+            "details": "Create audit_logs table with id, user_id, user_role, action_type, target_entity, entity_id, old_value, new_value, ip_address, user_agent, timestamp. Create AuditLogger service class with methods for different action types. Hook into all admin API endpoints to log queue changes, delegate edits, session management. Implement log retention policy (90 days). Add endpoint to query audit logs with filtering.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement session timeout handling",
+            "description": "Add automatic session expiration after 15 minutes of inactivity",
+            "dependencies": [
+              "10.4"
+            ],
+            "details": "Track last activity timestamp in JWT token or server-side session store. Create middleware to check and update activity timestamp on each request. Implement client-side inactivity detector using mouse/keyboard events. Add warning modal at 13 minutes of inactivity. Force logout and redirect to login page at 15 minutes. Clear tokens and session data on timeout.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add rate limiting middleware",
+            "description": "Implement rate limiting on API endpoints to prevent abuse and brute force attacks",
+            "dependencies": [
+              "10.4"
+            ],
+            "details": "Install express-rate-limit package. Configure different rate limits: login endpoints (5 attempts per 15 minutes), API endpoints (100 requests per minute), bulk operations (10 per hour). Implement IP-based tracking with Redis store. Add custom error messages for rate limit exceeded. Whitelist localhost for development. Add rate limit headers to responses.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Set up data encryption for sensitive fields",
+            "description": "Implement AES-256 encryption for sensitive demographic data in database",
+            "dependencies": [
+              "10.1"
+            ],
+            "details": "Install crypto library for AES-256-GCM encryption. Create encryption service with encrypt() and decrypt() methods. Generate and securely store encryption keys in environment variables. Encrypt sensitive fields: delegate location, personal notes, contact information. Implement transparent encryption/decryption in database layer. Add key rotation mechanism. Handle migration of existing unencrypted data.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Configure HTTPS and SSL certificates",
+            "description": "Set up secure HTTPS connections with SSL/TLS certificates",
+            "dependencies": [],
+            "details": "Obtain SSL certificate from Let's Encrypt or certificate authority. Configure Express server to use HTTPS with fs.readFileSync for cert and key. Implement HTTP to HTTPS redirect middleware. Set up certificate auto-renewal with certbot. Configure secure headers: HSTS, X-Frame-Options, X-Content-Type-Options. Test SSL configuration with SSL Labs. Update CORS settings for HTTPS.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Add CSRF protection and security headers",
+            "description": "Implement CSRF tokens for form submissions and configure comprehensive security headers",
+            "dependencies": [
+              "10.4",
+              "10.9"
+            ],
+            "details": "Install csurf middleware for CSRF protection. Generate and validate CSRF tokens for all state-changing operations. Add CSRF token to all forms and AJAX requests. Configure helmet.js for security headers: CSP policy, XSS protection, MIME sniffing prevention. Implement Content Security Policy with nonces for inline scripts. Add security.txt file. Run security audit with npm audit.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Add Offline Support and Data Recovery",
+        "description": "Implement offline mode functionality, auto-save mechanisms, and data recovery features as specified in section 5.5",
+        "details": "Implement service worker for offline support: cache critical assets, queue API calls when offline, sync when connection restored. Add IndexedDB for local storage: mirror queue state locally, store pending changes. Create auto-save mechanism: save queue state every 30 seconds to database and localStorage. Implement conflict resolution for concurrent edits. Add data recovery endpoints: restore from last checkpoint, merge offline changes. Create backup service: hourly database snapshots, point-in-time recovery capability.",
+        "testStrategy": "Test offline mode by disabling network. Verify queued changes sync when reconnected. Test auto-save triggers every 30 seconds. Simulate data loss and test recovery. Verify conflict resolution handles concurrent edits correctly.",
+        "priority": "medium",
+        "dependencies": [
+          10
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configure Service Worker and Caching Strategy",
+            "description": "Set up service worker registration, define cache-first and network-first strategies for different asset types, and implement versioning for cache invalidation",
+            "dependencies": [],
+            "details": "Create service-worker.js file with registration logic in main app entry point. Define cache names for static assets, API responses, and dynamic content. Implement cache-first strategy for static assets (JS, CSS, images), network-first with fallback for API calls. Add cache versioning system to handle updates. Configure precaching for critical app shell components. Implement cache cleanup on activation to remove old versions.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Design and Implement IndexedDB Schema",
+            "description": "Create IndexedDB database structure with object stores for queue state, pending changes, and sync metadata with proper indexes and versioning",
+            "dependencies": [],
+            "details": "Design schema with object stores: queueState (mirror of server queue), pendingChanges (unsync'd operations), syncMetadata (timestamps, conflict info). Create indexes on delegate_id, session_id, timestamp fields. Implement database version migration logic. Add transaction wrappers for CRUD operations. Create data validation layer to ensure consistency. Build abstraction layer with promises for easier consumption.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build Offline API Request Queue System",
+            "description": "Implement queue mechanism to capture and store API calls made while offline, with retry logic and priority ordering for sync",
+            "dependencies": [
+              "11.1",
+              "11.2"
+            ],
+            "details": "Create OfflineQueue class to intercept failed network requests. Store requests in IndexedDB with metadata: timestamp, priority, retry count, endpoint, payload. Implement request serialization for storage. Add priority levels (critical, high, normal, low) for sync order. Build retry mechanism with exponential backoff. Create request deduplication logic to prevent duplicate operations. Add request expiration handling for stale operations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop Conflict Resolution Algorithms",
+            "description": "Create algorithms to handle data conflicts when syncing offline changes with server state, including merge strategies and user resolution UI",
+            "dependencies": [
+              "11.2",
+              "11.3"
+            ],
+            "details": "Implement timestamp-based resolution for simple conflicts (last-write-wins). Create field-level merge strategies for delegate updates. Build queue position conflict resolver using operational transformation concepts. Design conflict detection by comparing local and server checksums. Create ConflictResolver class with resolution strategies per data type. Implement UI components to show conflicts requiring user intervention. Add conflict logging for audit trail.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Auto-Save Mechanism with Intervals",
+            "description": "Build automatic saving system that persists queue state every 30 seconds to both database and localStorage with debouncing and error handling",
+            "dependencies": [
+              "11.2"
+            ],
+            "details": "Create AutoSaveManager with configurable interval (default 30s). Implement debouncing to prevent saves during rapid changes. Add dirty state tracking to only save when changes exist. Store in both IndexedDB and localStorage for redundancy. Implement save queue to prevent concurrent saves. Add error recovery if save fails. Create save status indicators for UI feedback. Build performance monitoring to track save duration.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create Data Recovery API Endpoints",
+            "description": "Build backend endpoints for checkpoint restoration, point-in-time recovery, and merging offline changes with server state",
+            "dependencies": [],
+            "details": "Implement POST /api/recovery/checkpoint to restore from specific backup. Create GET /api/recovery/checkpoints to list available recovery points. Build POST /api/recovery/merge to handle offline data reconciliation. Add GET /api/recovery/validate to check data integrity. Implement rollback mechanism with transaction support. Create recovery audit log for tracking restore operations. Add authorization checks for recovery operations.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Automated Backup Service",
+            "description": "Develop scheduled backup system that creates hourly database snapshots with retention policies and point-in-time recovery capability",
+            "dependencies": [
+              "11.6"
+            ],
+            "details": "Create BackupService with cron job for hourly execution. Implement database snapshot using pg_dump or streaming replication. Store backups in cloud storage (S3/Azure Blob) with encryption. Create retention policy (24 hourly, 7 daily, 4 weekly). Build point-in-time recovery using WAL archives. Implement backup verification to ensure integrity. Add monitoring and alerting for failed backups. Create backup catalog with metadata.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Add Offline Status Indicators and UI Components",
+            "description": "Create visual indicators showing online/offline status, sync progress, pending changes count, and last sync timestamp in the UI",
+            "dependencies": [
+              "11.3"
+            ],
+            "details": "Build OfflineIndicator component with connection status icon. Create SyncProgress component showing upload/download progress. Implement PendingChanges badge showing count of unsynced items. Add LastSyncTime display with relative timestamps. Create toast notifications for connection state changes. Build sync conflict resolution dialog. Add offline mode banner with retry button. Implement connection speed indicator for slow connections.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement Delta Sync for Efficiency",
+            "description": "Build incremental sync system that only transfers changed data using checksums and diff algorithms to minimize bandwidth usage",
+            "dependencies": [
+              "11.3",
+              "11.4"
+            ],
+            "details": "Implement checksum generation for queue state using MD5/SHA. Create diff algorithm to identify changed records since last sync. Build delta packet format for efficient transmission. Implement server-side delta application logic. Add compression for sync payloads using gzip. Create sync cursor tracking for resumable syncs. Build bandwidth throttling for limited connections. Implement sync batching for large changesets.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Test Offline/Online Transitions Thoroughly",
+            "description": "Create comprehensive test suite covering all offline scenarios including network failures, partial syncs, and data consistency verification",
+            "dependencies": [
+              "11.1",
+              "11.2",
+              "11.3",
+              "11.4",
+              "11.5",
+              "11.6",
+              "11.7",
+              "11.8",
+              "11.9"
+            ],
+            "details": "Write unit tests for service worker caching strategies. Create integration tests for IndexedDB operations. Test offline queue with simulated network failures. Verify conflict resolution with concurrent edit scenarios. Test auto-save under various load conditions. Validate recovery endpoints with corrupted data. Test backup/restore full cycle. Verify UI indicators reflect accurate state. Test delta sync with large datasets. Create E2E tests for complete offline/online workflows.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Performance Optimization and Testing",
+        "description": "Optimize application performance, implement comprehensive testing, and ensure system meets all acceptance criteria",
+        "details": "Implement performance optimizations: lazy loading for queue items beyond position 20, virtual scrolling for admin queue view, debounce WebSocket emissions, optimize database queries with proper indexing. Add comprehensive test suites: unit tests (80% coverage target), integration tests for API endpoints, E2E tests using Cypress for critical user flows. Performance testing: load test with 200 concurrent users using k6 or similar, ensure sub-1 second queue update latency. Implement monitoring: application metrics with Prometheus, error tracking with Sentry, performance monitoring.",
+        "testStrategy": "Run load tests simulating 200 users. Verify queue updates propagate in under 1 second. Test lazy loading improves initial page load. Run full test suite and ensure 80%+ coverage. Validate all acceptance criteria from section 8 are met.",
+        "priority": "medium",
+        "dependencies": [
+          11
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Lazy Loading and Code Splitting",
+            "description": "Implement lazy loading for queue items beyond position 20 and add code splitting to reduce initial bundle size",
+            "dependencies": [],
+            "details": "Add React.lazy() and Suspense for queue components. Implement intersection observer for queue item lazy loading. Set up webpack code splitting for route-based chunks. Add loading states and skeleton components for lazy-loaded content.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Add Virtual Scrolling for Admin Queue View",
+            "description": "Implement virtual scrolling to handle large delegate lists efficiently in the admin interface",
+            "dependencies": [
+              "12.1"
+            ],
+            "details": "Install and configure react-virtualized or react-window. Replace static delegate list rendering with virtual scrolling. Implement dynamic row height calculation. Add search and filter capabilities that work with virtual scrolling.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Optimize WebSocket Message Batching",
+            "description": "Implement debouncing and batching for WebSocket emissions to reduce network overhead",
+            "dependencies": [],
+            "details": "Add debounce utility for frequent queue updates. Implement message batching for bulk operations. Add compression for large payloads. Optimize event emission patterns to prevent unnecessary updates.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Database Query Optimizations",
+            "description": "Optimize database queries with proper indexing and query performance improvements",
+            "dependencies": [],
+            "details": "Add database indexes on frequently queried columns (delegate_number, session_id, position). Optimize JOIN queries in queue operations. Implement query result caching with Redis. Add database query performance monitoring and slow query logging.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Write Comprehensive Unit Test Suites",
+            "description": "Create unit tests for all components and services targeting 80% code coverage",
+            "dependencies": [
+              "12.1",
+              "12.2",
+              "12.3",
+              "12.4"
+            ],
+            "details": "Set up Jest and React Testing Library. Write unit tests for queue management logic, delegate services, and UI components. Add test coverage reporting with nyc or jest coverage. Mock external dependencies and WebSocket connections.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Build Integration Tests for APIs",
+            "description": "Create integration tests for all API endpoints and database operations",
+            "dependencies": [
+              "12.4",
+              "12.5"
+            ],
+            "details": "Set up test database environment. Write integration tests for REST API endpoints. Test WebSocket event handling and real-time updates. Add database transaction testing and rollback mechanisms.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-24T22:02:01.052Z",
+      "updated": "2025-08-25T07:07:11.017Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

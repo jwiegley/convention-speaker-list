@@ -1,0 +1,11 @@
+{
+  "migration-file-language": "ts",
+  "migrations-dir": "src/database/migrations",
+  "migrations-table": "pgmigrations",
+  "migrations-schema": "public",
+  "template-file-name": "src/database/migration-template.ts",
+  "check-order": true,
+  "create-schema": false,
+  "create-migrations-schema": false,
+  "verbose": true
+}

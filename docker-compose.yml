@@ -1,0 +1,77 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: convention-postgres
+    environment:
+      POSTGRES_DB: convention_db
+      POSTGRES_USER: convention_user
+      POSTGRES_PASSWORD: convention_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U convention_user -d convention_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - convention-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: convention-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - convention-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: convention-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://convention_user:convention_pass@postgres:5432/convention_db
+      REDIS_URL: redis://redis:6379
+      PORT: 3001
+      FRONTEND_URL: http://localhost:5173
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./shared:/app/shared
+      - /app/node_modules
+      - /app/backend/node_modules
+      - /app/frontend/node_modules
+      - /app/shared/node_modules
+    networks:
+      - convention-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  convention-network:
+    driver: bridge

@@ -1,0 +1,521 @@
+/* Responsive Design System for Convention Speaker List Manager */
+
+/* ========================================
+   Breakpoints
+   ======================================== */
+:root {
+  /* Breakpoint variables */
+  --breakpoint-mobile: 0px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-wide: 1440px;
+  
+  /* Container widths */
+  --container-mobile: 100%;
+  --container-tablet: 768px;
+  --container-desktop: 1024px;
+  --container-wide: 1440px;
+  
+  /* Spacing scale */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* Typography scale */
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-base: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.25rem;
+  --font-2xl: 1.5rem;
+  --font-3xl: 1.875rem;
+  --font-4xl: 2.25rem;
+  --font-5xl: 3rem;
+  
+  /* Touch target sizes */
+  --touch-target-min: 44px;
+  --touch-target-comfortable: 48px;
+  --touch-target-large: 56px;
+}
+
+/* ========================================
+   Responsive Grid System
+   ======================================== */
+.container {
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.grid {
+  display: grid;
+  gap: var(--spacing-md);
+}
+
+/* Mobile-first grid columns */
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+.grid-cols-12 { grid-template-columns: repeat(12, 1fr); }
+
+/* Flexbox utilities */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.flex-row { flex-direction: row; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.items-end { align-items: flex-end; }
+.justify-center { justify-content: center; }
+.justify-between { justify-content: space-between; }
+.justify-around { justify-content: space-around; }
+.justify-evenly { justify-content: space-evenly; }
+
+/* ========================================
+   Mobile Styles (default, < 768px)
+   ======================================== */
+@media (max-width: 767px) {
+  /* Navigation */
+  .mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid #e5e5e5;
+    z-index: 999;
+    display: flex;
+    justify-content: space-around;
+    padding: var(--spacing-sm);
+  }
+  
+  .desktop-nav {
+    display: none;
+  }
+  
+  /* Hamburger menu */
+  .hamburger-menu {
+    display: block;
+    width: var(--touch-target-min);
+    height: var(--touch-target-min);
+    position: relative;
+    cursor: pointer;
+  }
+  
+  .hamburger-line {
+    width: 24px;
+    height: 2px;
+    background: #333;
+    margin: 5px auto;
+    transition: all 0.3s ease;
+  }
+  
+  /* Typography adjustments */
+  h1 { font-size: var(--font-3xl); }
+  h2 { font-size: var(--font-2xl); }
+  h3 { font-size: var(--font-xl); }
+  
+  /* Touch-friendly buttons */
+  button, .btn {
+    min-height: var(--touch-target-min);
+    min-width: var(--touch-target-min);
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  /* Queue grid for mobile */
+  .queue-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+  
+  /* Speaker cards */
+  .speaker-card-container {
+    width: 100%;
+    margin-bottom: var(--spacing-md);
+  }
+  
+  /* Admin forms */
+  .admin-form {
+    grid-template-columns: 1fr;
+  }
+  
+  /* Tables - horizontal scroll */
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  table {
+    min-width: 600px;
+  }
+  
+  /* Modal adjustments */
+  .modal {
+    width: calc(100% - var(--spacing-lg));
+    max-width: none;
+    margin: var(--spacing-md);
+  }
+  
+  /* Hide non-essential columns on mobile */
+  .hide-mobile {
+    display: none;
+  }
+  
+  /* Stack layouts vertically */
+  .stack-mobile {
+    flex-direction: column;
+  }
+  
+  /* Full width on mobile */
+  .full-mobile {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   Tablet Styles (768px - 1023px)
+   ======================================== */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .container {
+    max-width: var(--container-tablet);
+    padding: 0 var(--spacing-lg);
+  }
+  
+  /* Show desktop nav, hide mobile nav */
+  .mobile-nav {
+    display: none;
+  }
+  
+  .desktop-nav {
+    display: flex;
+  }
+  
+  .hamburger-menu {
+    display: none;
+  }
+  
+  /* Grid adjustments */
+  .tablet\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .tablet\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .tablet\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  
+  /* Queue grid for tablet */
+  .queue-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-md);
+  }
+  
+  /* Two-column forms on tablet */
+  .admin-form {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  /* Modal sizing */
+  .modal {
+    width: 80%;
+    max-width: 600px;
+  }
+  
+  /* Show more table columns */
+  .hide-mobile {
+    display: table-cell;
+  }
+  
+  .hide-tablet {
+    display: none;
+  }
+}
+
+/* ========================================
+   Desktop Styles (1024px - 1439px)
+   ======================================== */
+@media (min-width: 1024px) {
+  .container {
+    max-width: var(--container-desktop);
+    padding: 0 var(--spacing-xl);
+  }
+  
+  /* Grid adjustments */
+  .desktop\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .desktop\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .desktop\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .desktop\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+  .desktop\:grid-cols-6 { grid-template-columns: repeat(6, 1fr); }
+  
+  /* Queue grid for desktop */
+  .queue-grid {
+    grid-template-columns: repeat(5, 1fr);
+    gap: var(--spacing-lg);
+  }
+  
+  /* Three-column forms on desktop */
+  .admin-form {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  /* Sidebar layout */
+  .sidebar-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: var(--spacing-xl);
+  }
+  
+  /* Modal sizing */
+  .modal {
+    width: auto;
+    max-width: 800px;
+  }
+  
+  /* Show all table columns */
+  .hide-mobile,
+  .hide-tablet {
+    display: table-cell;
+  }
+  
+  .hide-desktop {
+    display: none;
+  }
+}
+
+/* ========================================
+   Wide Screen Styles (1440px+)
+   ======================================== */
+@media (min-width: 1440px) {
+  .container {
+    max-width: var(--container-wide);
+  }
+  
+  /* Queue grid for wide screens */
+  .queue-grid {
+    grid-template-columns: repeat(10, 1fr);
+  }
+  
+  /* Expanded sidebar */
+  .sidebar-layout {
+    grid-template-columns: 300px 1fr;
+  }
+}
+
+/* ========================================
+   Landscape Orientation Support
+   ======================================== */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Reduce vertical spacing in landscape on small screens */
+  :root {
+    --spacing-md: 0.75rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+  }
+  
+  /* Compact header in landscape */
+  .header {
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+  
+  /* Adjust modal height */
+  .modal {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ========================================
+   Responsive Typography
+   ======================================== */
+.text-responsive {
+  font-size: clamp(var(--font-sm), 2.5vw, var(--font-base));
+}
+
+.heading-responsive {
+  font-size: clamp(var(--font-xl), 5vw, var(--font-3xl));
+}
+
+/* ========================================
+   Responsive Images
+   ======================================== */
+img, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ========================================
+   Accessibility Enhancements
+   ======================================== */
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #4169E1;
+  outline-offset: 2px;
+}
+
+/* Skip to content link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #000;
+  color: white;
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-decoration: none;
+  z-index: 9999;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+   Print Styles
+   ======================================== */
+@media print {
+  /* Hide navigation and controls for print */
+  .mobile-nav,
+  .desktop-nav,
+  .no-print,
+  button,
+  .btn {
+    display: none !important;
+  }
+  
+  /* Ensure content prints properly */
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  
+  /* Break pages appropriately */
+  .page-break {
+    page-break-before: always;
+  }
+  
+  /* Ensure tables don't break across pages */
+  table {
+    page-break-inside: avoid;
+  }
+}
+
+/* ========================================
+   Responsive Utilities
+   ======================================== */
+/* Visibility utilities */
+.show-mobile { display: none; }
+.show-tablet { display: none; }
+.show-desktop { display: none; }
+
+@media (max-width: 767px) {
+  .show-mobile { display: block; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .show-tablet { display: block; }
+}
+
+@media (min-width: 1024px) {
+  .show-desktop { display: block; }
+}
+
+/* Spacing utilities */
+.p-responsive {
+  padding: var(--spacing-sm);
+}
+
+@media (min-width: 768px) {
+  .p-responsive {
+    padding: var(--spacing-md);
+  }
+}
+
+@media (min-width: 1024px) {
+  .p-responsive {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* ========================================
+   Component-Specific Responsive Styles
+   ======================================== */
+/* Current Speaker Display */
+.current-speaker {
+  font-size: clamp(2rem, 8vw, 4rem);
+  text-align: center;
+  padding: var(--spacing-lg);
+}
+
+/* Next Speaker Display */
+.next-speaker {
+  font-size: clamp(1.5rem, 5vw, 2.5rem);
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* Following Speaker Display */
+.following-speaker {
+  font-size: clamp(1rem, 3vw, 1.5rem);
+  text-align: center;
+  padding: var(--spacing-sm);
+}
+
+/* Admin tabs responsive */
+@media (max-width: 767px) {
+  .admin-tabs {
+    display: flex;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  
+  .admin-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .admin-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    padding: var(--spacing-sm) var(--spacing-md);
+  }
+}
+
+/* Timer display responsive */
+.timer-display {
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Queue position cards */
+@media (max-width: 767px) {
+  .queue-position-card {
+    padding: var(--spacing-xs);
+    font-size: var(--font-sm);
+  }
+  
+  .queue-position-number {
+    font-size: var(--font-lg);
+  }
+}
+
+/* Delegate form responsive */
+@media (max-width: 767px) {
+  .delegate-form input,
+  .delegate-form select,
+  .delegate-form textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

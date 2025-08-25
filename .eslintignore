@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+
+# Config files
+*.config.js
+.eslintrc.js
+
+# Generated files
+*.generated.ts
+*.generated.js
+
+# Database
+database/
+
+# Docker
+docker/
+
+# Task Master
+.taskmaster/
