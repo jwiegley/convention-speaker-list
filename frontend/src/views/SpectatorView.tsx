@@ -51,19 +51,8 @@ export function SpectatorView() {
 
   return (
     <div className="h-screen bg-gray-900 text-white p-2 flex flex-col overflow-hidden">
-      {/* Header */}
-      <div className="mb-2 flex-shrink-0">
-        <h1 className="text-3xl font-bold text-center">Convention Speaker Queue</h1>
-        <div className="flex justify-center mt-1">
-          <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/20 text-green-400">
-            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-            <span className="text-xs font-medium">Live Updates</span>
-          </div>
-        </div>
-      </div>
-
       {/* Top Section - Current and Next Speakers */}
-      <div className="grid grid-cols-2 gap-2 mb-2 flex-shrink-0" style={{ height: '28vh' }}>
+      <div className="grid grid-cols-2 gap-2 mb-2 flex-shrink-0" style={{ height: '32vh' }}>
         {/* Left: Current Speaker */}
         <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-4 flex flex-col justify-center shadow-2xl">
           <h2 className="text-xl font-bold mb-2 text-green-100">Currently Speaking</h2>

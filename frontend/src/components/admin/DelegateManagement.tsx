@@ -40,7 +40,7 @@ export function DelegateManagement() {
   const [editingDelegate, setEditingDelegate] = useState<Delegate | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'name' | 'number' | 'country'>('number');
+  const [sortBy, setSortBy] = useState<'name' | 'number'>('number');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [showImportDialog, setShowImportDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -57,10 +57,10 @@ export function DelegateManagement() {
   } = useForm<DelegateFormData>({
     resolver: zodResolver(delegateSchema),
     defaultValues: {
-      has_spoken: false,
       gender: 'Male',
       age_group: '30-39',
       race_orientation: 'Majority',
+      has_spoken: false,
     },
   });
 
@@ -202,8 +202,9 @@ export function DelegateManagement() {
     setEditingDelegate(delegate);
     setValue('name', delegate.name);
     setValue('number', delegate.number);
-    setValue('country', delegate.country);
     setValue('gender', delegate.gender);
+    setValue('age_group', delegate.age_group);
+    setValue('race_orientation', delegate.race_orientation);
     setValue('has_spoken', delegate.has_spoken);
   };
 
@@ -453,7 +454,6 @@ export function DelegateManagement() {
           >
             <option value="number">Sort by Number</option>
             <option value="name">Sort by Name</option>
-            <option value="age_group">Sort by Age Group</option>
           </select>
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -547,11 +547,12 @@ export function DelegateManagement() {
                       </td>
                       <td className="px-4 py-3 text-sm">{delegate.number}</td>
                       <td className="px-4 py-3 text-sm font-medium">{delegate.name}</td>
-                      <td className="px-4 py-3 text-sm">{delegate.country}</td>
                       <td className="px-4 py-3 text-sm">{delegate.gender}</td>
+                      <td className="px-4 py-3 text-sm">{delegate.age_group}</td>
+                      <td className="px-4 py-3 text-sm">{delegate.race_orientation}</td>
                       <td className="px-4 py-3 text-sm">
                         {delegate.has_spoken ? (
-                          <span className="text-green-600">Yes ({delegate.speaking_count})</span>
+                          <span className="text-green-600">Yes</span>
                         ) : (
                           <span className="text-gray-400">No</span>
                         )}
