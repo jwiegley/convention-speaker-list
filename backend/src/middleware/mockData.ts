@@ -69,6 +69,49 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
     return res.json(mockDelegates);
   }
 
+  // Mock CSV import endpoint - POST
+  if (req.path === '/api/v1/delegates/import' && req.method === 'POST') {
+    // Simple CSV parsing simulation
+    // In production, you'd use a proper CSV parser like csv-parse
+    try {
+      // For mock purposes, we'll just add a few sample delegates
+      const newDelegates = [
+        {
+          id: String(Date.now() + 1),
+          name: 'Sample Import 1',
+          number: Math.floor(Math.random() * 1000) + 200,
+          gender: 'Male',
+          age_group: '40-49',
+          race_orientation: 'Majority',
+          has_spoken: false,
+          total_speaking_time: 0,
+        },
+        {
+          id: String(Date.now() + 2),
+          name: 'Sample Import 2',
+          number: Math.floor(Math.random() * 1000) + 200,
+          gender: 'Female',
+          age_group: '30-39',
+          race_orientation: 'Minority',
+          has_spoken: false,
+          total_speaking_time: 0,
+        },
+      ];
+      
+      mockDelegates.push(...newDelegates);
+      return res.json({ 
+        success: true, 
+        count: newDelegates.length,
+        message: `Imported ${newDelegates.length} delegates successfully`
+      });
+    } catch (error) {
+      return res.status(400).json({ 
+        error: 'Failed to parse CSV',
+        message: 'Please ensure CSV format matches: name, number, gender, age_group, race_orientation, has_spoken'
+      });
+    }
+  }
+
   // Mock create delegate endpoint - POST
   if (req.path === '/api/v1/delegates' && req.method === 'POST') {
     const { name, number, gender, age_group, race_orientation, has_spoken } = req.body;

@@ -1,0 +1,11 @@
+name,number,gender,age_group,race_orientation,has_spoken
+John Smith,101,Male,30-39,Majority,false
+Jane Doe,102,Female,40-49,Minority,false
+Robert Johnson,103,Male,50-59,Majority,true
+Emily Davis,104,Female,20-29,Minority,false
+Michael Brown,105,Male,60-69,Majority,false
+Sarah Wilson,106,Female,30-39,Minority,false
+David Lee,107,Male,40-49,Majority,false
+Lisa Anderson,108,Female,50-59,Minority,false
+James Martinez,109,Male,30-39,Minority,false
+Jennifer Taylor,110,Female,40-49,Majority,false

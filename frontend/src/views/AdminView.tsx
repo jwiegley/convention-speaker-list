@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { DelegateManagement } from '../components/admin/DelegateManagement';
 import { QueueControl } from '../components/admin/QueueControl';
 import { TimerSettings } from '../components/admin/TimerSettings';
-import { SessionManagement } from '../components/admin/SessionManagement';
+import { Analytics } from '../components/admin/Analytics';
 import { useWebSocket } from '../hooks/useWebSocket';
 
-type TabType = 'delegates' | 'queue' | 'timer' | 'session';
+type TabType = 'delegates' | 'queue' | 'timer' | 'analytics';
 
 export function AdminView() {
   const [activeTab, setActiveTab] = useState<TabType>('queue');
@@ -15,7 +15,7 @@ export function AdminView() {
     { id: 'queue', label: 'Queue Control' },
     { id: 'delegates', label: 'Delegates' },
     { id: 'timer', label: 'Timer' },
-    { id: 'session', label: 'Session' },
+    { id: 'analytics', label: 'Analytics' },
   ];
 
   return (
@@ -68,7 +68,7 @@ export function AdminView() {
           {activeTab === 'queue' && <QueueControl />}
           {activeTab === 'delegates' && <DelegateManagement />}
           {activeTab === 'timer' && <TimerSettings />}
-          {activeTab === 'session' && <SessionManagement />}
+          {activeTab === 'analytics' && <Analytics />}
         </div>
       </main>
     </div>

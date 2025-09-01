@@ -663,7 +663,14 @@ export function DelegateManagement() {
                 </button>
               </div>
               <div className="mt-4 text-sm text-gray-600">
-                <p>CSV Format: name, number, country, gender (M/F/O), has_spoken (true/false)</p>
+                <p className="mb-2">CSV Format: name, number, gender (Male/Female/Other), age_group (e.g., 30-39), race_orientation (Majority/Minority), has_spoken (true/false)</p>
+                <a 
+                  href="/sample-delegates.csv" 
+                  download="sample-delegates.csv"
+                  className="text-blue-600 hover:underline"
+                >
+                  Download sample CSV template
+                </a>
               </div>
               <div className="flex gap-2 justify-end mt-4">
                 <button

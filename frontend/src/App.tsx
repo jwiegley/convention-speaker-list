@@ -32,7 +32,6 @@ function AppContent() {
           <Route path="/" element={<SpectatorView />} />
           <Route path="/admin" element={<AdminView />} />
           <Route path="/test" element={<TestView />} />
-          <Route path="/analytics" element={<div className="p-8 text-center text-gray-600">Analytics view coming soon</div>} />
         </Routes>
       </main>
     </div>
