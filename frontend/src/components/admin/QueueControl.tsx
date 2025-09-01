@@ -65,6 +65,13 @@ export function QueueControl() {
       refetchQueue();
       setDelegateNumber('');
     },
+    onError: (error: any) => {
+      if (error.response?.status === 400 && error.response?.data?.error === 'Duplicate entry') {
+        alert('This delegate is already in the queue or currently speaking');
+      } else {
+        alert('Failed to add delegate to queue');
+      }
+    },
   });
 
   // Advance queue mutation

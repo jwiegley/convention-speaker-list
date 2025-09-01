@@ -127,6 +127,19 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
     const { delegateId } = req.body;
     const delegate = mockDelegates.find(d => d.id === delegateId);
     if (delegate) {
+      // Check if delegate is already in the queue
+      const alreadyInQueue = mockQueue.some(item => item.delegate.id === delegateId);
+      
+      // Check if delegate is currently speaking
+      const isCurrentlySpeaking = currentSpeaker && currentSpeaker.delegate.id === delegateId;
+      
+      if (alreadyInQueue || isCurrentlySpeaking) {
+        return res.status(400).json({ 
+          error: 'Duplicate entry',
+          message: 'This delegate is already in the queue or currently speaking'
+        });
+      }
+      
       const queueItem = {
         id: String(Date.now()),
         delegate,
@@ -183,6 +196,7 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
 
   // Undo advance endpoint - POST
   if (req.path === '/api/v1/queue/undo' && req.method === 'POST') {
+    // Case 1: There's history - restore the last completed speaker
     if (speakerHistory.length > 0) {
       const lastSpeaker = speakerHistory.shift();
       
@@ -225,9 +239,40 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
       });
     }
     
+    // Case 2: No history but there's a current speaker - move them back to queue
+    if (currentSpeaker) {
+      // Revert the has_spoken status for the current speaker
+      const delegateIndex = mockDelegates.findIndex(d => d.id === currentSpeaker.delegate.id);
+      if (delegateIndex !== -1) {
+        mockDelegates[delegateIndex].has_spoken = false;
+      }
+      
+      // Move current speaker back to front of queue
+      mockQueue.unshift({
+        ...currentSpeaker,
+        position: 1
+      });
+      delete currentSpeaker.startedAt;
+      
+      // Clear current speaker
+      currentSpeaker = null;
+      
+      // Update queue positions
+      mockQueue.forEach((item, index) => {
+        item.position = index + 1;
+      });
+      
+      return res.json({
+        success: true,
+        currentSpeaker,
+        queue: mockQueue,
+        history: speakerHistory
+      });
+    }
+    
     return res.json({
       success: false,
-      message: 'No history to undo'
+      message: 'Nothing to undo'
     });
   }
 
