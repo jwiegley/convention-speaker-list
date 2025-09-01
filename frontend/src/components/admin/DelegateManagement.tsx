@@ -10,9 +10,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 const delegateSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   number: z.number().min(1, 'Number must be positive').max(999, 'Number must be less than 1000'),
-  country: z.string().min(2, 'Country is required'),
-  gender: z.enum(['M', 'F', 'O'], {
+  gender: z.enum(['Male', 'Female', 'Other'], {
     errorMap: () => ({ message: 'Please select a gender' })
+  }),
+  age_group: z.enum(['Under 20', '20-29', '30-39', '40-49', '50-59', '60-69', '70+'], {
+    errorMap: () => ({ message: 'Please select an age group' })
+  }),
+  race_orientation: z.enum(['Majority', 'Minority'], {
+    errorMap: () => ({ message: 'Please select race orientation' })
   }),
   has_spoken: z.boolean().default(false),
 });
@@ -53,7 +58,9 @@ export function DelegateManagement() {
     resolver: zodResolver(delegateSchema),
     defaultValues: {
       has_spoken: false,
-      gender: 'M',
+      gender: 'Male',
+      age_group: '30-39',
+      race_orientation: 'Majority',
     },
   });
 
@@ -256,8 +263,9 @@ export function DelegateManagement() {
       const search = searchTerm.toLowerCase();
       return (
         delegate.name.toLowerCase().includes(search) ||
-        delegate.country.toLowerCase().includes(search) ||
-        delegate.number.toString().includes(search)
+        delegate.number.toString().includes(search) ||
+        (delegate.age_group && delegate.age_group.toLowerCase().includes(search)) ||
+        (delegate.race_orientation && delegate.race_orientation.toLowerCase().includes(search))
       );
     })
     .sort((a: Delegate, b: Delegate) => {
@@ -342,32 +350,55 @@ export function DelegateManagement() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Country *
-            </label>
-            <input
-              {...register('country')}
-              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter country"
-            />
-            {errors.country && (
-              <p className="text-red-500 text-sm mt-1">{errors.country.message}</p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
               Gender *
             </label>
             <select
               {...register('gender')}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="M">Male</option>
-              <option value="F">Female</option>
-              <option value="O">Other</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
             </select>
             {errors.gender && (
               <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Age Group *
+            </label>
+            <select
+              {...register('age_group')}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Under 20">Under 20</option>
+              <option value="20-29">20-29</option>
+              <option value="30-39">30-39</option>
+              <option value="40-49">40-49</option>
+              <option value="50-59">50-59</option>
+              <option value="60-69">60-69</option>
+              <option value="70+">70+</option>
+            </select>
+            {errors.age_group && (
+              <p className="text-red-500 text-sm mt-1">{errors.age_group.message}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Race Orientation *
+            </label>
+            <select
+              {...register('race_orientation')}
+              className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="Majority">Majority</option>
+              <option value="Minority">Minority</option>
+            </select>
+            {errors.race_orientation && (
+              <p className="text-red-500 text-sm mt-1">{errors.race_orientation.message}</p>
             )}
           </div>
 
@@ -422,7 +453,7 @@ export function DelegateManagement() {
           >
             <option value="number">Sort by Number</option>
             <option value="name">Sort by Name</option>
-            <option value="country">Sort by Country</option>
+            <option value="age_group">Sort by Age Group</option>
           </select>
           <button
             onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
@@ -473,10 +504,13 @@ export function DelegateManagement() {
                     Name
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Country
+                    Gender
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Gender
+                    Age Group
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                    Race
                   </th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     Spoken

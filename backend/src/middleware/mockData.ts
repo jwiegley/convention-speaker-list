@@ -2,9 +2,9 @@ import { Request, Response, NextFunction } from 'express';
 
 // Mock delegate data
 let mockDelegates = [
-  { id: '1', name: 'John Doe', number: 101, country: 'USA', gender: 'Male', has_spoken: false },
-  { id: '2', name: 'Jane Smith', number: 102, country: 'Canada', gender: 'Female', has_spoken: false },
-  { id: '3', name: 'Bob Johnson', number: 103, country: 'UK', gender: 'Male', has_spoken: true },
+  { id: '1', name: 'John Doe', number: 101, gender: 'Male', age_group: '30-39', race_orientation: 'Majority', has_spoken: false },
+  { id: '2', name: 'Jane Smith', number: 102, gender: 'Female', age_group: '40-49', race_orientation: 'Minority', has_spoken: false },
+  { id: '3', name: 'Bob Johnson', number: 103, gender: 'Male', age_group: '50-59', race_orientation: 'Majority', has_spoken: true },
 ];
 
 // Mock queue data with history
@@ -65,13 +65,14 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
 
   // Mock create delegate endpoint - POST
   if (req.path === '/api/v1/delegates' && req.method === 'POST') {
-    const { name, number, country, gender, has_spoken } = req.body;
+    const { name, number, gender, age_group, race_orientation, has_spoken } = req.body;
     const newDelegate = {
       id: String(Date.now()),
       name: name || '',
       number: number || Math.floor(Math.random() * 1000),
-      country: country || '',
       gender: gender || 'Other',
+      age_group: age_group || '30-39',
+      race_orientation: race_orientation || 'Majority',
       has_spoken: has_spoken || false,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

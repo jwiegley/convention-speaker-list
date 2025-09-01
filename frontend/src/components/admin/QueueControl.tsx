@@ -124,11 +124,15 @@ export function QueueControl() {
   };
 
   const handleClearQueue = () => {
-    if (window.confirm('Are you sure you want to clear the entire queue?')) {
-      // Clear all items one by one
+    if (window.confirm('Are you sure you want to clear everything (queue and current speaker)?')) {
+      // Clear all items in queue
       queueData?.queue.forEach(item => {
         removeFromQueueMutation.mutate(item.id);
       });
+      // If there's a current speaker, advance to clear them too
+      if (queueData?.currentSpeaker) {
+        advanceQueueMutation.mutate();
+      }
     }
   };
 
@@ -164,24 +168,25 @@ export function QueueControl() {
         <div className="flex gap-3">
           <button
             onClick={handleAdvanceQueue}
-            disabled={!queueData?.queue.length || advanceQueueMutation.isPending}
+            disabled={(!queueData?.queue.length && !queueData?.currentSpeaker) || advanceQueueMutation.isPending}
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+            title={queueData?.queue.length ? "Move to next speaker" : "Clear current speaker"}
           >
-            Advance Queue
+            {queueData?.queue.length ? "Advance Queue" : "Clear Speaker"}
           </button>
           <button
             onClick={handleUndoAdvance}
-            disabled={!queueData?.history.length || undoAdvanceMutation.isPending}
+            disabled={(!queueData?.history.length && !queueData?.currentSpeaker) || undoAdvanceMutation.isPending}
             className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
           >
             Undo Advance
           </button>
           <button
             onClick={handleClearQueue}
-            disabled={!queueData?.queue.length}
+            disabled={!queueData?.queue.length && !queueData?.currentSpeaker}
             className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
           >
-            Clear Queue
+            Clear All
           </button>
         </div>
       </div>

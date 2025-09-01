@@ -29,8 +29,7 @@ function AppContent() {
       <ResponsiveNav />
       <main id="main-content" className="container mx-auto px-4 py-8">
         <Routes>
-          <Route path="/" element={<Navigate to="/spectator" replace />} />
-          <Route path="/spectator" element={<SpectatorView />} />
+          <Route path="/" element={<SpectatorView />} />
           <Route path="/admin" element={<AdminView />} />
           <Route path="/test" element={<TestView />} />
           <Route path="/analytics" element={<div className="p-8 text-center text-gray-600">Analytics view coming soon</div>} />
