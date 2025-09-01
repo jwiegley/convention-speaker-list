@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,7 +26,9 @@ interface Delegate extends DelegateFormData {
   speaking_count: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+import { config } from '../../utils/config';
+
+const API_BASE_URL = config.api.baseUrl;
 
 export function DelegateManagement() {
   const [selectedDelegates, setSelectedDelegates] = useState<Set<string>>(new Set());
@@ -193,7 +195,7 @@ export function DelegateManagement() {
     if (selectedDelegates.size === filteredDelegates.length) {
       setSelectedDelegates(new Set());
     } else {
-      setSelectedDelegates(new Set(filteredDelegates.map(d => d.id)));
+      setSelectedDelegates(new Set(filteredDelegates.map((d: Delegate) => d.id)));
     }
   };
 

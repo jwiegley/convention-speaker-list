@@ -1,10 +1,16 @@
 import { Pool, PoolClient } from 'pg';
 import { getDatabaseConfig } from './config';
+import { sqlitePool } from './sqlite-config';
 
 // Create a singleton pool instance
 let pool: Pool | null = null;
 
 export const getPool = (): Pool => {
+  // Use SQLite for development without PostgreSQL
+  if (process.env.NODE_ENV === 'development' && !process.env.USE_POSTGRES) {
+    return sqlitePool as any;
+  }
+  
   if (!pool) {
     pool = new Pool(getDatabaseConfig());
     

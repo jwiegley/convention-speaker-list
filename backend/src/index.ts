@@ -13,6 +13,7 @@ import { helmetMiddleware, apiLimiter } from './middleware/security';
 import { errorHandler, notFoundHandler, handleUncaughtException, handleUnhandledRejection } from './middleware/errorHandler';
 import { correlationId, requestLogger } from './middleware/requestLogger';
 import { httpsRedirect, securityHeaders, expectCT } from './middleware/httpsRedirect';
+import { useMockData } from './middleware/mockData';
 import logger from './utils/logger';
 
 // Import routes
@@ -97,6 +98,9 @@ app.get('/api/v1', (_req: Request, res: Response) => {
     secure: httpsConfig.enabled
   });
 });
+
+// Use mock data in development
+app.use(useMockData);
 
 // API Routes
 app.use('/api/v1/auth', authRoutes);

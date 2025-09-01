@@ -20,7 +20,7 @@ import {
   gracefulShutdown as scalingGracefulShutdown,
   connectionRateLimiter 
 } from './scaling';
-import { getRedisService } from '../services/redisService';
+import { redisService } from '../services/redisService';
 
 export type SocketServer = Server<
   ClientToServerEvents,
@@ -58,7 +58,6 @@ export async function initializeSocketServer(httpServer: HttpServer): Promise<So
   >(httpServer, socketConfig);
 
   // Setup Redis adapter for scaling if Redis is available
-  const redisService = getRedisService();
   if (redisService.isReady()) {
     try {
       const pubClient = redisService.getClient()!;

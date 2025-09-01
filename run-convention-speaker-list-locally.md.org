@@ -1,0 +1,92 @@
+To run the Convention Speaker List Manager locally, follow these steps:
+
+Quick Start
+
+1. Install Dependencies
+
+​# Install all dependencies for the monorepo npm install
+
+2. [@2] Set Up Environment Variables
+
+Create .env files in the backend directory:
+
+​# Copy the example environment file cp backend/.env.example backend/.env
+
+Edit backend/.env with your values: # Database
+DATABASE_URL=postgresql://convention_user:convention_pass@localhost:5432/convention
+_speaker_db DB_HOST=localhost DB_PORT=5432 DB_NAME=convention_speaker_db
+DB_USER=convention_user DB_PASSWORD=convention_pass
+
+​# Redis REDIS_URL=redis://localhost:6379
+
+​# Security JWT_SECRET=your-secret-key-here-change-in-production
+ENCRYPTION_KEY=your-32-character-encryption-key-here
+
+​# Server PORT=3000 NODE_ENV=development
+
+3. [@3] Start Docker Services (PostgreSQL & Redis)
+
+​# Start the database and Redis docker-compose up -d
+
+4. [@4] Run Database Migrations
+
+​# Create database and run migrations npm run db:create npm run
+db:migrate
+
+​# (Optional) Seed with test data npm run db:seed
+
+5. [@5] Start the Application
+
+Open two terminal windows:
+
+Terminal 1 - Backend: npm run dev:backend
+
+Terminal 2 - Frontend: npm run dev:frontend
+
+The application will be available at: - Frontend:
+http://localhost:5173 - Backend API: http://localhost:3000 - WebSocket:
+ws://localhost:3000
+
+Alternative: Run Everything with Docker
+
+​# Build and start all services docker-compose -f docker-compose.yml up
+--build
+
+Default Access
+
+- Admin Panel: http://localhost:5173/admin
+  - Default PIN: 1234 (configured in backend)
+- Spectator View: http://localhost:5173/spectator
+
+Verify Installation
+
+Check that everything is running: # Check backend health curl
+http://localhost:3000/health
+
+​# Check database connection npm run db:status
+
+Troubleshooting
+
+If you encounter issues:
+
+1. Port conflicts: Ensure ports 3000, 5173, 5432, and 6379 are available
+2. Database connection: Verify PostgreSQL is running: docker ps
+3. Missing dependencies: Run npm install in the root directory
+4. Migration errors: Drop and recreate database: npm run db:reset
+
+Available Scripts
+
+​# Development npm run dev # Run both frontend and backend npm run
+dev:backend # Backend only npm run dev:frontend # Frontend only
+
+​# Database npm run db:create # Create database npm run db:migrate # Run
+migrations npm run db:seed # Seed test data npm run db:reset # Reset
+database
+
+​# Testing npm run test # Run all tests npm run test:backend # Backend
+tests only
+
+​# Building npm run build # Build all packages
+
+The application is now running locally with full functionality including
+real-time updates, queue management, and demographic tracking!

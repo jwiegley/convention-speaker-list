@@ -120,7 +120,7 @@ export class ExportService {
           d.id as delegate_id,
           d.name as delegate_name,
           d.delegate_number,
-          ${options.includeDemo graphics ? `
+          ${options.includeDemographics ? `
             d.gender,
             d.age_group as age_range,
             d.race,
@@ -160,7 +160,7 @@ export class ExportService {
 
     query += `
         GROUP BY d.id, d.name, d.delegate_number
-        ${options.includeDemo graphics ? ', d.gender, d.age_group, d.race' : ''}
+        ${options.includeDemographics ? ', d.gender, d.age_group, d.race' : ''}
       ),
       total_delegates AS (
         SELECT COUNT(DISTINCT id) as total FROM delegates
@@ -304,7 +304,7 @@ export class ExportService {
         sh.duration as duration_seconds,
         q.position as queue_position,
         EXTRACT(EPOCH FROM (sh.start_time - q.joined_at)) as wait_time_seconds
-        ${options.includeDemo graphics ? `,
+        ${options.includeDemographics ? `,
         d.gender,
         d.age_group as age_range,
         d.race
@@ -458,7 +458,7 @@ export class ExportService {
       'delegate_number'
     ];
 
-    if (options.includeDemo graphics) {
+    if (options.includeDemographics) {
       fields.push('gender', 'age_range', 'race');
     }
 
@@ -512,7 +512,7 @@ export class ExportService {
       'wait_time_seconds'
     ];
 
-    if (options.includeDemo graphics) {
+    if (options.includeDemographics) {
       fields.push('gender', 'age_range', 'race');
     }
 

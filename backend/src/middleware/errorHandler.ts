@@ -6,7 +6,7 @@ export const errorHandler = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) => {
   if (err instanceof AppError) {
     // Operational errors
@@ -17,11 +17,12 @@ export const errorHandler = (
       ip: req.ip,
     });
     
-    return res.status(err.statusCode).json({
+    res.status(err.statusCode).json({
       status: 'error',
       message: err.message,
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
+    return;
   }
   
   // Programming or unknown errors
