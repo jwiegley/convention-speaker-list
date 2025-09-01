@@ -68,12 +68,11 @@ export function SpectatorView() {
         <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-2xl p-8 flex flex-col justify-center shadow-2xl">
           <h2 className="text-3xl font-bold mb-4 text-green-100">Currently Speaking</h2>
           {currentSpeaker ? (
-            <div className="bg-white/10 backdrop-blur rounded-xl p-6">
+            <div className={`backdrop-blur rounded-xl p-6 ${
+              currentSpeaker.delegate.has_spoken ? 'bg-blue-500/20' : 'bg-yellow-500/20'
+            }`}>
               <div className="text-6xl font-bold mb-2">#{currentSpeaker.delegate.number}</div>
               <div className="text-3xl">{currentSpeaker.delegate.name}</div>
-              <div className="text-xl mt-2 text-green-200">
-                {currentSpeaker.delegate.gender} • {currentSpeaker.delegate.age_group} • {currentSpeaker.delegate.race_orientation}
-              </div>
             </div>
           ) : (
             <div className="text-2xl text-green-200">No current speaker</div>
@@ -86,16 +85,13 @@ export function SpectatorView() {
           <div className="space-y-4">
             {nextTwo.length > 0 ? (
               nextTwo.map((item, index) => (
-                <div key={item.id} className="bg-white/10 backdrop-blur rounded-xl p-4">
+                <div key={item.id} className={`backdrop-blur rounded-xl p-4 ${
+                  item.delegate.has_spoken ? 'bg-blue-500/20' : 'bg-yellow-500/20'
+                }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="text-4xl font-bold">#{item.delegate.number}</div>
-                      <div>
-                        <div className="text-2xl">{item.delegate.name}</div>
-                        <div className="text-sm text-blue-200">
-                          {item.delegate.gender} • {item.delegate.age_group}
-                        </div>
-                      </div>
+                      <div className="text-2xl">{item.delegate.name}</div>
                     </div>
                     <div className="text-3xl font-bold text-blue-300">
                       {index === 0 ? 'NEXT' : '2nd'}
@@ -120,9 +116,13 @@ export function SpectatorView() {
           <div className="space-y-2">
             {nextTen.length > 0 ? (
               nextTen.map((item, index) => (
-                <div key={item.id} className="bg-gray-700 rounded-lg p-3 flex items-center justify-between hover:bg-gray-600 transition-colors">
+                <div key={item.id} className={`rounded-lg p-3 flex items-center justify-between transition-colors ${
+                  item.delegate.has_spoken 
+                    ? 'bg-blue-700/50 hover:bg-blue-600/50' 
+                    : 'bg-yellow-700/50 hover:bg-yellow-600/50'
+                }`}>
                   <div className="flex items-center gap-3">
-                    <div className="text-xl font-bold text-gray-300">#{item.delegate.number}</div>
+                    <div className="text-xl font-bold">#{item.delegate.number}</div>
                     <div className="text-lg">{item.delegate.name}</div>
                   </div>
                   <div className="text-sm text-gray-400">Position {index + 3}</div>
@@ -142,7 +142,11 @@ export function SpectatorView() {
           <div className="grid grid-cols-4 gap-2">
             {remaining.length > 0 ? (
               remaining.map((item) => (
-                <div key={item.id} className="bg-gray-700 rounded-lg p-3 text-center hover:bg-gray-600 transition-colors">
+                <div key={item.id} className={`rounded-lg p-3 text-center transition-colors ${
+                  item.delegate.has_spoken 
+                    ? 'bg-blue-700/50 hover:bg-blue-600/50' 
+                    : 'bg-yellow-700/50 hover:bg-yellow-600/50'
+                }`}>
                   <div className="text-lg font-bold">#{item.delegate.number}</div>
                 </div>
               ))

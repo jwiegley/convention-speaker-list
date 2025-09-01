@@ -147,6 +147,12 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
   // Advance queue endpoint - POST
   if (req.path === '/api/v1/queue/advance' && req.method === 'POST') {
     if (currentSpeaker) {
+      // Mark the current speaker as having spoken
+      const delegateIndex = mockDelegates.findIndex(d => d.id === currentSpeaker.delegate.id);
+      if (delegateIndex !== -1) {
+        mockDelegates[delegateIndex].has_spoken = true;
+      }
+      
       speakerHistory.unshift({
         ...currentSpeaker,
         endedAt: new Date().toISOString()
@@ -179,6 +185,16 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
   if (req.path === '/api/v1/queue/undo' && req.method === 'POST') {
     if (speakerHistory.length > 0) {
       const lastSpeaker = speakerHistory.shift();
+      
+      // Revert the has_spoken status for the speaker being moved back
+      const delegateIndex = mockDelegates.findIndex(d => d.id === lastSpeaker.delegate.id);
+      if (delegateIndex !== -1) {
+        // Check if this delegate has other entries in history
+        const otherAppearances = speakerHistory.some(h => h.delegate.id === lastSpeaker.delegate.id);
+        if (!otherAppearances) {
+          mockDelegates[delegateIndex].has_spoken = false;
+        }
+      }
       
       // Move current speaker back to front of queue if exists
       if (currentSpeaker) {
