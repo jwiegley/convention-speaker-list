@@ -2,15 +2,21 @@ import { Request, Response, NextFunction } from 'express';
 
 // Mock delegate data
 let mockDelegates = [
-  { id: '1', name: 'John Doe', number: 101, gender: 'Male', age_group: '30-39', race_orientation: 'Majority', has_spoken: false },
-  { id: '2', name: 'Jane Smith', number: 102, gender: 'Female', age_group: '40-49', race_orientation: 'Minority', has_spoken: false },
-  { id: '3', name: 'Bob Johnson', number: 103, gender: 'Male', age_group: '50-59', race_orientation: 'Majority', has_spoken: true },
+  { id: '1', name: 'John Doe', number: 101, gender: 'Male', age_group: '30-39', race_orientation: 'Majority', has_spoken: false, total_speaking_time: 0 },
+  { id: '2', name: 'Jane Smith', number: 102, gender: 'Female', age_group: '40-49', race_orientation: 'Minority', has_spoken: false, total_speaking_time: 0 },
+  { id: '3', name: 'Bob Johnson', number: 103, gender: 'Male', age_group: '50-59', race_orientation: 'Majority', has_spoken: true, total_speaking_time: 145 },
 ];
 
 // Mock queue data with history
 let mockQueue: any[] = [];
 let speakerHistory: any[] = [];
 let currentSpeaker: any = null;
+
+// Timer settings
+let timerSettings = {
+  warningTime: 90,
+  limitTime: 120
+};
 
 // Mock data middleware for development without database
 export const useMockData = (req: Request, res: Response, next: NextFunction) => {
@@ -74,6 +80,7 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
       age_group: age_group || '30-39',
       race_orientation: race_orientation || 'Majority',
       has_spoken: has_spoken || false,
+      total_speaking_time: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
@@ -160,15 +167,21 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
   // Advance queue endpoint - POST
   if (req.path === '/api/v1/queue/advance' && req.method === 'POST') {
     if (currentSpeaker) {
-      // Mark the current speaker as having spoken
+      // Calculate speaking time and update delegate
+      const endTime = new Date();
+      const startTime = new Date(currentSpeaker.startedAt);
+      const speakingSeconds = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
+      
       const delegateIndex = mockDelegates.findIndex(d => d.id === currentSpeaker.delegate.id);
       if (delegateIndex !== -1) {
         mockDelegates[delegateIndex].has_spoken = true;
+        mockDelegates[delegateIndex].total_speaking_time += speakingSeconds;
       }
       
       speakerHistory.unshift({
         ...currentSpeaker,
-        endedAt: new Date().toISOString()
+        endedAt: endTime.toISOString(),
+        speakingTime: speakingSeconds
       });
     }
     
@@ -294,6 +307,19 @@ export const useMockData = (req: Request, res: Response, next: NextFunction) => 
     }
     
     return res.status(404).json({ error: 'Queue item not found' });
+  }
+
+  // Get timer settings endpoint - GET
+  if (req.path === '/api/v1/settings/timer' && req.method === 'GET') {
+    return res.json(timerSettings);
+  }
+
+  // Update timer settings endpoint - PUT
+  if (req.path === '/api/v1/settings/timer' && req.method === 'PUT') {
+    const { warningTime, limitTime } = req.body;
+    if (warningTime !== undefined) timerSettings.warningTime = warningTime;
+    if (limitTime !== undefined) timerSettings.limitTime = limitTime;
+    return res.json(timerSettings);
   }
 
   next();

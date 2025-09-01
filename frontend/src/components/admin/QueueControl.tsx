@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { API_BASE_URL } from '@/utils/config';
@@ -33,8 +33,14 @@ interface QueueData {
   };
 }
 
+interface TimerConfig {
+  warningTime: number;
+  limitTime: number;
+}
+
 export function QueueControl() {
   const [delegateNumber, setDelegateNumber] = useState('');
+  const [speakingTime, setSpeakingTime] = useState<number>(0);
 
   // Fetch delegates
   const { data: delegates = [] } = useQuery<Delegate[]>({
@@ -53,6 +59,15 @@ export function QueueControl() {
       return response.data;
     },
     refetchInterval: 2000, // Auto-refresh every 2 seconds
+  });
+
+  // Fetch timer settings
+  const { data: timerSettings } = useQuery<TimerConfig>({
+    queryKey: ['timerSettings'],
+    queryFn: async () => {
+      const response = await axios.get(`${API_BASE_URL}/settings/timer`);
+      return response.data;
+    },
   });
 
   // Add to queue mutation
@@ -143,6 +158,35 @@ export function QueueControl() {
     }
   };
 
+  // Timer effect
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    
+    if (queueData?.currentSpeaker?.startedAt) {
+      // Calculate initial elapsed time
+      const startTime = new Date(queueData.currentSpeaker.startedAt).getTime();
+      setSpeakingTime(Math.floor((Date.now() - startTime) / 1000));
+      
+      // Update every second
+      interval = setInterval(() => {
+        setSpeakingTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
+    } else {
+      setSpeakingTime(0);
+    }
+    
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [queueData?.currentSpeaker?.startedAt]);
+
+  // Format time display
+  const formatTime = (seconds: number): string => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="queue-control space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Queue Control</h2>
@@ -211,8 +255,17 @@ export function QueueControl() {
                 {queueData.currentSpeaker.delegate.country} • {queueData.currentSpeaker.delegate.gender}
               </p>
             </div>
-            <div className="text-sm text-gray-500">
-              Started: {new Date(queueData.currentSpeaker.startedAt!).toLocaleTimeString()}
+            <div className="text-right">
+              <div className={`text-2xl font-bold ${
+                speakingTime >= (timerSettings?.limitTime || 120) ? 'text-red-600' : 
+                speakingTime >= (timerSettings?.warningTime || 90) ? 'text-yellow-600' : 
+                'text-green-600'
+              }`}>
+                {formatTime(speakingTime)}
+              </div>
+              <div className="text-xs text-gray-500">
+                Started: {new Date(queueData.currentSpeaker.startedAt!).toLocaleTimeString()}
+              </div>
             </div>
           </div>
         </div>

@@ -57,11 +57,13 @@ export function SpectatorView() {
         <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-4 flex flex-col justify-center shadow-2xl">
           <h2 className="text-xl font-bold mb-2 text-green-100">Currently Speaking</h2>
           {currentSpeaker ? (
-            <div className={`rounded-lg p-3 ${
-              currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
-            }`}>
-              <div className="text-3xl font-bold">#{currentSpeaker.delegate.number}</div>
-              <div className="text-xl">{currentSpeaker.delegate.name}</div>
+            <div>
+              <div className={`rounded-lg p-3 ${
+                currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
+              }`}>
+                <div className="text-3xl font-bold">#{currentSpeaker.delegate.number}</div>
+                <div className="text-xl">{currentSpeaker.delegate.name}</div>
+              </div>
             </div>
           ) : (
             <div className="text-xl text-green-200">No current speaker</div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DelegateManagement } from '../components/admin/DelegateManagement';
 import { QueueControl } from '../components/admin/QueueControl';
-import { TimerControl } from '../components/admin/TimerControl';
+import { TimerSettings } from '../components/admin/TimerSettings';
 import { SessionManagement } from '../components/admin/SessionManagement';
 import { useWebSocket } from '../hooks/useWebSocket';
 
@@ -67,7 +67,7 @@ export function AdminView() {
         <div className="bg-white rounded-lg shadow p-6">
           {activeTab === 'queue' && <QueueControl />}
           {activeTab === 'delegates' && <DelegateManagement />}
-          {activeTab === 'timer' && <TimerControl />}
+          {activeTab === 'timer' && <TimerSettings />}
           {activeTab === 'session' && <SessionManagement />}
         </div>
       </main>
