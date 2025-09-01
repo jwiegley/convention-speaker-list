@@ -1,11 +1,13 @@
 // Environment configuration
 export const config = {
   api: {
-    baseUrl: import.meta.env.VITE_API_URL || 'http://localhost:3001/api/v1',
+    // Use relative URL in development to work with Vite proxy
+    baseUrl: import.meta.env.VITE_API_URL || '/api/v1',
     timeout: 30000,
   },
   ws: {
-    url: import.meta.env.VITE_WS_URL || 'ws://localhost:3001',
+    // Use relative path for WebSocket to go through Vite proxy
+    url: import.meta.env.VITE_WS_URL || '',
     reconnectDelay: 3000,
     maxReconnectAttempts: 5,
   },

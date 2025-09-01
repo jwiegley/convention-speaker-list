@@ -61,18 +61,39 @@ export function DelegateManagement() {
   const { data: delegates = [], isLoading, error } = useQuery({
     queryKey: ['delegates'],
     queryFn: async () => {
-      const response = await axios.get(`${API_BASE_URL}/delegates`);
-      return response.data;
+      try {
+        console.log('API_BASE_URL:', API_BASE_URL);
+        console.log('Full URL:', `${API_BASE_URL}/delegates`);
+        console.log('Window location:', window.location.origin);
+        
+        const response = await axios.get(`${API_BASE_URL}/delegates`);
+        console.log('Delegates response:', response.data);
+        return response.data;
+      } catch (err: any) {
+        console.error('Error fetching delegates:', err);
+        console.error('Error details:', {
+          message: err.message,
+          code: err.code,
+          response: err.response,
+          request: err.request,
+          config: err.config
+        });
+        throw err;
+      }
     },
   });
 
   // Create delegate mutation
   const createDelegateMutation = useMutation({
     mutationFn: async (data: DelegateFormData) => {
+      console.log('Creating delegate with data:', data);
+      console.log('POST URL:', `${API_BASE_URL}/delegates`);
       const response = await axios.post(`${API_BASE_URL}/delegates`, data);
+      console.log('Create response:', response.data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Delegate created successfully:', data);
       queryClient.invalidateQueries({ queryKey: ['delegates'] });
       reset();
       showNotification('Delegate created successfully', 'success');
@@ -432,7 +453,9 @@ export function DelegateManagement() {
         {isLoading ? (
           <div className="p-8 text-center">Loading delegates...</div>
         ) : error ? (
-          <div className="p-8 text-center text-red-500">Error loading delegates</div>
+          <div className="p-8 text-center text-red-500">
+            Error loading delegates: {error instanceof Error ? error.message : 'Unknown error'}
+          </div>
         ) : filteredDelegates.length === 0 ? (
           <div className="p-8 text-center text-gray-500">No delegates found</div>
         ) : (
