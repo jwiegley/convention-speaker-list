@@ -54,46 +54,44 @@ export function SpectatorView() {
       {/* Top Section - Current and Next Speakers */}
       <div className="grid grid-cols-2 gap-2 mb-2 flex-shrink-0" style={{ height: '32vh' }}>
         {/* Left: Current Speaker */}
-        <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-4 flex flex-col justify-center shadow-2xl">
-          <h2 className="text-xl font-bold mb-2 text-green-100">Currently Speaking</h2>
-          {currentSpeaker ? (
-            <div>
-              <div className={`rounded-lg p-3 ${
+        <div className="bg-gradient-to-br from-green-600 to-green-800 rounded-xl p-4 flex flex-col shadow-2xl">
+          <h2 className="text-xl font-bold mb-2 text-green-100 flex-shrink-0">Currently Speaking</h2>
+          <div className="flex-grow flex items-center justify-center">
+            {currentSpeaker ? (
+              <div className={`rounded-lg p-6 w-full ${
                 currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
               }`}>
-                <div className="text-3xl font-bold">#{currentSpeaker.delegate.number}</div>
-                <div className="text-xl">{currentSpeaker.delegate.name}</div>
+                <div className="text-6xl font-bold text-center mb-2">#{currentSpeaker.delegate.number}</div>
+                <div className="text-4xl text-center font-semibold">{currentSpeaker.delegate.name}</div>
               </div>
-            </div>
-          ) : (
-            <div className="text-xl text-green-200">No current speaker</div>
-          )}
+            ) : (
+              <div className="text-3xl text-green-200 text-center">No current speaker</div>
+            )}
+          </div>
         </div>
 
         {/* Right: Next Two Speakers */}
-        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-4 shadow-2xl">
-          <h2 className="text-xl font-bold mb-2 text-blue-100">Next Speakers</h2>
-          <div className="space-y-2">
+        <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-4 flex flex-col shadow-2xl">
+          <h2 className="text-xl font-bold mb-2 text-blue-100 flex-shrink-0">Next Speakers</h2>
+          <div className="flex-grow flex flex-col justify-center gap-2">
             {nextTwo.length > 0 ? (
               nextTwo.map((item, index) => (
-                <div key={item.id} className={`rounded-lg p-2 ${
+                <div key={item.id} className={`rounded-lg p-4 flex-1 flex items-center ${
                   item.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
-                }`}>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="text-2xl font-bold">#{item.delegate.number}</div>
-                      <div className="text-lg">{item.delegate.name}</div>
-                    </div>
-                    <div className={`text-xl font-bold ${
-                      item.delegate.has_spoken ? 'text-white' : 'text-black'
-                    }`}>
-                      {index === 0 ? 'NEXT' : '2nd'}
-                    </div>
+                }`} style={{ minHeight: nextTwo.length === 1 ? '50%' : 'auto' }}>
+                  <div className="flex-grow">
+                    <div className="text-5xl font-bold mb-1">#{item.delegate.number}</div>
+                    <div className="text-3xl font-semibold">{item.delegate.name}</div>
+                  </div>
+                  <div className={`text-2xl font-bold px-4 ${
+                    item.delegate.has_spoken ? 'text-white' : 'text-black'
+                  }`}>
+                    {index === 0 ? 'NEXT' : '2nd'}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="text-lg text-blue-200">No speakers in queue</div>
+              <div className="text-2xl text-blue-200 text-center">No speakers in queue</div>
             )}
           </div>
         </div>
@@ -106,19 +104,19 @@ export function SpectatorView() {
           <h3 className="text-lg font-bold mb-2 text-gray-200 flex-shrink-0">
             Next 10 Speakers
           </h3>
-          <div className="space-y-1 overflow-y-auto flex-grow">
+          <div className="space-y-1.5 overflow-y-auto flex-grow">
             {nextTen.length > 0 ? (
               nextTen.map((item, index) => (
-                <div key={item.id} className={`rounded p-1 flex items-center justify-between transition-colors ${
+                <div key={item.id} className={`rounded p-2 flex items-center justify-between transition-colors ${
                   item.delegate.has_spoken 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-yellow-400 text-black hover:bg-yellow-500'
                 }`}>
-                  <div className="flex items-center gap-1">
-                    <div className="text-sm font-bold">#{item.delegate.number}</div>
-                    <div className="text-sm">{item.delegate.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-lg font-bold">#{item.delegate.number}</div>
+                    <div className="text-base">{item.delegate.name}</div>
                   </div>
-                  <div className={`text-xs ${item.delegate.has_spoken ? 'text-gray-200' : 'text-gray-700'}`}>{index + 3}</div>
+                  <div className={`text-sm font-semibold ${item.delegate.has_spoken ? 'text-gray-200' : 'text-gray-700'}`}>{index + 3}</div>
                 </div>
               ))
             ) : (
@@ -132,15 +130,15 @@ export function SpectatorView() {
           <h3 className="text-lg font-bold mb-2 text-gray-200 flex-shrink-0">
             Remaining Queue ({remaining.length} speakers)
           </h3>
-          <div className="grid grid-cols-5 gap-1 overflow-y-auto flex-grow">
+          <div className="grid grid-cols-4 gap-1.5 overflow-y-auto flex-grow content-start">
             {remaining.length > 0 ? (
               remaining.map((item) => (
-                <div key={item.id} className={`rounded p-1 text-center transition-colors ${
+                <div key={item.id} className={`rounded p-2 flex items-center justify-center transition-colors ${
                   item.delegate.has_spoken 
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-yellow-400 text-black hover:bg-yellow-500'
-                }`}>
-                  <div className="text-xs font-bold">#{item.delegate.number}</div>
+                }`} style={{ aspectRatio: '1 / 1' }}>
+                  <div className="text-base font-bold">#{item.delegate.number}</div>
                 </div>
               ))
             ) : (
