@@ -58,11 +58,11 @@ export function SpectatorView() {
           <h2 className="text-xl font-bold mb-2 text-green-100 flex-shrink-0">Currently Speaking</h2>
           <div className="flex-grow flex items-center justify-center">
             {currentSpeaker ? (
-              <div className={`rounded-lg p-6 w-full ${
+              <div className={`rounded-lg p-4 w-full h-full flex flex-col justify-center ${
                 currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
               }`}>
-                <div className="text-6xl font-bold text-center mb-2">#{currentSpeaker.delegate.number}</div>
-                <div className="text-4xl text-center font-semibold">{currentSpeaker.delegate.name}</div>
+                <div className="text-7xl font-bold text-center mb-2">#{currentSpeaker.delegate.number}</div>
+                <div className="text-5xl text-center font-semibold">{currentSpeaker.delegate.name}</div>
               </div>
             ) : (
               <div className="text-3xl text-green-200 text-center">No current speaker</div>

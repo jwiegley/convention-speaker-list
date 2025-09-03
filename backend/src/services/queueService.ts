@@ -70,14 +70,14 @@ export class QueueService implements IQueueService {
   
   /**
    * Calculate queue position for a delegate based on priority rules
-   * First-time speakers get priority
+   * Delegates who haven't spoken get priority, up to 4th position maximum
    */
   async calculateQueuePosition(delegateId: string, sessionId: string): Promise<number> {
     const client = await getClient();
     try {
       // Check if delegate has spoken before
       const speakHistory = await client.query(
-        'SELECT has_spoken_count FROM delegates WHERE id = $1',
+        'SELECT has_spoken, has_spoken_count FROM delegates WHERE id = $1',
         [delegateId]
       );
       
@@ -85,11 +85,12 @@ export class QueueService implements IQueueService {
         throw new Error('Delegate not found');
       }
       
+      const hasSpoken = speakHistory.rows[0].has_spoken || false;
       const hasSpokenCount = speakHistory.rows[0].has_spoken_count || 0;
       
       // Get current queue state
       const queueState = await client.query(
-        `SELECT q.*, d.has_spoken_count 
+        `SELECT q.*, d.has_spoken, d.has_spoken_count 
          FROM queue q
          JOIN delegates d ON q.delegate_id = d.id
          WHERE q.session_id = $1 AND q.status = 'waiting'
@@ -102,22 +103,35 @@ export class QueueService implements IQueueService {
         return 1;
       }
       
-      // First-time speakers get priority
-      if (hasSpokenCount === 0) {
-        // Find the last first-time speaker in the queue
-        let lastFirstTimeSpeakerPos = 0;
-        for (const row of queueState.rows) {
-          if (row.has_spoken_count === 0) {
-            lastFirstTimeSpeakerPos = row.position;
+      // Delegates who haven't spoken get priority
+      if (!hasSpoken || hasSpokenCount === 0) {
+        // Find the last delegate who hasn't spoken, up to position 3 (0-indexed)
+        let targetPosition = 0;
+        let maxPriorityPosition = Math.min(3, queueState.rows.length); // Max position 4 (1-indexed)
+        
+        for (let i = 0; i < maxPriorityPosition; i++) {
+          const row = queueState.rows[i];
+          if (!row.has_spoken || row.has_spoken_count === 0) {
+            targetPosition = i + 1; // Convert to 1-indexed position
           } else {
+            // Found a delegate who has spoken, insert before them
             break;
           }
         }
         
-        // Insert after the last first-time speaker
-        return lastFirstTimeSpeakerPos + 1;
+        // If we haven't found a position yet, check if we should insert at position 4
+        if (targetPosition === 0 && queueState.rows.length >= 3) {
+          // Check if delegate at position 3 (index 2) has spoken
+          if (queueState.rows[2].has_spoken && queueState.rows[2].has_spoken_count > 0) {
+            // Insert at position 4
+            return 4;
+          }
+        }
+        
+        // Insert after the last non-speaker we found, or at position 1 if none found
+        return targetPosition + 1;
       } else {
-        // Regular speakers go to the end
+        // Delegates who have spoken go to the end
         const lastPosition = queueState.rows[queueState.rows.length - 1].position;
         return lastPosition + 1;
       }
