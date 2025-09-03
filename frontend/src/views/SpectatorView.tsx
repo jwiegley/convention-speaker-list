@@ -61,7 +61,7 @@ export function SpectatorView() {
               <div className={`rounded-lg p-4 w-full h-full flex flex-col justify-center ${
                 currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
               }`}>
-                <div className="text-9xl font-bold text-center mb-2" style={{ fontSize: '10rem', lineHeight: '1' }}>#{currentSpeaker.delegate.number}</div>
+                <div className="text-9xl font-bold text-center mb-2" style={{ fontSize: '10rem', lineHeight: '1' }}>{currentSpeaker.delegate.number}</div>
                 <div className="text-5xl text-center font-semibold">{currentSpeaker.delegate.name}</div>
               </div>
             ) : (
@@ -80,7 +80,7 @@ export function SpectatorView() {
                   item.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
                 }`} style={{ minHeight: nextTwo.length === 1 ? '50%' : 'auto' }}>
                   <div className="flex-grow">
-                    <div className="text-5xl font-bold mb-1">#{item.delegate.number}</div>
+                    <div className="text-5xl font-bold mb-1">{item.delegate.number}</div>
                     <div className="text-3xl font-semibold">{item.delegate.name}</div>
                   </div>
                   <div className={`text-2xl font-bold px-4 ${
@@ -113,7 +113,7 @@ export function SpectatorView() {
                     : 'bg-yellow-400 text-black hover:bg-yellow-500'
                 }`}>
                   <div className="flex items-center gap-2">
-                    <div className="text-lg font-bold">#{item.delegate.number}</div>
+                    <div className="text-lg font-bold">{item.delegate.number}</div>
                     <div className="text-base">{item.delegate.name}</div>
                   </div>
                   <div className={`text-sm font-semibold ${item.delegate.has_spoken ? 'text-gray-200' : 'text-gray-700'}`}>{index + 3}</div>
@@ -138,7 +138,7 @@ export function SpectatorView() {
                     ? 'bg-blue-600 text-white hover:bg-blue-700' 
                     : 'bg-yellow-400 text-black hover:bg-yellow-500'
                 }`} style={{ aspectRatio: '1 / 1' }}>
-                  <div className="text-base font-bold">#{item.delegate.number}</div>
+                  <div className="text-base font-bold">{item.delegate.number}</div>
                 </div>
               ))
             ) : (
