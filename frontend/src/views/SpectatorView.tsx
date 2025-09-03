@@ -61,7 +61,7 @@ export function SpectatorView() {
               <div className={`rounded-lg p-4 w-full h-full flex flex-col justify-center ${
                 currentSpeaker.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
               }`}>
-                <div className="text-7xl font-bold text-center mb-2">#{currentSpeaker.delegate.number}</div>
+                <div className="text-9xl font-bold text-center mb-2" style={{ fontSize: '10rem', lineHeight: '1' }}>#{currentSpeaker.delegate.number}</div>
                 <div className="text-5xl text-center font-semibold">{currentSpeaker.delegate.name}</div>
               </div>
             ) : (
