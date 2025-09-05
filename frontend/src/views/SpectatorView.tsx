@@ -73,12 +73,16 @@ export function SpectatorView() {
         {/* Right: Next Two Speakers */}
         <div className="bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-4 flex flex-col shadow-2xl">
           <h2 className="text-xl font-bold mb-2 text-blue-100 flex-shrink-0">Next Speakers</h2>
-          <div className="flex-grow flex flex-col justify-center gap-2">
+          <div className={`flex-grow flex flex-col gap-2 ${nextTwo.length === 1 ? 'justify-start' : 'justify-center'}`}>
             {nextTwo.length > 0 ? (
               nextTwo.map((item, index) => (
-                <div key={item.id} className={`rounded-lg p-4 flex-1 flex items-center ${
+                <div key={item.id} className={`rounded-lg p-4 flex items-center ${
+                  nextTwo.length === 1 ? '' : 'flex-1'
+                } ${
                   item.delegate.has_spoken ? 'bg-blue-600 text-white' : 'bg-yellow-400 text-black'
-                }`} style={{ minHeight: nextTwo.length === 1 ? '50%' : 'auto' }}>
+                }`} style={{ 
+                  height: nextTwo.length === 1 ? '50%' : 'auto'
+                }}>
                   <div className="flex-grow">
                     <div className="text-5xl font-bold mb-1">{item.delegate.number}</div>
                     <div className="text-3xl font-semibold">{item.delegate.name}</div>
