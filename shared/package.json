@@ -5,8 +5,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
+    "build": "npx --package=typescript tsc",
+    "watch": "npx --package=typescript tsc --watch",
     "clean": "rm -rf dist",
     "test": "jest",
     "lint": "eslint src/**/*.ts",

@@ -34,7 +34,7 @@ router.post('/bulk', bulkOperationLimiter, (req, res, next) => {
     if (err) {
       return res.status(400).json({ error: handleUploadError(err) });
     }
-    next();
+    return next();
   });
 }, delegateController.bulkImport);
 router.put('/:id', 

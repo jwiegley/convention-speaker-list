@@ -12,7 +12,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U convention_user -d convention_db"]
       interval: 10s
@@ -41,6 +40,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: development
     container_name: convention-app
     depends_on:
       postgres:
@@ -69,7 +69,7 @@ services:
       - /app/shared/node_modules
     networks:
       - convention-network
-    command: npm run dev
+    command: sh -c "cd /app/backend && /app/node_modules/.bin/nodemon & cd /app/frontend && /app/node_modules/.bin/vite --host 0.0.0.0 --port 5173 & wait"
 
 volumes:
   postgres_data:

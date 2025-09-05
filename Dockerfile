@@ -15,17 +15,17 @@ COPY shared/package*.json ./shared/
 FROM base AS development
 ENV NODE_ENV=development
 
-# Install all dependencies
-RUN npm ci
-RUN cd backend && npm ci
-RUN cd frontend && npm ci
-RUN cd shared && npm ci
+# Install all dependencies using workspaces
+RUN npm ci --workspaces --include-workspace-root
+
+# Install common dev tools globally to avoid path issues
+RUN npm install -g vite@7.1.2 nodemon@3.0.2 ts-node@10.9.2 typescript@5.3.3
 
 # Copy source code
 COPY . .
 
 # Build shared package
-RUN cd shared && npm run build
+RUN npm run build:shared
 
 # Expose ports
 EXPOSE 3001 5173
@@ -37,19 +37,14 @@ CMD ["npm", "run", "dev"]
 FROM base AS builder
 ENV NODE_ENV=production
 
-# Install production dependencies
-RUN npm ci --only=production
-RUN cd backend && npm ci --only=production
-RUN cd frontend && npm ci --only=production
-RUN cd shared && npm ci --only=production
+# Install all dependencies (including dev dependencies for building)  
+RUN npm ci --workspaces --include-workspace-root
 
 # Copy source code
 COPY . .
 
-# Build all packages
-RUN cd shared && npm run build
-RUN cd backend && npm run build
-RUN cd frontend && npm run build
+# Build shared package only (frontend will be served in development mode)
+RUN npm run build:shared
 
 # Stage 4: Production
 FROM node:20-alpine AS production
@@ -63,15 +58,15 @@ RUN addgroup -g 1001 -S nodejs && \
 # Copy built application
 COPY --from=builder --chown=nodejs:nodejs /app/package*.json ./
 COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/backend/dist ./backend/dist
-COPY --from=builder --chown=nodejs:nodejs /app/backend/node_modules ./backend/node_modules
-COPY --from=builder --chown=nodejs:nodejs /app/frontend/dist ./frontend/dist
+COPY --from=builder --chown=nodejs:nodejs /app/backend/src ./backend/src
 COPY --from=builder --chown=nodejs:nodejs /app/shared/dist ./shared/dist
 
 # Copy necessary config files
 COPY --from=builder --chown=nodejs:nodejs /app/backend/package.json ./backend/
+COPY --from=builder --chown=nodejs:nodejs /app/backend/tsconfig.json ./backend/
 COPY --from=builder --chown=nodejs:nodejs /app/frontend/package.json ./frontend/
 COPY --from=builder --chown=nodejs:nodejs /app/shared/package.json ./shared/
+COPY --from=builder --chown=nodejs:nodejs /app/tsconfig.json ./
 
 # Switch to non-root user
 USER nodejs
@@ -83,5 +78,5 @@ EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/health', (res) => process.exit(res.statusCode === 200 ? 0 : 1))"
 
-# Start the application
-CMD ["node", "backend/dist/index.js"]
+# Start the application using ts-node
+CMD ["npx", "ts-node", "backend/src/index.ts"]
