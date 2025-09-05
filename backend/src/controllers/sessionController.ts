@@ -36,7 +36,7 @@ export class SessionController {
         );
         
         await client.query('COMMIT');
-        res.status(201).json(result.rows[0]);
+        return res.status(201).json(result.rows[0]);
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -45,7 +45,7 @@ export class SessionController {
       }
     } catch (error) {
       console.error('Error starting session:', error);
-      res.status(500).json({ error: 'Failed to start session' });
+      return res.status(500).json({ error: 'Failed to start session' });
     }
   }
   
@@ -68,10 +68,10 @@ export class SessionController {
         });
       }
       
-      res.json(result.rows[0]);
+      return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error ending session:', error);
-      res.status(500).json({ error: 'Failed to end session' });
+      return res.status(500).json({ error: 'Failed to end session' });
     }
   }
   
@@ -92,10 +92,10 @@ export class SessionController {
         return res.status(404).json({ error: 'No active session found' });
       }
       
-      res.json(result.rows[0]);
+      return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error fetching current session:', error);
-      res.status(500).json({ error: 'Failed to fetch current session' });
+      return res.status(500).json({ error: 'Failed to fetch current session' });
     }
   }
   
@@ -155,7 +155,7 @@ export class SessionController {
         params
       );
       
-      res.json({
+      return res.json({
         data: result.rows,
         pagination: {
           page,
@@ -166,7 +166,7 @@ export class SessionController {
       });
     } catch (error) {
       console.error('Error fetching sessions:', error);
-      res.status(500).json({ error: 'Failed to fetch sessions' });
+      return res.status(500).json({ error: 'Failed to fetch sessions' });
     }
   }
   
@@ -201,13 +201,13 @@ export class SessionController {
         [id]
       );
       
-      res.json({
+      return res.json({
         ...sessionResult.rows[0],
         speakers: speakersResult.rows
       });
     } catch (error) {
       console.error('Error fetching session:', error);
-      res.status(500).json({ error: 'Failed to fetch session' });
+      return res.status(500).json({ error: 'Failed to fetch session' });
     }
   }
 }

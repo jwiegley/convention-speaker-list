@@ -43,10 +43,10 @@ export class QueueController {
         completed: result.rows.filter(r => r.status === 'completed')
       };
       
-      res.json(queue);
+      return res.json(queue);
     } catch (error) {
       console.error('Error fetching queue:', error);
-      res.status(500).json({ error: 'Failed to fetch queue' });
+      return res.status(500).json({ error: 'Failed to fetch queue' });
     }
   }
   
@@ -133,7 +133,7 @@ export class QueueController {
           [result.rows[0].id]
         );
         
-        res.status(201).json(fullInfo.rows[0]);
+        return res.status(201).json(fullInfo.rows[0]);
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -142,7 +142,7 @@ export class QueueController {
       }
     } catch (error) {
       console.error('Error adding to queue:', error);
-      res.status(500).json({ error: 'Failed to add to queue' });
+      return res.status(500).json({ error: 'Failed to add to queue' });
     }
   }
   
@@ -166,10 +166,10 @@ export class QueueController {
       }
       
       const result = await queueService.advanceQueue(activeSessionId);
-      res.json(result);
+      return res.json(result);
     } catch (error) {
       console.error('Error advancing queue:', error);
-      res.status(500).json({ error: 'Failed to advance queue' });
+      return res.status(500).json({ error: 'Failed to advance queue' });
     }
   }
   
@@ -204,7 +204,7 @@ export class QueueController {
         }
         
         await client.query('COMMIT');
-        res.json({ message: 'Removed from queue successfully' });
+        return res.json({ message: 'Removed from queue successfully' });
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -213,7 +213,7 @@ export class QueueController {
       }
     } catch (error) {
       console.error('Error removing from queue:', error);
-      res.status(500).json({ error: 'Failed to remove from queue' });
+      return res.status(500).json({ error: 'Failed to remove from queue' });
     }
   }
   
@@ -239,7 +239,7 @@ export class QueueController {
         }
         
         await client.query('COMMIT');
-        res.json({ message: 'Queue reordered successfully' });
+        return res.json({ message: 'Queue reordered successfully' });
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -248,7 +248,7 @@ export class QueueController {
       }
     } catch (error) {
       console.error('Error reordering queue:', error);
-      res.status(500).json({ error: 'Failed to reorder queue' });
+      return res.status(500).json({ error: 'Failed to reorder queue' });
     }
   }
 }

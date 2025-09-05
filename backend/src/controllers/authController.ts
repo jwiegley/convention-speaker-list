@@ -25,7 +25,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Bad request',
         message: 'Username and password are required'
       });
@@ -40,7 +40,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     if (userResult.rows.length === 0) {
       logger.warn(`Login attempt for non-existent user: ${username}`);
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Authentication failed',
         message: 'Invalid username or password'
       });
@@ -54,7 +54,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     if (!isPasswordValid) {
       logger.warn(`Failed login attempt for user: ${username}`);
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Authentication failed',
         message: 'Invalid username or password'
       });
@@ -110,7 +110,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
     logger.info(`User logged in: ${username} (${user.role})`);
 
-    res.json({
+    return res.json({
       success: true,
       user: {
         id: user.id,
@@ -125,7 +125,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     logger.error('Login error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred during login'
     });
@@ -139,7 +139,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 export async function logout(req: Request, res: Response): Promise<void> {
   try {
     if (!req.user || !req.user.sessionId) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Bad request',
         message: 'No active session found'
       });
@@ -168,13 +168,13 @@ export async function logout(req: Request, res: Response): Promise<void> {
 
     logger.info(`User logged out: ${req.user.userId}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Logged out successfully'
     });
   } catch (error) {
     logger.error('Logout error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred during logout'
     });
@@ -190,7 +190,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Bad request',
         message: 'Refresh token is required'
       });
@@ -201,7 +201,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     const decoded = verifyRefreshToken(refreshToken);
 
     if (!decoded) {
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Invalid token',
         message: 'Refresh token verification failed'
       });
@@ -219,7 +219,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     );
 
     if (sessionResult.rows.length === 0) {
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Invalid session',
         message: 'Session not found or expired'
       });
@@ -245,7 +245,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
 
     logger.info(`Token refreshed for user: ${decoded.userId}`);
 
-    res.json({
+    return res.json({
       success: true,
       tokens: {
         accessToken: tokens.accessToken,
@@ -254,7 +254,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
     });
   } catch (error) {
     logger.error('Token refresh error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred during token refresh'
     });
@@ -268,7 +268,7 @@ export async function refreshToken(req: Request, res: Response): Promise<void> {
 export async function changePassword(req: Request, res: Response): Promise<void> {
   try {
     if (!req.user) {
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Authentication required',
         message: 'User not authenticated'
       });
@@ -278,7 +278,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Bad request',
         message: 'Current password and new password are required'
       });
@@ -288,7 +288,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     // Validate new password strength
     const validation = validatePasswordStrength(newPassword);
     if (!validation.isValid) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Invalid password',
         message: validation.message
       });
@@ -302,7 +302,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     );
 
     if (userResult.rows.length === 0) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'User not found',
         message: 'User account not found'
       });
@@ -313,7 +313,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
     const isPasswordValid = await comparePassword(currentPassword, userResult.rows[0].password_hash);
 
     if (!isPasswordValid) {
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Authentication failed',
         message: 'Current password is incorrect'
       });
@@ -351,13 +351,13 @@ export async function changePassword(req: Request, res: Response): Promise<void>
 
     logger.info(`Password changed for user: ${req.user.userId}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Password changed successfully'
     });
   } catch (error) {
     logger.error('Change password error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred while changing password'
     });
@@ -371,7 +371,7 @@ export async function changePassword(req: Request, res: Response): Promise<void>
 export async function getCurrentUser(req: Request, res: Response): Promise<void> {
   try {
     if (!req.user) {
-      res.status(401).json({
+      return res.status(401).json({
         error: 'Authentication required',
         message: 'User not authenticated'
       });
@@ -385,7 +385,7 @@ export async function getCurrentUser(req: Request, res: Response): Promise<void>
     );
 
     if (userResult.rows.length === 0) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'User not found',
         message: 'User account not found'
       });
@@ -394,7 +394,7 @@ export async function getCurrentUser(req: Request, res: Response): Promise<void>
 
     const user = userResult.rows[0];
 
-    res.json({
+    return res.json({
       user: {
         id: user.id,
         username: user.username,
@@ -405,7 +405,7 @@ export async function getCurrentUser(req: Request, res: Response): Promise<void>
     });
   } catch (error) {
     logger.error('Get current user error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred while fetching user information'
     });
@@ -420,7 +420,7 @@ export async function listActiveSessions(req: Request, res: Response): Promise<v
   try {
     // This endpoint should be admin-only
     if (!req.user || req.user.role !== 'admin') {
-      res.status(403).json({
+      return res.status(403).json({
         error: 'Access denied',
         message: 'Admin role required'
       });
@@ -445,7 +445,7 @@ export async function listActiveSessions(req: Request, res: Response): Promise<v
        ORDER BY s.last_activity DESC`
     );
 
-    res.json({
+    return res.json({
       sessions: sessionsResult.rows.map(session => ({
         id: session.id,
         userId: session.user_id,
@@ -460,7 +460,7 @@ export async function listActiveSessions(req: Request, res: Response): Promise<v
     });
   } catch (error) {
     logger.error('List sessions error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred while fetching sessions'
     });
@@ -475,7 +475,7 @@ export async function revokeSession(req: Request, res: Response): Promise<void> 
   try {
     // This endpoint should be admin-only
     if (!req.user || req.user.role !== 'admin') {
-      res.status(403).json({
+      return res.status(403).json({
         error: 'Access denied',
         message: 'Admin role required'
       });
@@ -485,7 +485,7 @@ export async function revokeSession(req: Request, res: Response): Promise<void> 
     const { sessionId } = req.params;
 
     if (!sessionId) {
-      res.status(400).json({
+      return res.status(400).json({
         error: 'Bad request',
         message: 'Session ID is required'
       });
@@ -499,7 +499,7 @@ export async function revokeSession(req: Request, res: Response): Promise<void> 
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({
+      return res.status(404).json({
         error: 'Not found',
         message: 'Session not found'
       });
@@ -523,13 +523,13 @@ export async function revokeSession(req: Request, res: Response): Promise<void> 
 
     logger.info(`Session revoked by admin: ${sessionId}`);
 
-    res.json({
+    return res.json({
       success: true,
       message: 'Session revoked successfully'
     });
   } catch (error) {
     logger.error('Revoke session error:', error);
-    res.status(500).json({
+    return res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred while revoking session'
     });

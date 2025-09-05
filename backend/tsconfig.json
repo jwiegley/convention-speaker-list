@@ -11,7 +11,12 @@
     "noImplicitAny": false,
     "strictNullChecks": false,
     "noUnusedLocals": false,
-    "noUnusedParameters": false
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "moduleResolution": "node",
+    "strict": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],

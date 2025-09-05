@@ -81,10 +81,10 @@ export class DelegateController {
         return res.status(404).json({ error: 'Delegate not found' });
       }
       
-      res.json(result.rows[0]);
+      return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error fetching delegate:', error);
-      res.status(500).json({ error: 'Failed to fetch delegate' });
+      return res.status(500).json({ error: 'Failed to fetch delegate' });
     }
   }
   
@@ -127,13 +127,13 @@ export class DelegateController {
         ]
       );
       
-      res.status(201).json(result.rows[0]);
+      return res.status(201).json(result.rows[0]);
     } catch (error: any) {
       console.error('Error creating delegate:', error);
       if (error.code === '23505') { // Unique constraint violation
-        res.status(409).json({ error: 'Delegate with this number already exists' });
+        return res.status(409).json({ error: 'Delegate with this number already exists' });
       } else {
-        res.status(500).json({ error: 'Failed to create delegate' });
+        return res.status(500).json({ error: 'Failed to create delegate' });
       }
     }
   }
@@ -174,10 +174,10 @@ export class DelegateController {
         return res.status(404).json({ error: 'Delegate not found' });
       }
       
-      res.json(result.rows[0]);
+      return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error updating delegate:', error);
-      res.status(500).json({ error: 'Failed to update delegate' });
+      return res.status(500).json({ error: 'Failed to update delegate' });
     }
   }
   
@@ -208,7 +208,7 @@ export class DelegateController {
         }
         
         await client.query('COMMIT');
-        res.json({ message: 'Delegate deleted successfully', delegate: result.rows[0] });
+        return res.json({ message: 'Delegate deleted successfully', delegate: result.rows[0] });
       } catch (error) {
         await client.query('ROLLBACK');
         throw error;
@@ -217,7 +217,7 @@ export class DelegateController {
       }
     } catch (error) {
       console.error('Error deleting delegate:', error);
-      res.status(500).json({ error: 'Failed to delete delegate' });
+      return res.status(500).json({ error: 'Failed to delete delegate' });
     }
   }
   
@@ -326,7 +326,7 @@ export class DelegateController {
           
           await client.query('COMMIT');
           
-          res.json({
+          return res.json({
             success: true,
             summary: {
               total: records.length,
@@ -350,7 +350,7 @@ export class DelegateController {
       parser.end();
     } catch (error) {
       console.error('Error in bulk import:', error);
-      res.status(500).json({ error: 'Failed to import delegates' });
+      return res.status(500).json({ error: 'Failed to import delegates' });
     }
   }
   
