@@ -17,8 +17,13 @@
     "build:backend": "npm run build --workspace=backend",
     "build:frontend": "npm run build --workspace=frontend",
     "test": "npm run test --workspaces",
+    "test:coverage": "cd backend && npx jest --coverage --passWithNoTests && cd ../frontend && npx vitest run --coverage --passWithNoTests",
+    "test:fuzz": "cd backend && npx jest --testPathPattern=fuzz --passWithNoTests && cd ../frontend && npx vitest run --testPathPattern=fuzz --passWithNoTests",
     "lint": "npm run lint --workspaces",
+    "lint:strict": "npx eslint --max-warnings=0 \"backend/src/**/*.ts\" \"shared/src/**/*.ts\" && cd frontend && npx eslint --max-warnings=0 \"src/**/*.{ts,tsx}\"",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "npx tsc --noEmit -p backend/tsconfig.json && npx tsc --noEmit -p frontend/tsconfig.app.json && npx tsc --noEmit -p shared/tsconfig.json",
     "clean": "npm run clean --workspaces",
     "docker:up": "docker-compose up -d",
     "docker:down": "docker-compose down",
@@ -30,10 +35,12 @@
     "@types/node": "^20.11.0",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
+    "@vitest/coverage-v8": "^4.1.0",
     "concurrently": "^8.2.2",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
+    "fast-check": "^4.6.0",
     "prettier": "^3.2.4",
     "typescript": "^5.3.3"
   },
@@ -54,7 +61,7 @@
     "websocket"
   ],
   "author": "",
-  "license": "MIT",
+  "license": "BSD-3-Clause",
   "dependencies": {
     "@playwright/test": "^1.55.0"
   }

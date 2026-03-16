@@ -13,7 +13,15 @@ module.exports = {
     '!src/database/migrations/**',
   ],
   coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
+  coverageReporters: ['text', 'lcov', 'html', 'text-summary'],
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 0,
+      lines: 0,
+      statements: 0,
+    },
+  },
   moduleNameMapper: {
     '^@shared/(.*)$': '<rootDir>/../shared/src/$1',
   },
