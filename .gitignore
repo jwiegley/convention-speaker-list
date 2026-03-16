@@ -81,3 +81,13 @@ temp/
 # Package manager locks (we'll commit package-lock.json)
 # yarn.lock
 # pnpm-lock.yaml
+
+# Nix
+result
+result-*
+
+# Lefthook
+.lefthook-local/
+
+# Benchmark baselines
+benchmark-results/

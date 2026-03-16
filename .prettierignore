@@ -41,3 +41,10 @@ temp
 
 # Task Master files
 .taskmaster/tasks/tasks.json
+
+# Nix files (no Prettier parser)
+*.nix
+
+# Nix build output
+result
+result-*
