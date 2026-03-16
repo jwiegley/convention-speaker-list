@@ -1,178 +1,97 @@
-# Convention Speaker List Manager
+# Convention Speaker List
 
-A real-time queue management system for handling speaker questions at conventions, built with modern web technologies.
+I built this to manage the speaker queue at national conventions -- the kind
+where hundreds of delegates line up at microphones to ask questions or make
+points, and someone needs to keep track of who's next, how long they've been
+talking, and whether the demographics of the queue are representative.
 
-## Project Overview
+It's a real-time web application: a React frontend and an Express backend,
+connected via WebSockets so that everyone -- delegates, moderators, spectators
+-- sees the same state at the same time.
 
-The Convention Speaker List Manager is designed to streamline the Q&A process at conventions by providing a digital queue system for audience members who want to ask questions. The system supports multiple microphones, tracks speaker demographics, and provides real-time updates to all participants.
+## What it does
 
-## Tech Stack
+- Manages a digital queue for speakers across 2-4 microphone stations
+- Tracks speaking time with built-in timers
+- Optionally collects demographic data to help ensure balanced participation
+- Provides an admin dashboard for moderators to control the queue
+- Updates all connected clients in real time via Socket.io
+- Works on mobile devices and handles offline scenarios with a service worker
 
-- **Frontend**: React 18+ with TypeScript, Vite
-- **Backend**: Node.js, Express, TypeScript
-- **Database**: PostgreSQL
-- **Cache**: Redis
-- **Real-time**: Socket.io
-- **Containerization**: Docker & Docker Compose
+## Getting it running
 
-## Project Structure
+You'll need Node.js 18+ and Docker (for PostgreSQL and Redis in development).
 
-```
-convention-speaker-list/
-├── frontend/          # React frontend application
-│   ├── src/          # Source code
-│   ├── public/       # Static assets
-│   └── package.json  # Frontend dependencies
-├── backend/          # Express backend server
-│   ├── src/          # Source code
-│   ├── tests/        # Test files
-│   └── package.json  # Backend dependencies
-├── shared/           # Shared TypeScript types and utilities
-│   ├── src/          # Shared code
-│   └── package.json  # Shared dependencies
-├── database/         # Database scripts and migrations
-│   ├── migrations/   # SQL migration files
-│   └── seeds/        # Seed data
-├── docker/           # Docker configuration files
-│   └── ...          # Environment-specific configs
-├── docker-compose.yml     # Docker Compose configuration
-├── package.json          # Root workspace configuration
-├── tsconfig.json         # TypeScript configuration
-├── .eslintrc.js         # ESLint configuration
-├── prettier.config.js    # Prettier configuration
-└── .editorconfig        # Editor configuration
-```
-
-## Features
-
-- **Queue Management**: Digital queue system for managing speaker questions
-- **Multiple Microphones**: Support for 2-4 microphone stations
-- **Real-time Updates**: WebSocket-based live updates for all users
-- **Demographics Tracking**: Optional demographic data collection
-- **Timer System**: Built-in timer for managing speaking time
-- **Admin Dashboard**: Comprehensive admin interface for queue management
-- **Offline Support**: Service worker for offline functionality
-- **Mobile Responsive**: Full mobile device support
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and npm 9+
-- Docker and Docker Compose
-- PostgreSQL 14+ (via Docker)
-- Redis (via Docker)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/convention-speaker-list.git
-cd convention-speaker-list
-```
-
-2. Install dependencies:
 ```bash
 npm install
+cp .env.example .env    # then edit with your configuration
+npm run docker:up       # start database and cache
+npm run db:migrate      # run migrations
+npm run dev             # start frontend and backend
 ```
 
-3. Set up environment variables:
+The frontend runs at `http://localhost:5173`, the backend API at
+`http://localhost:3001`.
+
+## Project structure
+
+This is an npm workspace with three packages:
+
+- `frontend/` -- React 19 + TypeScript + Vite + Tailwind CSS
+- `backend/` -- Express + TypeScript + SQLite + Socket.io
+- `shared/` -- TypeScript types and utilities shared between the two
+
+## Development commands
+
 ```bash
-cp .env.example .env
-# Edit .env with your configuration
+npm run dev             # start frontend and backend in dev mode
+npm run build           # build everything for production
+npm run test            # run all tests (Jest + Vitest)
+npm run lint            # lint all code with ESLint
+npm run format          # format with Prettier
+npm run format:check    # check formatting without modifying
+npm run typecheck       # type-check all packages without emitting
+npm run test:coverage   # run tests with coverage reports
+npm run test:fuzz       # run property-based tests with fast-check
 ```
 
-4. Start Docker services:
-```bash
-npm run docker:up
-```
+## Using Nix
 
-5. Run database migrations:
-```bash
-npm run db:migrate
-```
+If you use Nix, `nix develop` drops you into a shell with everything you need:
 
-6. Start development servers:
 ```bash
+nix develop
+npm install
 npm run dev
 ```
 
-The application will be available at:
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
-- WebSocket: ws://localhost:3000
+`nix flake check` runs the full verification suite -- formatting, linting,
+type-checking, tests, and a clean build.
 
-## Development
+## Pre-commit hooks
 
-### Available Scripts
-
-- `npm run dev` - Start both frontend and backend in development mode
-- `npm run build` - Build all packages for production
-- `npm run test` - Run tests across all packages
-- `npm run lint` - Lint all packages
-- `npm run format` - Format code with Prettier
-- `npm run docker:up` - Start Docker services
-- `npm run docker:down` - Stop Docker services
-- `npm run db:migrate` - Run database migrations
-- `npm run db:seed` - Seed database with sample data
-
-### Workspace Commands
-
-Run commands in specific workspaces:
-```bash
-npm run dev --workspace=frontend
-npm run build --workspace=backend
-npm run test --workspace=shared
-```
-
-## Testing
-
-The project uses Jest for unit testing and Cypress for E2E testing:
+The project uses [Lefthook](https://github.com/evilmartians/lefthook) for
+pre-commit checks. After cloning:
 
 ```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run E2E tests
-npm run test:e2e
+lefthook install
 ```
 
-## Deployment
+This runs formatting checks, linting, type-checking, shell linting, and tests
+in parallel before each commit.
 
-### Production Build
+## Docker
+
+For production deployment:
 
 ```bash
-# Build all packages
-npm run build
-
-# The built files will be in:
-# - frontend/dist
-# - backend/dist
-# - shared/dist
+docker-compose up -d
 ```
 
-### Docker Deployment
-
-```bash
-# Build and run with Docker Compose
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+The `Dockerfile` builds both frontend and backend into a single image. See
+`docker-compose.yml` for the full service configuration including PostgreSQL
+and Redis.
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Support
-
-For issues and questions, please use the GitHub issues page.
+BSD 3-Clause. See [LICENSE.md](LICENSE.md).
