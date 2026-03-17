@@ -46,9 +46,9 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npx tsc -p shared/tsconfig.json
       - run: npx tsc --noEmit -p backend/tsconfig.json
       - run: npx tsc --noEmit -p frontend/tsconfig.app.json
-      - run: npx tsc --noEmit -p shared/tsconfig.json
 
   shellcheck:
     name: Shell lint
