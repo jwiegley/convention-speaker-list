@@ -1,117 +1,136 @@
 To run the Convention Speaker List Manager locally, follow these steps:
 
-  Quick Start
+Quick Start
 
-  1. Install Dependencies
+1. Install Dependencies
 
-  # Install all dependencies for the monorepo
-  npm install
+# Install all dependencies for the monorepo
 
-  2. Set Up Environment Variables
+npm install
 
-  Create .env files in the backend directory:
+2. Set Up Environment Variables
 
-  # Copy the example environment file
-  cp backend/.env.example backend/.env
+Create .env files in the backend directory:
 
-  Edit backend/.env with your values:
-  # Database
-  DATABASE_URL=postgresql://convention_user:convention_pass@localhost:5432/convention
-  _speaker_db
-  DB_HOST=localhost
-  DB_PORT=5432
-  DB_NAME=convention_speaker_db
-  DB_USER=convention_user
-  DB_PASSWORD=convention_pass
+# Copy the example environment file
 
-  # Redis
-  REDIS_URL=redis://localhost:6379
+cp backend/.env.example backend/.env
 
-  # Security
-  JWT_SECRET=your-secret-key-here-change-in-production
-  ENCRYPTION_KEY=your-32-character-encryption-key-here
+Edit backend/.env with your values:
 
-  # Server
-  PORT=3000
-  NODE_ENV=development
+# Database
 
-  3. Start Docker Services (PostgreSQL & Redis)
+DATABASE_URL=postgresql://convention_user:convention_pass@localhost:5432/convention
+\_speaker_db
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=convention_speaker_db
+DB_USER=convention_user
+DB_PASSWORD=convention_pass
 
-  # Start the database and Redis
-  docker-compose up -d
+# Redis
 
-  4. Run Database Migrations
+REDIS_URL=redis://localhost:6379
 
-  # Create database and run migrations
-  npm run db:create
-  npm run db:migrate
+# Security
 
-  # (Optional) Seed with test data
-  npm run db:seed
+JWT_SECRET=your-secret-key-here-change-in-production
+ENCRYPTION_KEY=your-32-character-encryption-key-here
 
-  5. Start the Application
+# Server
 
-  Open two terminal windows:
+PORT=3000
+NODE_ENV=development
 
-  Terminal 1 - Backend:
-  npm run dev:backend
+3. Start Docker Services (PostgreSQL & Redis)
 
-  Terminal 2 - Frontend:
-  npm run dev:frontend
+# Start the database and Redis
 
-  The application will be available at:
-  - Frontend: http://localhost:5173
-  - Backend API: http://localhost:3000
-  - WebSocket: ws://localhost:3000
+docker-compose up -d
 
-  Alternative: Run Everything with Docker
+4. Run Database Migrations
 
-  # Build and start all services
-  docker-compose -f docker-compose.yml up --build
+# Create database and run migrations
 
-  Default Access
+npm run db:create
+npm run db:migrate
 
-  - Admin Panel: http://localhost:5173/admin
-    - Default PIN: 1234 (configured in backend)
-  - Spectator View: http://localhost:5173/spectator
+# (Optional) Seed with test data
 
-  Verify Installation
+npm run db:seed
 
-  Check that everything is running:
-  # Check backend health
-  curl http://localhost:3000/health
+5. Start the Application
 
-  # Check database connection
-  npm run db:status
+Open two terminal windows:
 
-  Troubleshooting
+Terminal 1 - Backend:
+npm run dev:backend
 
-  If you encounter issues:
+Terminal 2 - Frontend:
+npm run dev:frontend
 
-  1. Port conflicts: Ensure ports 3000, 5173, 5432, and 6379 are available
-  2. Database connection: Verify PostgreSQL is running: docker ps
-  3. Missing dependencies: Run npm install in the root directory
-  4. Migration errors: Drop and recreate database: npm run db:reset
+The application will be available at:
 
-  Available Scripts
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+- WebSocket: ws://localhost:3000
 
-  # Development
-  npm run dev           # Run both frontend and backend
-  npm run dev:backend   # Backend only
-  npm run dev:frontend  # Frontend only
+Alternative: Run Everything with Docker
 
-  # Database
-  npm run db:create     # Create database
-  npm run db:migrate    # Run migrations
-  npm run db:seed       # Seed test data
-  npm run db:reset      # Reset database
+# Build and start all services
 
-  # Testing
-  npm run test          # Run all tests
-  npm run test:backend  # Backend tests only
+docker-compose -f docker-compose.yml up --build
 
-  # Building
-  npm run build         # Build all packages
+Default Access
 
-  The application is now running locally with full functionality including real-time
-  updates, queue management, and demographic tracking!
+- Admin Panel: http://localhost:5173/admin
+  - Default PIN: 1234 (configured in backend)
+- Spectator View: http://localhost:5173/spectator
+
+Verify Installation
+
+Check that everything is running:
+
+# Check backend health
+
+curl http://localhost:3000/health
+
+# Check database connection
+
+npm run db:status
+
+Troubleshooting
+
+If you encounter issues:
+
+1. Port conflicts: Ensure ports 3000, 5173, 5432, and 6379 are available
+2. Database connection: Verify PostgreSQL is running: docker ps
+3. Missing dependencies: Run npm install in the root directory
+4. Migration errors: Drop and recreate database: npm run db:reset
+
+Available Scripts
+
+# Development
+
+npm run dev # Run both frontend and backend
+npm run dev:backend # Backend only
+npm run dev:frontend # Frontend only
+
+# Database
+
+npm run db:create # Create database
+npm run db:migrate # Run migrations
+npm run db:seed # Seed test data
+npm run db:reset # Reset database
+
+# Testing
+
+npm run test # Run all tests
+npm run test:backend # Backend tests only
+
+# Building
+
+npm run build # Build all packages
+
+The application is now running locally with full functionality including real-time
+updates, queue management, and demographic tracking!
