@@ -36,14 +36,18 @@ class ConnectionPool {
   canAcceptConnection(ip: string): boolean {
     // Check total connections limit
     if (this.totalConnections >= this.config.maxTotalConnections) {
-      logger.warn(`Connection pool full: ${this.totalConnections}/${this.config.maxTotalConnections}`);
+      logger.warn(
+        `Connection pool full: ${this.totalConnections}/${this.config.maxTotalConnections}`
+      );
       return false;
     }
 
     // Check per-IP limit
     const ipConnections = this.connectionsByIP.get(ip);
     if (ipConnections && ipConnections.size >= this.config.maxConnectionsPerIP) {
-      logger.warn(`Too many connections from IP ${ip}: ${ipConnections.size}/${this.config.maxConnectionsPerIP}`);
+      logger.warn(
+        `Too many connections from IP ${ip}: ${ipConnections.size}/${this.config.maxConnectionsPerIP}`
+      );
       return false;
     }
 
@@ -64,7 +68,7 @@ class ConnectionPool {
 
     this.connectionsByIP.get(ip)!.add(socketId);
     this.totalConnections++;
-    
+
     logger.debug(`Connection added: ${socketId} from ${ip}. Total: ${this.totalConnections}`);
     return true;
   }
@@ -142,7 +146,6 @@ export async function setupRedisAdapter(
     io.of('/').adapter.on('error', (error: Error) => {
       logger.error('Redis adapter error:', error);
     });
-
   } catch (error) {
     logger.error('Failed to setup Redis adapter:', error);
     throw error;
@@ -155,7 +158,7 @@ export async function setupRedisAdapter(
 export async function getMonitoringData(io: SocketServer) {
   const sockets = await io.fetchSockets();
   const rooms = io.of('/').adapter.rooms;
-  
+
   return {
     connections: {
       total: sockets.length,
@@ -191,15 +194,15 @@ export async function getMonitoringData(io: SocketServer) {
  */
 export async function gracefulShutdown(io: SocketServer, timeout: number = 10000): Promise<void> {
   logger.info('Starting graceful Socket.io shutdown...');
-  
+
   // Notify all clients about shutdown
-  io.emit('server:shutdown', { 
+  io.emit('server:shutdown', {
     message: 'Server is shutting down for maintenance',
     reconnectIn: 30000, // Suggest reconnect after 30 seconds
   });
 
   // Give clients time to receive the message
-  await new Promise(resolve => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   // Disconnect all sockets
   const sockets = await io.fetchSockets();
@@ -243,7 +246,7 @@ export class ConnectionRateLimiter {
 
   constructor(maxEventsPerMinute: number = 100) {
     this.maxEventsPerMinute = maxEventsPerMinute;
-    
+
     // Cleanup old entries periodically
     setInterval(() => {
       const now = Date.now();

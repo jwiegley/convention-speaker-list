@@ -80,7 +80,7 @@ export class AnalyticsService {
     sessionId?: string
   ): Promise<ParticipationRate[]> {
     const cacheKey = `participation:${demographic}:${value || 'all'}:${sessionId || 'all'}`;
-    
+
     // Check cache
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
@@ -89,7 +89,7 @@ export class AnalyticsService {
       }
     }
 
-    let query = `
+    const query = `
       WITH speaker_stats AS (
         SELECT 
           d.id,
@@ -140,10 +140,7 @@ export class AnalyticsService {
   /**
    * Get average speaking time
    */
-  async getAverageSpeakingTime(
-    delegateId?: string,
-    sessionId?: string
-  ): Promise<number> {
+  async getAverageSpeakingTime(delegateId?: string, sessionId?: string): Promise<number> {
     const cacheKey = `avg_time:${delegateId || 'all'}:${sessionId || 'all'}`;
 
     // Check cache
@@ -264,7 +261,7 @@ export class AnalyticsService {
     if (sessionId) params.push(sessionId);
 
     const result = await this.db.query(query, params);
-    
+
     if (result.rows.length === 0) {
       return null;
     }
@@ -292,7 +289,7 @@ export class AnalyticsService {
     `;
 
     const sessionResult = await this.db.query(sessionQuery, [sessionId]);
-    
+
     if (sessionResult.rows.length === 0) {
       throw new Error(`Session ${sessionId} not found`);
     }
@@ -371,10 +368,10 @@ export class AnalyticsService {
 
     const sessionData = sessionResult.rows[0];
     const queueLength = queueResult.rows[0]?.queue_length || 0;
-    const demographics = demographicResult.rows[0] || { 
-      gender_balance: 50, 
-      age_balance: 50, 
-      race_balance: 50 
+    const demographics = demographicResult.rows[0] || {
+      gender_balance: 50,
+      age_balance: 50,
+      race_balance: 50,
     };
     const participationRate = participationResult.rows[0]?.participation_rate || 0;
 
@@ -390,18 +387,15 @@ export class AnalyticsService {
       demographicBalance: {
         gender: parseFloat(demographics.gender_balance),
         age: parseFloat(demographics.age_balance),
-        race: parseFloat(demographics.race_balance)
-      }
+        race: parseFloat(demographics.race_balance),
+      },
     };
   }
 
   /**
    * Get aggregated metrics for a time range
    */
-  async getAggregatedMetrics(
-    startDate: Date,
-    endDate: Date
-  ): Promise<AggregatedMetrics> {
+  async getAggregatedMetrics(startDate: Date, endDate: Date): Promise<AggregatedMetrics> {
     // Get session count and duration stats
     const sessionStatsQuery = `
       SELECT 
@@ -432,17 +426,17 @@ export class AnalyticsService {
     const participationRates = await Promise.all([
       this.calculateParticipationRate('gender'),
       this.calculateParticipationRate('age_group'),
-      this.calculateParticipationRate('race')
+      this.calculateParticipationRate('race'),
     ]);
 
     // Get time distribution
     const timeDistribution = await this.generateTimeDistribution(30);
 
     const sessionData = sessionStats.rows[0] || { sessions: 0, avg_duration: 0 };
-    const speakerData = speakerStats.rows[0] || { 
-      total_speakers: 0, 
-      total_speaking_time: 0, 
-      hour: 0 
+    const speakerData = speakerStats.rows[0] || {
+      total_speakers: 0,
+      total_speaking_time: 0,
+      hour: 0,
     };
 
     return {
@@ -453,7 +447,7 @@ export class AnalyticsService {
       averageSessionDuration: parseFloat(sessionData.avg_duration) || 0,
       peakHour: parseInt(speakerData.hour) || 0,
       participationByDemographic: participationRates.flat(),
-      timeDistribution
+      timeDistribution,
     };
   }
 
@@ -473,9 +467,9 @@ export class AnalyticsService {
     } else {
       // Clear all analytics cache
       const keys = await this.redis.keys('participation:*');
-      keys.push(...await this.redis.keys('avg_time:*'));
-      keys.push(...await this.redis.keys('time_dist:*'));
-      
+      keys.push(...(await this.redis.keys('avg_time:*')));
+      keys.push(...(await this.redis.keys('time_dist:*')));
+
       if (keys.length > 0) {
         await this.redis.del(...keys);
       }

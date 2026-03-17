@@ -2,9 +2,8 @@ import { getClient } from '../database/client';
 import {
   SpeakingInstance,
   CreateSpeakingInstanceDTO,
-  UpdateSpeakingInstanceDTO,
   SessionSpeakingStats,
-  DelegateSpeakingStats
+  DelegateSpeakingStats,
 } from '../types/speakingInstance';
 import logger from '../utils/logger';
 
@@ -28,11 +27,13 @@ export class SpeakingInstanceService {
           data.session_id,
           data.queue_item_id || null,
           data.position_in_queue,
-          data.is_tracked !== false
+          data.is_tracked !== false,
         ]
       );
-      
-      logger.info(`Created speaking instance for delegate ${data.delegate_id} in session ${data.session_id}`);
+
+      logger.info(
+        `Created speaking instance for delegate ${data.delegate_id} in session ${data.session_id}`
+      );
       return result.rows[0];
     } catch (error) {
       logger.error('Error creating speaking instance:', error);
@@ -41,7 +42,7 @@ export class SpeakingInstanceService {
       client.release();
     }
   }
-  
+
   /**
    * Update a speaking instance when delegate stops speaking
    */
@@ -60,12 +61,14 @@ export class SpeakingInstanceService {
          LIMIT 1`,
         [delegateId, sessionId]
       );
-      
+
       if (activeInstance.rows.length === 0) {
-        logger.warn(`No active speaking instance found for delegate ${delegateId} in session ${sessionId}`);
+        logger.warn(
+          `No active speaking instance found for delegate ${delegateId} in session ${sessionId}`
+        );
         return null;
       }
-      
+
       // Update with end time (duration is calculated by trigger)
       const result = await client.query(
         `UPDATE speaking_instances 
@@ -74,8 +77,10 @@ export class SpeakingInstanceService {
          RETURNING *`,
         [activeInstance.rows[0].id]
       );
-      
-      logger.info(`Completed speaking instance for delegate ${delegateId} in session ${sessionId} with status: ${status}`);
+
+      logger.info(
+        `Completed speaking instance for delegate ${delegateId} in session ${sessionId} with status: ${status}`
+      );
       return result.rows[0];
     } catch (error) {
       logger.error('Error completing speaking instance:', error);
@@ -84,7 +89,7 @@ export class SpeakingInstanceService {
       client.release();
     }
   }
-  
+
   /**
    * Get active speaking instance for a session
    */
@@ -98,7 +103,7 @@ export class SpeakingInstanceService {
          LIMIT 1`,
         [sessionId]
       );
-      
+
       return result.rows[0] || null;
     } catch (error) {
       logger.error('Error getting active speaking instance:', error);
@@ -107,7 +112,7 @@ export class SpeakingInstanceService {
       client.release();
     }
   }
-  
+
   /**
    * Get speaking statistics for a session
    */
@@ -125,14 +130,14 @@ export class SpeakingInstanceService {
          WHERE session_id = $1 AND duration_seconds IS NOT NULL`,
         [sessionId]
       );
-      
+
       return {
         session_id: sessionId,
         total_speakers: parseInt(result.rows[0].total_speakers),
         total_duration_seconds: parseInt(result.rows[0].total_duration_seconds),
         average_duration_seconds: Math.round(parseFloat(result.rows[0].average_duration_seconds)),
         longest_duration_seconds: parseInt(result.rows[0].longest_duration_seconds),
-        shortest_duration_seconds: parseInt(result.rows[0].shortest_duration_seconds)
+        shortest_duration_seconds: parseInt(result.rows[0].shortest_duration_seconds),
       };
     } catch (error) {
       logger.error('Error getting session stats:', error);
@@ -141,7 +146,7 @@ export class SpeakingInstanceService {
       client.release();
     }
   }
-  
+
   /**
    * Get speaking statistics for a delegate
    */
@@ -158,13 +163,13 @@ export class SpeakingInstanceService {
          WHERE delegate_id = $1 AND duration_seconds IS NOT NULL`,
         [delegateId]
       );
-      
+
       return {
         delegate_id: delegateId,
         total_instances: parseInt(result.rows[0].total_instances),
         total_duration_seconds: parseInt(result.rows[0].total_duration_seconds),
         average_duration_seconds: Math.round(parseFloat(result.rows[0].average_duration_seconds)),
-        sessions_participated: parseInt(result.rows[0].sessions_participated)
+        sessions_participated: parseInt(result.rows[0].sessions_participated),
       };
     } catch (error) {
       logger.error('Error getting delegate stats:', error);
@@ -173,7 +178,7 @@ export class SpeakingInstanceService {
       client.release();
     }
   }
-  
+
   /**
    * Get all speaking instances for a session
    */
@@ -188,7 +193,7 @@ export class SpeakingInstanceService {
          ORDER BY si.start_time DESC`,
         [sessionId]
       );
-      
+
       return result.rows;
     } catch (error) {
       logger.error('Error getting session speaking instances:', error);

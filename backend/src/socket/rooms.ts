@@ -4,14 +4,17 @@ import logger from '../utils/logger';
 import { SocketEventNames } from '../../../shared/src/types/socket';
 
 // Track active sessions and their participants
-const activeSessions = new Map<string, {
-  createdAt: Date;
-  participantCount: number;
-  adminCount: number;
-  spectatorCount: number;
-  delegateCount: number;
-  name?: string;
-}>();
+const activeSessions = new Map<
+  string,
+  {
+    createdAt: Date;
+    participantCount: number;
+    adminCount: number;
+    spectatorCount: number;
+    delegateCount: number;
+    name?: string;
+  }
+>();
 
 /**
  * Join a client to a session room
@@ -22,19 +25,19 @@ export async function joinSessionRoom(
   io?: SocketServer
 ): Promise<void> {
   const roomName = `${roomConfig.roomPrefix}${sessionId}`;
-  
+
   // Check current rooms
-  const currentRooms = Array.from(socket.rooms).filter(room => 
-    room.startsWith(roomConfig.roomPrefix) && room !== socket.id
+  const currentRooms = Array.from(socket.rooms).filter(
+    (room) => room.startsWith(roomConfig.roomPrefix) && room !== socket.id
   );
-  
+
   if (currentRooms.length >= roomConfig.maxRoomsPerClient) {
     throw new Error(`Maximum rooms limit (${roomConfig.maxRoomsPerClient}) reached`);
   }
-  
+
   await socket.join(roomName);
   socket.data.sessionId = sessionId;
-  
+
   // Track session participants
   if (!activeSessions.has(sessionId)) {
     activeSessions.set(sessionId, {
@@ -44,7 +47,7 @@ export async function joinSessionRoom(
       spectatorCount: 0,
       delegateCount: 0,
     });
-    
+
     // Emit session created event
     if (io) {
       io.to(roomName).emit(SocketEventNames.SESSION_CREATED, {
@@ -55,10 +58,10 @@ export async function joinSessionRoom(
       });
     }
   }
-  
+
   const session = activeSessions.get(sessionId)!;
   session.participantCount++;
-  
+
   // Update role counts
   switch (socket.data.role) {
     case 'admin':
@@ -72,7 +75,7 @@ export async function joinSessionRoom(
       session.delegateCount++;
       break;
   }
-  
+
   // Emit participant joined event
   if (io) {
     io.to(roomName).emit(SocketEventNames.SESSION_PARTICIPANT_JOINED, {
@@ -82,8 +85,10 @@ export async function joinSessionRoom(
       timestamp: new Date(),
     });
   }
-  
-  logger.info(`Socket ${socket.id} joined room ${roomName}, total participants: ${session.participantCount}`);
+
+  logger.info(
+    `Socket ${socket.id} joined room ${roomName}, total participants: ${session.participantCount}`
+  );
 }
 
 /**
@@ -95,18 +100,18 @@ export async function leaveSessionRoom(
   io?: SocketServer
 ): Promise<void> {
   const roomName = `${roomConfig.roomPrefix}${sessionId}`;
-  
+
   await socket.leave(roomName);
-  
+
   if (socket.data.sessionId === sessionId) {
     socket.data.sessionId = undefined;
   }
-  
+
   // Update session participant tracking
   const session = activeSessions.get(sessionId);
   if (session) {
     session.participantCount--;
-    
+
     // Update role counts
     switch (socket.data.role) {
       case 'admin':
@@ -120,7 +125,7 @@ export async function leaveSessionRoom(
         session.delegateCount--;
         break;
     }
-    
+
     // Emit participant left event
     if (io) {
       io.to(roomName).emit(SocketEventNames.SESSION_PARTICIPANT_LEFT, {
@@ -130,11 +135,11 @@ export async function leaveSessionRoom(
         timestamp: new Date(),
       });
     }
-    
+
     // Clean up session if empty
     if (session.participantCount <= 0) {
       const duration = Date.now() - session.createdAt.getTime();
-      
+
       // Emit session ended event before cleanup
       if (io) {
         io.to(roomName).emit(SocketEventNames.SESSION_ENDED, {
@@ -144,26 +149,23 @@ export async function leaveSessionRoom(
           timestamp: new Date(),
         });
       }
-      
+
       activeSessions.delete(sessionId);
       logger.info(`Session ${sessionId} ended after ${duration}ms`);
     }
   }
-  
+
   logger.info(`Socket ${socket.id} left room ${roomName}`);
 }
 
 /**
  * Get all clients in a session room
  */
-export async function getSessionClients(
-  io: SocketServer,
-  sessionId: string
-): Promise<string[]> {
+export async function getSessionClients(io: SocketServer, sessionId: string): Promise<string[]> {
   const roomName = `${roomConfig.roomPrefix}${sessionId}`;
   const sockets = await io.in(roomName).fetchSockets();
-  
-  return sockets.map(socket => socket.id);
+
+  return sockets.map((socket) => socket.id);
 }
 
 /**
@@ -180,14 +182,14 @@ export async function getRoomStats(
 }> {
   const roomName = `${roomConfig.roomPrefix}${sessionId}`;
   const sockets = await io.in(roomName).fetchSockets();
-  
+
   const stats = {
     clientCount: sockets.length,
     adminCount: 0,
     spectatorCount: 0,
     delegateCount: 0,
   };
-  
+
   for (const socket of sockets) {
     switch (socket.data.role) {
       case 'admin':
@@ -202,7 +204,7 @@ export async function getRoomStats(
         break;
     }
   }
-  
+
   return stats;
 }
 
@@ -225,22 +227,22 @@ export function broadcastToRoom(
 export async function cleanupEmptyRooms(io: SocketServer): Promise<number> {
   const rooms = io.of('/').adapter.rooms;
   let cleanedCount = 0;
-  
+
   for (const [roomName, socketIds] of rooms) {
     // Skip socket ID rooms (each socket has its own room)
     if (!roomName.startsWith(roomConfig.roomPrefix)) {
       continue;
     }
-    
+
     if (socketIds.size === 0) {
       // Extract sessionId from room name
       const sessionId = roomName.replace(roomConfig.roomPrefix, '');
-      
+
       // Clean up session tracking if still exists
       if (activeSessions.has(sessionId)) {
         const session = activeSessions.get(sessionId)!;
         const duration = Date.now() - session.createdAt.getTime();
-        
+
         // Emit session ended event
         io.emit(SocketEventNames.SESSION_ENDED, {
           sessionId,
@@ -248,16 +250,16 @@ export async function cleanupEmptyRooms(io: SocketServer): Promise<number> {
           totalDuration: Math.floor(duration / 1000),
           timestamp: new Date(),
         });
-        
+
         activeSessions.delete(sessionId);
         logger.info(`Cleaned up abandoned session ${sessionId}`);
       }
-      
+
       logger.debug(`Empty room found and cleaned: ${roomName}`);
       cleanedCount++;
     }
   }
-  
+
   return cleanedCount;
 }
 

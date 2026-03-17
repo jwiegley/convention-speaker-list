@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosInstance } from 'axios';
+import axios from 'axios';
+import type { AxiosError, AxiosInstance } from 'axios';
 import { config } from './config';
 import type { ApiResponse } from '../types';
 
@@ -33,14 +34,14 @@ api.interceptors.response.use(
     if (config.features.enableDebug) {
       console.error('API Error:', error);
     }
-    
+
     // Handle specific error cases
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
       localStorage.removeItem('authToken');
       // Could trigger a redirect here if needed
     }
-    
+
     return Promise.reject(error);
   }
 );
@@ -56,7 +57,7 @@ export const apiEndpoints = {
     delete: (id: string) => api.delete(`/sessions/${id}`),
     current: () => api.get('/sessions/current'),
   },
-  
+
   // Delegate endpoints
   delegates: {
     list: () => api.get('/delegates'),
@@ -66,23 +67,23 @@ export const apiEndpoints = {
     delete: (id: string) => api.delete(`/delegates/${id}`),
     bulkImport: (data: any) => api.post('/delegates/bulk', data),
   },
-  
+
   // Queue endpoints
   queue: {
     get: (sessionId: string) => api.get(`/queue/${sessionId}`),
-    add: (sessionId: string, delegateId: string) => 
+    add: (sessionId: string, delegateId: string) =>
       api.post(`/queue/${sessionId}/add`, { delegateId }),
-    remove: (sessionId: string, delegateId: string) => 
+    remove: (sessionId: string, delegateId: string) =>
       api.post(`/queue/${sessionId}/remove`, { delegateId }),
     advance: (sessionId: string) => api.post(`/queue/${sessionId}/advance`),
     clear: (sessionId: string) => api.post(`/queue/${sessionId}/clear`),
-    reorder: (sessionId: string, positions: any) => 
+    reorder: (sessionId: string, positions: any) =>
       api.post(`/queue/${sessionId}/reorder`, { positions }),
   },
-  
+
   // Timer endpoints
   timer: {
-    start: (sessionId: string, delegateId?: string) => 
+    start: (sessionId: string, delegateId?: string) =>
       api.post(`/timer/${sessionId}/start`, { delegateId }),
     pause: (sessionId: string) => api.post(`/timer/${sessionId}/pause`),
     resume: (sessionId: string) => api.post(`/timer/${sessionId}/resume`),
@@ -90,7 +91,7 @@ export const apiEndpoints = {
     reset: (sessionId: string) => api.post(`/timer/${sessionId}/reset`),
     state: (sessionId: string) => api.get(`/timer/${sessionId}/state`),
   },
-  
+
   // Statistics endpoints
   stats: {
     session: (sessionId: string) => api.get(`/stats/session/${sessionId}`),

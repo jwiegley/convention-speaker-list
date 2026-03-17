@@ -9,35 +9,35 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       type: 'uuid',
       default: pgm.func('gen_random_uuid()'),
       primaryKey: true,
-      notNull: true
+      notNull: true,
     },
     username: {
       type: 'varchar(255)',
       notNull: true,
-      unique: true
+      unique: true,
     },
     password_hash: {
       type: 'varchar(255)',
-      notNull: true
+      notNull: true,
     },
     role: {
       type: 'varchar(50)',
       notNull: true,
-      check: "role IN ('admin', 'spectator')"
+      check: "role IN ('admin', 'spectator')",
     },
     last_login: {
-      type: 'timestamp'
+      type: 'timestamp',
     },
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
     updated_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
-    }
+      default: pgm.func('CURRENT_TIMESTAMP'),
+    },
   });
 
   // Create index on username for faster lookups
@@ -50,38 +50,38 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       type: 'uuid',
       default: pgm.func('gen_random_uuid()'),
       primaryKey: true,
-      notNull: true
+      notNull: true,
     },
     user_id: {
       type: 'uuid',
       notNull: true,
       references: 'users(id)',
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
     },
     refresh_token: {
       type: 'text',
-      unique: true
+      unique: true,
     },
     ip_address: {
-      type: 'varchar(45)'  // Support IPv6
+      type: 'varchar(45)', // Support IPv6
     },
     user_agent: {
-      type: 'text'
+      type: 'text',
     },
     last_activity: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
     expires_at: {
       type: 'timestamp',
-      notNull: true
+      notNull: true,
     },
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
-    }
+      default: pgm.func('CURRENT_TIMESTAMP'),
+    },
   });
 
   // Create indexes for session lookups
@@ -95,42 +95,42 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       type: 'uuid',
       default: pgm.func('gen_random_uuid()'),
       primaryKey: true,
-      notNull: true
+      notNull: true,
     },
     user_id: {
       type: 'uuid',
       notNull: true,
       references: 'users(id)',
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
     },
     action: {
       type: 'varchar(255)',
-      notNull: true
+      notNull: true,
     },
     entity_type: {
       type: 'varchar(100)',
-      notNull: true
+      notNull: true,
     },
     entity_id: {
-      type: 'varchar(255)'
+      type: 'varchar(255)',
     },
     old_value: {
-      type: 'jsonb'
+      type: 'jsonb',
     },
     new_value: {
-      type: 'jsonb'
+      type: 'jsonb',
     },
     ip_address: {
-      type: 'varchar(45)'
+      type: 'varchar(45)',
     },
     user_agent: {
-      type: 'text'
+      type: 'text',
     },
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
-    }
+      default: pgm.func('CURRENT_TIMESTAMP'),
+    },
   });
 
   // Create indexes for audit log queries
@@ -145,30 +145,30 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       type: 'uuid',
       default: pgm.func('gen_random_uuid()'),
       primaryKey: true,
-      notNull: true
+      notNull: true,
     },
     identifier: {
       type: 'varchar(255)',
-      notNull: true
+      notNull: true,
     },
     endpoint: {
       type: 'varchar(255)',
-      notNull: true
+      notNull: true,
     },
     count: {
       type: 'integer',
       notNull: true,
-      default: 1
+      default: 1,
     },
     window_start: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
     window_end: {
       type: 'timestamp',
-      notNull: true
-    }
+      notNull: true,
+    },
   });
 
   // Create composite index for rate limit lookups

@@ -7,7 +7,7 @@ dotenv.config();
 // Database configuration for different environments
 export const getDatabaseConfig = (env?: string): PoolConfig => {
   const environment = env || process.env.NODE_ENV || 'development';
-  
+
   const configs: Record<string, PoolConfig> = {
     development: {
       host: process.env.DB_HOST || 'localhost',
@@ -48,7 +48,7 @@ export const getDatabaseConfig = (env?: string): PoolConfig => {
 // Migration configuration for node-pg-migrate
 export const getMigrationConfig = () => {
   const dbConfig = getDatabaseConfig();
-  
+
   return {
     databaseUrl: {
       host: dbConfig.host,

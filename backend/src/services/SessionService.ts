@@ -14,7 +14,7 @@ export class SessionService {
 
   constructor() {
     this.pool = new Pool({
-      connectionString: config.database.url
+      connectionString: config.database.url,
     });
 
     // Start automatic cleanup of expired sessions
@@ -24,11 +24,7 @@ export class SessionService {
   /**
    * Create a new session
    */
-  async createSession(
-    userId: string,
-    userAgent?: string,
-    ipAddress?: string
-  ): Promise<string> {
+  async createSession(userId: string, userAgent?: string, ipAddress?: string): Promise<string> {
     const sessionId = uuidv4();
     const expiresAt = new Date(Date.now() + this.sessionTimeout);
 
@@ -48,7 +44,7 @@ export class SessionService {
    */
   async updateActivity(sessionId: string): Promise<boolean> {
     const expiresAt = new Date(Date.now() + this.sessionTimeout);
-    
+
     const result = await this.pool.query(
       `UPDATE user_sessions 
        SET last_activity = NOW(), 
@@ -196,11 +192,14 @@ export class SessionService {
    */
   private startCleanupInterval(): void {
     // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanupExpiredSessions().catch(error => {
-        logger.error('Session cleanup failed:', error);
-      });
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanupExpiredSessions().catch((error) => {
+          logger.error('Session cleanup failed:', error);
+        });
+      },
+      5 * 60 * 1000
+    );
   }
 
   /**
@@ -240,7 +239,7 @@ export class SessionService {
 
     return {
       ...result.rows[0],
-      byRole: roleStats.rows
+      byRole: roleStats.rows,
     };
   }
 
@@ -248,8 +247,8 @@ export class SessionService {
    * Extend session timeout for a specific session
    */
   async extendSession(sessionId: string, additionalMinutes: number = 15): Promise<boolean> {
-    const newExpiry = new Date(Date.now() + (additionalMinutes * 60 * 1000));
-    
+    const newExpiry = new Date(Date.now() + additionalMinutes * 60 * 1000);
+
     const result = await this.pool.query(
       `UPDATE user_sessions 
        SET expires_at = $2
@@ -269,23 +268,24 @@ export default new SessionService();
 export function sessionTimeoutMiddleware(req: any, res: any, next: any) {
   if (req.user && req.user.sessionId) {
     const sessionService = new SessionService();
-    
-    sessionService.validateSession(req.user.sessionId)
-      .then(isValid => {
+
+    sessionService
+      .validateSession(req.user.sessionId)
+      .then((isValid) => {
         if (!isValid) {
           res.status(401).json({
             error: 'Session expired',
-            message: 'Your session has expired due to inactivity. Please log in again.'
+            message: 'Your session has expired due to inactivity. Please log in again.',
           });
         } else {
           next();
         }
       })
-      .catch(error => {
+      .catch((error) => {
         logger.error('Session validation error:', error);
         res.status(500).json({
           error: 'Internal server error',
-          message: 'Failed to validate session'
+          message: 'Failed to validate session',
         });
       });
   } else {

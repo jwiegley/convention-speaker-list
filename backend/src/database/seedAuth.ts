@@ -60,26 +60,25 @@ async function seedAuth() {
     if (!process.env.INITIAL_ADMIN_PASSWORD) {
       const fs = await import('fs');
       const path = await import('path');
-      
+
       const credentialsPath = path.join(process.cwd(), '..', '.credentials');
       const credentials = {
         admin: {
           username: 'admin',
-          password: adminPassword
+          password: adminPassword,
         },
         spectator: {
           username: 'spectator',
-          password: spectatorPassword
+          password: spectatorPassword,
         },
         created_at: new Date().toISOString(),
-        warning: 'DELETE THIS FILE AFTER SAVING CREDENTIALS SECURELY'
+        warning: 'DELETE THIS FILE AFTER SAVING CREDENTIALS SECURELY',
       };
 
       fs.writeFileSync(credentialsPath, JSON.stringify(credentials, null, 2));
       console.log(`Credentials saved to ${credentialsPath}`);
       console.log('WARNING: Delete .credentials file after saving passwords securely!');
     }
-
   } catch (error) {
     console.error('Error seeding authentication data:', error);
     throw error;

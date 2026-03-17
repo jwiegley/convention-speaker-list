@@ -12,7 +12,7 @@ const router = Router();
 router.get('/stats', async (req: Request, res: Response) => {
   try {
     const io = getSocketServer();
-    
+
     if (!io) {
       return res.status(503).json({
         error: 'WebSocket server not initialized',
@@ -21,7 +21,7 @@ router.get('/stats', async (req: Request, res: Response) => {
     }
 
     const monitoringData = await getMonitoringData(io);
-    
+
     res.json({
       available: true,
       timestamp: new Date().toISOString(),
@@ -43,7 +43,7 @@ router.get('/stats', async (req: Request, res: Response) => {
 router.get('/connections', async (req: Request, res: Response) => {
   try {
     const poolStats = connectionPool.getStats();
-    
+
     res.json({
       timestamp: new Date().toISOString(),
       pool: poolStats,
@@ -67,7 +67,7 @@ router.get('/connections', async (req: Request, res: Response) => {
 router.get('/rooms/:namespace?', async (req: Request, res: Response) => {
   try {
     const io = getSocketServer();
-    
+
     if (!io) {
       return res.status(503).json({
         error: 'WebSocket server not initialized',
@@ -77,7 +77,7 @@ router.get('/rooms/:namespace?', async (req: Request, res: Response) => {
     const namespace = req.params.namespace || '/';
     const nsp = io.of(namespace);
     const rooms = nsp.adapter.rooms;
-    
+
     const roomData = Array.from(rooms.entries()).map(([room, sockets]) => ({
       room,
       members: sockets.size,
@@ -104,7 +104,7 @@ router.get('/rooms/:namespace?', async (req: Request, res: Response) => {
 router.get('/health', async (req: Request, res: Response) => {
   try {
     const io = getSocketServer();
-    
+
     if (!io) {
       return res.status(503).json({
         status: 'unhealthy',
@@ -114,7 +114,7 @@ router.get('/health', async (req: Request, res: Response) => {
 
     const poolStats = connectionPool.getStats();
     const isHealthy = poolStats.totalConnections < poolStats.maxConnections * 0.95;
-    
+
     if (!isHealthy) {
       return res.status(503).json({
         status: 'unhealthy',

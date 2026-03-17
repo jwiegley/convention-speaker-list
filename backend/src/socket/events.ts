@@ -1,11 +1,11 @@
 import { SocketServer } from './index';
-import { 
-  QueueUpdatePayload, 
-  SpeakerAdvancedPayload, 
+import {
+  QueueUpdatePayload,
+  SpeakerAdvancedPayload,
   TimerTickPayload,
   DemographicsUpdatePayload,
   GardenStatePayload,
-  SocketEventNames 
+  SocketEventNames,
 } from '../../../shared/src/types/socket';
 import { IQueueItem } from '../../../shared/src/types/queue';
 import logger from '../utils/logger';
@@ -18,8 +18,8 @@ const DEBOUNCE_DELAY = 500; // 500ms debounce for rapid queue changes
  * Emit queue update to all clients in a session with debouncing
  */
 export function emitQueueUpdate(
-  io: SocketServer, 
-  sessionId: string, 
+  io: SocketServer,
+  sessionId: string,
   payload: Omit<QueueUpdatePayload, 'timestamp'>,
   immediate: boolean = false
 ): void {
@@ -28,7 +28,7 @@ export function emitQueueUpdate(
       ...payload,
       timestamp: new Date(),
     };
-    
+
     io.to(`session:${sessionId}`).emit(SocketEventNames.QUEUE_UPDATED, fullPayload);
     logger.debug(`Emitted queue update for session ${sessionId}, action: ${payload.action}`);
   };
@@ -47,12 +47,12 @@ export function emitQueueUpdate(
     if (existing) {
       clearTimeout(existing);
     }
-    
+
     const timeout = setTimeout(() => {
       emit();
       queueUpdateDebounce.delete(sessionId);
     }, DEBOUNCE_DELAY);
-    
+
     queueUpdateDebounce.set(sessionId, timeout);
   }
 }
@@ -69,7 +69,7 @@ export function emitSpeakerAdvanced(
     ...payload,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.SPEAKER_ADVANCED, fullPayload);
   logger.info(`Emitted speaker advanced for session ${sessionId}`);
 }
@@ -85,7 +85,7 @@ export function emitTimerTick(
   delegateId?: string
 ): void {
   const isWarning = remainingTime <= 30 && remainingTime > 0;
-  
+
   const payload: TimerTickPayload = {
     sessionId,
     delegateId,
@@ -94,16 +94,18 @@ export function emitTimerTick(
     isWarning,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.TIMER_TICK, payload);
-  
+
   if (isWarning) {
     io.to(`session:${sessionId}`).emit(SocketEventNames.TIMER_WARNING, remainingTime);
   }
-  
+
   if (remainingTime === 0) {
-    io.to(`session:${sessionId}`).emit(SocketEventNames.TIMER_EXPIRED, { sessionId, delegateId });
-    logger.info(`Timer expired for session ${sessionId}${delegateId ? ` (delegate: ${delegateId})` : ''}`);
+    io.to(`session:${sessionId}`).emit(SocketEventNames.TIMER_EXPIRED);
+    logger.info(
+      `Timer expired for session ${sessionId}${delegateId ? ` (delegate: ${delegateId})` : ''}`
+    );
   }
 }
 
@@ -119,7 +121,7 @@ export function emitDemographicsUpdate(
     ...payload,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.DEMOGRAPHICS_UPDATED, fullPayload);
   logger.debug(`Emitted demographics update for session ${sessionId}`);
 }
@@ -136,7 +138,7 @@ export function emitGardenStateChange(
     ...payload,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.GARDEN_STATE_CHANGED, fullPayload);
   logger.debug(`Emitted garden state change for session ${sessionId}`);
 }
@@ -156,7 +158,7 @@ export function emitQueueJoined(
     position,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.QUEUE_JOINED, payload);
   logger.info(`Emitted queue joined for delegate ${queueItem.delegateId} at position ${position}`);
 }
@@ -178,7 +180,7 @@ export function emitQueueLeft(
     reason,
     timestamp: new Date(),
   };
-  
+
   io.to(`session:${sessionId}`).emit(SocketEventNames.QUEUE_LEFT, payload);
   logger.info(`Emitted queue left for delegate ${delegateId}, reason: ${reason}`);
 }
@@ -202,7 +204,7 @@ export function emitQueueSnapshot(
     totalInQueue: queue.length,
     timestamp: new Date(),
   };
-  
+
   io.to(socketId).emit(SocketEventNames.QUEUE_SNAPSHOT, payload);
   logger.debug(`Emitted queue snapshot to ${socketId} for session ${sessionId}`);
 }
@@ -217,14 +219,14 @@ export function emitError(
   message: string
 ): void {
   const errorPayload = { code, message };
-  
+
   if (Array.isArray(target)) {
-    target.forEach(socketId => {
+    target.forEach((socketId) => {
       io.to(socketId).emit(SocketEventNames.ERROR, errorPayload);
     });
   } else {
     io.to(target).emit(SocketEventNames.ERROR, errorPayload);
   }
-  
+
   logger.error(`Emitted error ${code} to ${target}: ${message}`);
 }

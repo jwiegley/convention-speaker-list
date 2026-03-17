@@ -7,13 +7,13 @@ import logger from '../utils/logger';
  */
 
 interface RateLimitOptions {
-  windowMs?: number;      // Time window in milliseconds
-  maxRequests?: number;    // Maximum requests per window
-  message?: string;        // Error message
-  skipSuccessfulRequests?: boolean;  // Don't count successful requests
-  skipFailedRequests?: boolean;      // Don't count failed requests
-  keyGenerator?: (req: Request) => string;  // Custom key generator
-  handler?: (req: Request, res: Response) => void;  // Custom handler
+  windowMs?: number; // Time window in milliseconds
+  maxRequests?: number; // Maximum requests per window
+  message?: string; // Error message
+  skipSuccessfulRequests?: boolean; // Don't count successful requests
+  skipFailedRequests?: boolean; // Don't count failed requests
+  keyGenerator?: (req: Request) => string; // Custom key generator
+  handler?: (req: Request, res: Response) => void; // Custom handler
 }
 
 interface RequestRecord {
@@ -26,13 +26,13 @@ interface RequestRecord {
  */
 export function createRateLimiter(options: RateLimitOptions = {}) {
   const {
-    windowMs = 15 * 60 * 1000,  // 15 minutes default
-    maxRequests = 100,           // 100 requests default
+    windowMs = 15 * 60 * 1000, // 15 minutes default
+    maxRequests = 100, // 100 requests default
     message = 'Too many requests from this IP, please try again later.',
     skipSuccessfulRequests = false,
     skipFailedRequests = false,
     keyGenerator = (req) => req.ip || 'unknown',
-    handler
+    handler,
   } = options;
 
   const requests = new Map<string, RequestRecord>();
@@ -56,7 +56,7 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
     if (!record || now > record.resetTime) {
       record = {
         count: 0,
-        resetTime: now + windowMs
+        resetTime: now + windowMs,
       };
       requests.set(key, record);
     }
@@ -72,16 +72,16 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
     // Check if limit exceeded
     if (record.count > maxRequests) {
       res.setHeader('Retry-After', Math.ceil((record.resetTime - now) / 1000).toString());
-      
+
       logger.warn(`Rate limit exceeded for ${key}: ${record.count}/${maxRequests}`);
-      
+
       if (handler) {
         handler(req, res);
       } else {
         res.status(429).json({
           error: 'Too Many Requests',
           message,
-          retryAfter: Math.ceil((record.resetTime - now) / 1000)
+          retryAfter: Math.ceil((record.resetTime - now) / 1000),
         });
       }
       return;
@@ -90,9 +90,11 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
     // Handle skip logic after response
     if (skipSuccessfulRequests || skipFailedRequests) {
       const originalSend = res.send;
-      res.send = function(data: any) {
-        if ((skipSuccessfulRequests && res.statusCode < 400) ||
-            (skipFailedRequests && res.statusCode >= 400)) {
+      res.send = function (data: any) {
+        if (
+          (skipSuccessfulRequests && res.statusCode < 400) ||
+          (skipFailedRequests && res.statusCode >= 400)
+        ) {
           record!.count--;
         }
         return originalSend.call(this, data);
@@ -108,9 +110,9 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
  * Stricter limits for API endpoints
  */
 export const apiRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  maxRequests: 100,           // 100 requests per window
-  message: 'Too many API requests, please try again later.'
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 100, // 100 requests per window
+  message: 'Too many API requests, please try again later.',
 });
 
 /**
@@ -118,10 +120,10 @@ export const apiRateLimiter = createRateLimiter({
  * Very strict limits for auth endpoints
  */
 export const authRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  maxRequests: 5,             // Only 5 attempts per window
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 5, // Only 5 attempts per window
   message: 'Too many authentication attempts, please try again later.',
-  skipSuccessfulRequests: true  // Don't count successful logins
+  skipSuccessfulRequests: true, // Don't count successful logins
 });
 
 /**
@@ -129,9 +131,9 @@ export const authRateLimiter = createRateLimiter({
  * For socket.io connections
  */
 export const socketRateLimiter = createRateLimiter({
-  windowMs: 60 * 1000,       // 1 minute
-  maxRequests: 20,            // 20 connections per minute
-  message: 'Too many WebSocket connections, please try again later.'
+  windowMs: 60 * 1000, // 1 minute
+  maxRequests: 20, // 20 connections per minute
+  message: 'Too many WebSocket connections, please try again later.',
 });
 
 /**
@@ -139,9 +141,9 @@ export const socketRateLimiter = createRateLimiter({
  * Applied to all routes
  */
 export const globalRateLimiter = createRateLimiter({
-  windowMs: 15 * 60 * 1000,  // 15 minutes
-  maxRequests: 1000,          // 1000 requests per window
-  message: 'Too many requests, please slow down.'
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 1000, // 1000 requests per window
+  message: 'Too many requests, please slow down.',
 });
 
 /**
@@ -155,7 +157,7 @@ export function roleBasedRateLimiter(
 ) {
   return createRateLimiter({
     windowMs: 15 * 60 * 1000,
-    maxRequests: guestLimit,  // Default to guest limit
+    maxRequests: guestLimit, // Default to guest limit
     keyGenerator: (req: any) => {
       // Use user ID if authenticated, otherwise IP
       if (req.user) {
@@ -178,9 +180,9 @@ export function roleBasedRateLimiter(
       res.status(429).json({
         error: 'Too Many Requests',
         message: `Rate limit exceeded. Your limit is ${limit} requests per 15 minutes.`,
-        retryAfter
+        retryAfter,
       });
-    }
+    },
   });
 }
 
@@ -223,7 +225,7 @@ export class IPRateLimiter {
         logger.warn(`Blocked request from blacklisted IP: ${ip}`);
         res.status(403).json({
           error: 'Forbidden',
-          message: 'Your IP address has been blocked.'
+          message: 'Your IP address has been blocked.',
         });
         return;
       }
@@ -249,7 +251,7 @@ export function createRedisRateLimiter(redisClient: any, options: RateLimitOptio
     windowMs = 15 * 60 * 1000,
     maxRequests = 100,
     message = 'Too many requests, please try again later.',
-    keyGenerator = (req) => req.ip || 'unknown'
+    keyGenerator = (req) => req.ip || 'unknown',
   } = options;
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -261,7 +263,7 @@ export function createRedisRateLimiter(redisClient: any, options: RateLimitOptio
     try {
       // Increment counter in Redis
       const count = await redisClient.incr(redisKey);
-      
+
       // Set expiry on first request
       if (count === 1) {
         await redisClient.expire(redisKey, Math.ceil(windowMs / 1000));
@@ -276,11 +278,11 @@ export function createRedisRateLimiter(redisClient: any, options: RateLimitOptio
       if (count > maxRequests) {
         const retryAfter = Math.ceil(((window + 1) * windowMs - now) / 1000);
         res.setHeader('Retry-After', retryAfter.toString());
-        
+
         res.status(429).json({
           error: 'Too Many Requests',
           message,
-          retryAfter
+          retryAfter,
         });
         return;
       }
@@ -302,5 +304,5 @@ export default {
   globalRateLimiter,
   roleBasedRateLimiter,
   IPRateLimiter,
-  createRedisRateLimiter
+  createRedisRateLimiter,
 };

@@ -12,9 +12,7 @@ export function CurrentSpeaker({ speaker }: CurrentSpeakerProps) {
         <div className="space-y-2">
           <p className="text-3xl font-bold text-green-300">{speaker.name}</p>
           <p className="text-xl text-gray-300">{speaker.country}</p>
-          {speaker.organization && (
-            <p className="text-sm text-gray-400">{speaker.organization}</p>
-          )}
+          {speaker.organization && <p className="text-sm text-gray-400">{speaker.organization}</p>}
         </div>
       ) : (
         <p className="text-gray-500 italic">No current speaker</p>

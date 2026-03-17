@@ -54,7 +54,7 @@ export interface QueueStatistics {
 }
 
 export interface QueueEvent {
-  type: 'added' | 'removed' | 'advanced' | 'reordered' | 'locked' | 'unlocked';
+  type: 'added' | 'removed' | 'advanced' | 'reordered' | 'locked' | 'unlocked' | 'reset';
   sessionId: string;
   timestamp: Date;
   data: any;

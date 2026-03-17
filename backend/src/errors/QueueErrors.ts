@@ -1,5 +1,9 @@
 export class QueueError extends Error {
-  constructor(message: string, public code: string, public statusCode: number = 400) {
+  constructor(
+    message: string,
+    public code: string,
+    public statusCode: number = 400
+  ) {
     super(message);
     this.name = 'QueueError';
   }

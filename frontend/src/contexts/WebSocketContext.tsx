@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useRef, useCallback } from 'react';
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { useStore } from '../store';
+
+type Socket = ReturnType<typeof io>;
 
 interface WebSocketContextType {
   socket: Socket | null;
@@ -23,10 +25,13 @@ interface WebSocketProviderProps {
   url?: string;
 }
 
-export function WebSocketProvider({ children, url = 'http://localhost:3001' }: WebSocketProviderProps) {
+export function WebSocketProvider({
+  children,
+  url = 'http://localhost:3001',
+}: WebSocketProviderProps) {
   const socketRef = useRef<Socket | null>(null);
   const eventHandlers = useRef<Map<string, Set<(data: any) => void>>>(new Map());
-  
+
   // Store actions
   const setConnectionStatus = useStore((state) => state.setConnectionStatus);
   const updateHeartbeat = useStore((state) => state.updateHeartbeat);
@@ -36,14 +41,14 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
   const updateSession = useStore((state) => state.updateSession);
   const advanceQueue = useStore((state) => state.advanceQueue);
   const updateTimerElapsed = useStore((state) => state.updateTimerElapsed);
-  
+
   const isConnected = useStore((state) => state.isConnected);
 
   // Initialize socket connection
   useEffect(() => {
     if (!socketRef.current) {
       console.log('Initializing WebSocket connection to:', url);
-      
+
       socketRef.current = io(url, {
         transports: ['websocket'],
         reconnection: true,
@@ -57,7 +62,7 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
       socket.on('connect', () => {
         console.log('WebSocket connected');
         setConnectionStatus('connected');
-        
+
         // Request initial data
         socket.emit('request_initial_state');
       });
@@ -67,7 +72,7 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
         setConnectionStatus('disconnected');
       });
 
-      socket.on('connect_error', (error) => {
+      socket.on('connect_error', (error: Error) => {
         console.error('WebSocket connection error:', error);
         setConnectionStatus('error');
       });
@@ -78,15 +83,15 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
       });
 
       // Initial state sync
-      socket.on('initial_state', (data) => {
+      socket.on('initial_state', (data: Record<string, unknown>) => {
         console.log('Received initial state:', data);
         syncWithServer(data);
       });
 
       // Queue events
-      socket.on('queue_updated', (queue) => {
+      socket.on('queue_updated', (queue: unknown) => {
         console.log('Queue updated:', queue);
-        updateQueue(queue);
+        updateQueue(queue as Parameters<typeof updateQueue>[0]);
       });
 
       socket.on('queue_advanced', () => {
@@ -94,42 +99,42 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
         advanceQueue();
       });
 
-      socket.on('speaker_added', (data) => {
+      socket.on('speaker_added', (data: unknown) => {
         console.log('Speaker added to queue:', data);
         // The queue_updated event will handle the actual update
       });
 
-      socket.on('speaker_removed', (data) => {
+      socket.on('speaker_removed', (data: unknown) => {
         console.log('Speaker removed from queue:', data);
         // The queue_updated event will handle the actual update
       });
 
       // Delegate events
-      socket.on('delegates_updated', (delegates) => {
+      socket.on('delegates_updated', (delegates: unknown) => {
         console.log('Delegates updated:', delegates);
-        setDelegates(delegates);
+        setDelegates(delegates as Parameters<typeof setDelegates>[0]);
       });
 
-      socket.on('delegate_created', (delegate) => {
+      socket.on('delegate_created', (delegate: unknown) => {
         console.log('New delegate created:', delegate);
         // Refetch delegates
         socket.emit('request_delegates');
       });
 
-      socket.on('delegate_updated', (delegate) => {
+      socket.on('delegate_updated', (delegate: unknown) => {
         console.log('Delegate updated:', delegate);
         // Refetch delegates
         socket.emit('request_delegates');
       });
 
-      socket.on('delegate_deleted', (delegateId) => {
+      socket.on('delegate_deleted', (delegateId: string) => {
         console.log('Delegate deleted:', delegateId);
         // Refetch delegates
         socket.emit('request_delegates');
       });
 
       // Session events
-      socket.on('session_started', (session) => {
+      socket.on('session_started', (session: Record<string, unknown>) => {
         console.log('Session started:', session);
         updateSession(session);
       });
@@ -144,13 +149,13 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
         updateSession({ status: 'active' });
       });
 
-      socket.on('session_ended', (session) => {
+      socket.on('session_ended', (session: Record<string, unknown>) => {
         console.log('Session ended:', session);
-        updateSession({ status: 'ended', ended_at: session.ended_at });
+        updateSession({ status: 'ended', ended_at: session.ended_at as string | undefined });
       });
 
       // Timer events
-      socket.on('timer_updated', (timerData) => {
+      socket.on('timer_updated', (timerData: { elapsed: number }) => {
         console.log('Timer updated:', timerData);
         updateTimerElapsed(timerData.elapsed);
       });
@@ -171,15 +176,17 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
       });
 
       // Error handling
-      socket.on('error', (error) => {
+      socket.on('error', (error: unknown) => {
         console.error('WebSocket error:', error);
       });
 
       // Custom event handling
-      socket.onAny((event, ...args) => {
+      (
+        socket as unknown as { onAny: (fn: (event: string, ...args: unknown[]) => void) => void }
+      ).onAny((event: string, ...args: unknown[]) => {
         const handlers = eventHandlers.current.get(event);
         if (handlers) {
-          handlers.forEach(handler => handler(args[0]));
+          handlers.forEach((handler) => handler(args[0]));
         }
       });
     }
@@ -226,17 +233,13 @@ export function WebSocketProvider({ children, url = 'http://localhost:3001' }: W
     subscribeToEvent,
   };
 
-  return (
-    <WebSocketContext.Provider value={contextValue}>
-      {children}
-    </WebSocketContext.Provider>
-  );
+  return <WebSocketContext.Provider value={contextValue}>{children}</WebSocketContext.Provider>;
 }
 
 // Custom hooks for specific WebSocket operations
 export function useQueueOperations() {
   const { sendMessage } = useWebSocket();
-  
+
   return {
     addToQueue: (delegateNumber: number, position?: number) => {
       sendMessage('add_to_queue', { delegate_number: delegateNumber, position });
@@ -255,7 +258,7 @@ export function useQueueOperations() {
 
 export function useSessionOperations() {
   const { sendMessage } = useWebSocket();
-  
+
   return {
     startSession: (name: string) => {
       sendMessage('start_session', { name });
@@ -274,7 +277,7 @@ export function useSessionOperations() {
 
 export function useTimerOperations() {
   const { sendMessage } = useWebSocket();
-  
+
   return {
     startTimer: () => {
       sendMessage('start_timer');

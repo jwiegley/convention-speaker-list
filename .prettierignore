@@ -40,7 +40,8 @@ temp
 *.tmp
 
 # Task Master files
-.taskmaster/tasks/tasks.json
+.taskmaster
+.claude
 
 # Nix files (no Prettier parser)
 *.nix

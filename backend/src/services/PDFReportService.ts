@@ -1,9 +1,6 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
-import { ChartConfiguration } from 'chart.js';
+import puppeteer, { Browser } from 'puppeteer';
 import { Pool } from 'pg';
 import { format } from 'date-fns';
-import path from 'path';
-import fs from 'fs/promises';
 import AnalyticsService from './AnalyticsService';
 import DemographicAnalytics from './DemographicAnalytics';
 import TimeAnalytics from './TimeAnalytics';
@@ -55,7 +52,7 @@ export class PDFReportService {
       if (!this.browser) {
         this.browser = await puppeteer.launch({
           headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
       }
 
@@ -89,7 +86,7 @@ export class PDFReportService {
       if (!this.browser) {
         this.browser = await puppeteer.launch({
           headless: true,
-          args: ['--no-sandbox', '--disable-setuid-sandbox']
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
         });
       }
 
@@ -120,13 +117,27 @@ export class PDFReportService {
     }
 
     // Get demographic balance
-    data.demographicBalance = await this.demographicAnalytics.calculateBalanceScores(config.sessionId);
+    data.demographicBalance = await this.demographicAnalytics.calculateBalanceScores(
+      config.sessionId
+    );
 
     // Get participation rates
     data.participationRates = {
-      gender: await this.analyticsService.calculateParticipationRate('gender', undefined, config.sessionId),
-      age: await this.analyticsService.calculateParticipationRate('age_group', undefined, config.sessionId),
-      race: await this.analyticsService.calculateParticipationRate('race', undefined, config.sessionId)
+      gender: await this.analyticsService.calculateParticipationRate(
+        'gender',
+        undefined,
+        config.sessionId
+      ),
+      age: await this.analyticsService.calculateParticipationRate(
+        'age_group',
+        undefined,
+        config.sessionId
+      ),
+      race: await this.analyticsService.calculateParticipationRate(
+        'race',
+        undefined,
+        config.sessionId
+      ),
     };
 
     // Get time distribution
@@ -137,9 +148,17 @@ export class PDFReportService {
 
     // Get speaker rankings
     data.speakerRankings = {
-      gender: await this.demographicAnalytics.rankSpeakersByDemographic('gender', config.sessionId, 10),
-      age: await this.demographicAnalytics.rankSpeakersByDemographic('age_group', config.sessionId, 10),
-      race: await this.demographicAnalytics.rankSpeakersByDemographic('race', config.sessionId, 10)
+      gender: await this.demographicAnalytics.rankSpeakersByDemographic(
+        'gender',
+        config.sessionId,
+        10
+      ),
+      age: await this.demographicAnalytics.rankSpeakersByDemographic(
+        'age_group',
+        config.sessionId,
+        10
+      ),
+      race: await this.demographicAnalytics.rankSpeakersByDemographic('race', config.sessionId, 10),
     };
 
     // Generate recommendations
@@ -376,15 +395,22 @@ export class PDFReportService {
   <div class="header">
     <h1>Convention Speaker Analytics Report</h1>
     <div class="subtitle">
-      ${config.sessionId ? `Session ${config.sessionId}` : 
-        `${format(config.startDate || new Date(), 'MMM dd, yyyy')} - ${format(config.endDate || new Date(), 'MMM dd, yyyy')}`}
+      ${
+        config.sessionId
+          ? `Session ${config.sessionId}`
+          : `${format(config.startDate || new Date(), 'MMM dd, yyyy')} - ${format(config.endDate || new Date(), 'MMM dd, yyyy')}`
+      }
     </div>
-    ${config.companyName || config.logoPath ? `
+    ${
+      config.companyName || config.logoPath
+        ? `
       <div class="company-info">
         ${config.logoPath ? `<img src="${config.logoPath}" alt="Logo">` : ''}
         ${config.companyName ? `<h2>${config.companyName}</h2>` : ''}
       </div>
-    ` : ''}
+    `
+        : ''
+    }
   </div>
 
   <div class="container">
@@ -405,18 +431,26 @@ export class PDFReportService {
       ${this.generateTimeSection(data, config.includeCharts)}
     </div>
     
-    ${config.includeHeatmap ? `
+    ${
+      config.includeHeatmap
+        ? `
       <div class="section">
         <h2 class="section-title">Activity Heatmap</h2>
         ${this.generateHeatmap(data)}
       </div>
-    ` : ''}
+    `
+        : ''
+    }
     
-    ${config.includeRecommendations && data.recommendations ? `
+    ${
+      config.includeRecommendations && data.recommendations
+        ? `
       <div class="section">
-        ${this.generateRecommendations(data.recommendations)}
+        ${this.generateRecommendationsHtml(data.recommendations)}
       </div>
-    ` : ''}
+    `
+        : ''
+    }
   </div>
   
   <div class="footer">
@@ -439,15 +473,19 @@ export class PDFReportService {
   private generateExecutiveSummary(data: ReportData): string {
     const metrics = data.sessionMetrics;
     const balance = data.demographicBalance;
-    
+
     return `
       <div class="section">
         <h2 class="section-title">Executive Summary</h2>
         <p style="margin-bottom: 20px; line-height: 1.8;">
           This report provides a comprehensive analysis of speaker participation patterns
           ${metrics ? `for session ${metrics.sessionId}` : 'for the specified period'}.
-          ${metrics ? `The session had ${metrics.uniqueSpeakers} unique speakers with a 
-          ${metrics.participationRate.toFixed(1)}% participation rate.` : ''}
+          ${
+            metrics
+              ? `The session had ${metrics.uniqueSpeakers} unique speakers with a 
+          ${metrics.participationRate.toFixed(1)}% participation rate.`
+              : ''
+          }
           The overall demographic balance score is ${((balance.gender + balance.age + balance.race) / 3).toFixed(0)}%,
           indicating ${this.getBalanceDescription((balance.gender + balance.age + balance.race) / 3)}.
         </p>
@@ -489,7 +527,7 @@ export class PDFReportService {
    */
   private generateDemographicSection(data: ReportData, includeCharts?: boolean): string {
     const balance = data.demographicBalance;
-    
+
     let html = `
       <div class="metrics-grid">
         <div class="metric-card">
@@ -558,15 +596,19 @@ export class PDFReportService {
    */
   private generateHeatmap(data: ReportData): string {
     const heatmapData = this.prepareHeatmapData(data.peakHours);
-    
+
     return `
       <div class="heatmap-container">
         <div class="heatmap">
-          ${heatmapData.map(cell => `
+          ${heatmapData
+            .map(
+              (cell) => `
             <div class="heatmap-cell" style="background: ${cell.color}; color: ${cell.textColor}">
               ${cell.value}
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
         <div style="text-align: center; margin-top: 10px; color: #666;">
           Hours of the Day (0-23)
@@ -595,7 +637,10 @@ export class PDFReportService {
             </tr>
           </thead>
           <tbody>
-            ${rankings.gender.slice(0, 5).map((speaker: any) => `
+            ${rankings.gender
+              .slice(0, 5)
+              .map(
+                (speaker: any) => `
               <tr>
                 <td>${speaker.rank}</td>
                 <td>${speaker.value}</td>
@@ -603,7 +648,9 @@ export class PDFReportService {
                 <td>${speaker.speaking_frequency}</td>
                 <td>${Math.round(speaker.total_time)}s</td>
               </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
           </tbody>
         </table>
       </div>
@@ -613,12 +660,12 @@ export class PDFReportService {
   /**
    * Generate recommendations HTML
    */
-  private generateRecommendations(recommendations: string[]): string {
+  private generateRecommendationsHtml(recommendations: string[]): string {
     return `
       <div class="recommendations">
         <h3>Recommendations</h3>
         <ul>
-          ${recommendations.map(rec => `<li>${rec}</li>`).join('')}
+          ${recommendations.map((rec) => `<li>${rec}</li>`).join('')}
         </ul>
       </div>
     `;
@@ -632,42 +679,54 @@ export class PDFReportService {
 
     // Gender chart
     if (data.participationRates?.gender) {
-      scripts.push(this.createPieChartScript('genderChart', 
-        data.participationRates.gender.map((r: any) => ({
-          label: r.value,
-          value: r.participants
-        }))
-      ));
+      scripts.push(
+        this.createPieChartScript(
+          'genderChart',
+          data.participationRates.gender.map((r: any) => ({
+            label: r.value,
+            value: r.participants,
+          }))
+        )
+      );
     }
 
     // Age chart
     if (data.participationRates?.age) {
-      scripts.push(this.createBarChartScript('ageChart',
-        data.participationRates.age.map((r: any) => ({
-          label: r.value,
-          value: r.rate
-        }))
-      ));
+      scripts.push(
+        this.createBarChartScript(
+          'ageChart',
+          data.participationRates.age.map((r: any) => ({
+            label: r.value,
+            value: r.rate,
+          }))
+        )
+      );
     }
 
     // Time distribution chart
     if (data.timeDistribution) {
-      scripts.push(this.createBarChartScript('timeDistChart',
-        data.timeDistribution.map((t: any) => ({
-          label: t.bucket,
-          value: t.count
-        }))
-      ));
+      scripts.push(
+        this.createBarChartScript(
+          'timeDistChart',
+          data.timeDistribution.map((t: any) => ({
+            label: t.bucket,
+            value: t.count,
+          }))
+        )
+      );
     }
 
     // Peak hours chart
     if (data.peakHours) {
-      scripts.push(this.createLineChartScript('peakHoursChart',
-        data.peakHours.map((h: any) => ({
-          label: h.time_label,
-          value: h.speaking_instances
-        }))
-      ));
+      scripts.push(
+        this.createLineChartScript(
+          'peakHoursChart',
+          data.peakHours.map((h: any) => ({
+            label: h.time_label,
+            value: h.speaking_instances,
+          }))
+        )
+      );
     }
 
     return `
@@ -687,9 +746,9 @@ export class PDFReportService {
       new Chart(document.getElementById('${canvasId}'), {
         type: 'pie',
         data: {
-          labels: ${JSON.stringify(data.map(d => d.label))},
+          labels: ${JSON.stringify(data.map((d) => d.label))},
           datasets: [{
-            data: ${JSON.stringify(data.map(d => d.value))},
+            data: ${JSON.stringify(data.map((d) => d.value))},
             backgroundColor: [
               '#667eea', '#764ba2', '#f093fb', '#c471f5',
               '#fa709a', '#fee140', '#30cfd0', '#330867'
@@ -717,10 +776,10 @@ export class PDFReportService {
       new Chart(document.getElementById('${canvasId}'), {
         type: 'bar',
         data: {
-          labels: ${JSON.stringify(data.map(d => d.label))},
+          labels: ${JSON.stringify(data.map((d) => d.label))},
           datasets: [{
             label: 'Value',
-            data: ${JSON.stringify(data.map(d => d.value))},
+            data: ${JSON.stringify(data.map((d) => d.value))},
             backgroundColor: '#667eea'
           }]
         },
@@ -750,10 +809,10 @@ export class PDFReportService {
       new Chart(document.getElementById('${canvasId}'), {
         type: 'line',
         data: {
-          labels: ${JSON.stringify(data.map(d => d.label))},
+          labels: ${JSON.stringify(data.map((d) => d.label))},
           datasets: [{
             label: 'Activity',
-            data: ${JSON.stringify(data.map(d => d.value))},
+            data: ${JSON.stringify(data.map((d) => d.value))},
             borderColor: '#667eea',
             backgroundColor: 'rgba(102, 126, 234, 0.1)',
             tension: 0.4
@@ -780,7 +839,7 @@ export class PDFReportService {
   /**
    * Generate heatmap script
    */
-  private async generateHeatmapScript(data: ReportData): Promise<string> {
+  private async generateHeatmapScript(_data: ReportData): Promise<string> {
     return ''; // Heatmap is rendered with CSS, no script needed
   }
 
@@ -790,18 +849,18 @@ export class PDFReportService {
   private prepareHeatmapData(peakHours: any[]): any[] {
     if (!peakHours) return [];
 
-    const maxValue = Math.max(...peakHours.map(h => h.speaking_instances));
-    
+    const maxValue = Math.max(...peakHours.map((h) => h.speaking_instances));
+
     return Array.from({ length: 24 }, (_, hour) => {
-      const hourData = peakHours.find(h => h.hour === hour);
+      const hourData = peakHours.find((h) => h.hour === hour);
       const value = hourData?.speaking_instances || 0;
       const intensity = maxValue > 0 ? value / maxValue : 0;
-      
+
       return {
         hour,
         value: value.toString(),
         color: this.getHeatmapColor(intensity),
-        textColor: intensity > 0.5 ? 'white' : 'black'
+        textColor: intensity > 0.5 ? 'white' : 'black',
       };
     });
   }
@@ -816,9 +875,9 @@ export class PDFReportService {
       '#ffca28', // 40%
       '#ff9800', // 60%
       '#ff6f00', // 80%
-      '#ff3d00'  // 100%
+      '#ff3d00', // 100%
     ];
-    
+
     const index = Math.min(Math.floor(intensity * colors.length), colors.length - 1);
     return colors[index];
   }
@@ -828,16 +887,16 @@ export class PDFReportService {
    */
   private async htmlToPDF(html: string, config: ReportConfig): Promise<Buffer> {
     const page = await this.browser!.newPage();
-    
+
     try {
       // Set content
       await page.setContent(html, { waitUntil: 'networkidle0' });
-      
+
       // Wait for charts to render
       if (config.includeCharts) {
         await page.waitForTimeout(2000);
       }
-      
+
       // Generate PDF
       const pdf = await page.pdf({
         format: config.pageSize || 'A4',
@@ -847,21 +906,23 @@ export class PDFReportService {
           top: '20mm',
           right: '15mm',
           bottom: '20mm',
-          left: '15mm'
+          left: '15mm',
         },
         displayHeaderFooter: true,
-        headerTemplate: config.headerText ? `
+        headerTemplate: config.headerText
+          ? `
           <div style="font-size: 10px; text-align: center; width: 100%;">
             ${config.headerText}
           </div>
-        ` : '',
+        `
+          : '',
         footerTemplate: `
           <div style="font-size: 10px; text-align: center; width: 100%;">
             Page <span class="pageNumber"></span> of <span class="totalPages"></span>
           </div>
-        `
+        `,
       });
-      
+
       return pdf;
     } finally {
       await page.close();
@@ -938,7 +999,7 @@ export class PDFReportService {
    * Calculate peak variance
    */
   private calculatePeakVariance(peakHours: any[]): number {
-    const values = peakHours.map(h => h.speaking_instances);
+    const values = peakHours.map((h) => h.speaking_instances);
     const mean = values.reduce((a, b) => a + b, 0) / values.length;
     const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
     return Math.sqrt(variance) / mean;

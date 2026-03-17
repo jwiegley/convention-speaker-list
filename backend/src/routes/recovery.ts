@@ -7,21 +7,17 @@ import logger from '../utils/logger';
 
 const router = Router();
 const pool = new Pool({
-  connectionString: config.database.url
+  connectionString: config.database.url,
 });
 
 /**
  * GET /api/v1/recovery/checkpoints
  * List available recovery checkpoints
  */
-router.get(
-  '/checkpoints',
-  authenticate,
-  requireAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      const result = await pool.query(
-        `SELECT 
+router.get('/checkpoints', authenticate, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    const result = await pool.query(
+      `SELECT 
           id,
           checkpoint_type,
           created_at,
@@ -32,21 +28,20 @@ router.get(
         FROM recovery_checkpoints
         ORDER BY created_at DESC
         LIMIT 50`
-      );
+    );
 
-      res.json({
-        checkpoints: result.rows,
-        count: result.rowCount
-      });
-    } catch (error) {
-      logger.error('Failed to fetch recovery checkpoints:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        message: 'Failed to fetch recovery checkpoints'
-      });
-    }
+    res.json({
+      checkpoints: result.rows,
+      count: result.rowCount,
+    });
+  } catch (error) {
+    logger.error('Failed to fetch recovery checkpoints:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to fetch recovery checkpoints',
+    });
   }
-);
+});
 
 /**
  * POST /api/v1/recovery/checkpoint
@@ -115,14 +110,14 @@ router.post(
       res.status(201).json({
         message: 'Recovery checkpoint created successfully',
         checkpointId,
-        hash: dataResult.rows[0].hash
+        hash: dataResult.rows[0].hash,
       });
     } catch (error) {
       await pool.query('ROLLBACK');
       logger.error('Failed to create recovery checkpoint:', error);
       res.status(500).json({
         error: 'Internal server error',
-        message: 'Failed to create recovery checkpoint'
+        message: 'Failed to create recovery checkpoint',
       });
     }
   }
@@ -151,7 +146,7 @@ router.post(
       if (checkpointResult.rows.length === 0) {
         res.status(404).json({
           error: 'Not found',
-          message: 'Checkpoint not found'
+          message: 'Checkpoint not found',
         });
         return;
       }
@@ -179,7 +174,7 @@ router.post(
         await pool.query('ROLLBACK');
         res.status(404).json({
           error: 'Not found',
-          message: 'Snapshot data not found for checkpoint'
+          message: 'Snapshot data not found for checkpoint',
         });
         return;
       }
@@ -209,9 +204,15 @@ router.post(
             `INSERT INTO delegates (id, name, country, organization, role, location, personal_notes, email, phone)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [
-              delegate.id, delegate.name, delegate.country, delegate.organization,
-              delegate.role, delegate.location, delegate.personal_notes,
-              delegate.email, delegate.phone
+              delegate.id,
+              delegate.name,
+              delegate.country,
+              delegate.organization,
+              delegate.role,
+              delegate.location,
+              delegate.personal_notes,
+              delegate.email,
+              delegate.phone,
             ]
           );
         }
@@ -232,14 +233,14 @@ router.post(
       res.json({
         message: 'System restored successfully',
         checkpointId,
-        restoredAt: new Date().toISOString()
+        restoredAt: new Date().toISOString(),
       });
     } catch (error) {
       await pool.query('ROLLBACK');
       logger.error('Failed to restore from checkpoint:', error);
       res.status(500).json({
         error: 'Internal server error',
-        message: 'Failed to restore from checkpoint'
+        message: 'Failed to restore from checkpoint',
       });
     }
   }
@@ -256,11 +257,11 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const { changes, conflictResolution = 'server' } = req.body;
-      
+
       if (!changes || !Array.isArray(changes)) {
         res.status(400).json({
           error: 'Bad request',
-          message: 'Changes array is required'
+          message: 'Changes array is required',
         });
         return;
       }
@@ -269,7 +270,7 @@ router.post(
         applied: 0,
         conflicts: 0,
         errors: 0,
-        details: [] as any[]
+        details: [] as any[],
       };
 
       // Process each change
@@ -289,18 +290,20 @@ router.post(
           results.details.push({
             changeId: change.id,
             success: false,
-            error: (error as Error).message
+            error: (error as Error).message,
           });
         }
       }
 
-      logger.info(`Merge completed: ${results.applied} applied, ${results.conflicts} conflicts, ${results.errors} errors`);
+      logger.info(
+        `Merge completed: ${results.applied} applied, ${results.conflicts} conflicts, ${results.errors} errors`
+      );
       res.json(results);
     } catch (error) {
       logger.error('Failed to merge changes:', error);
       res.status(500).json({
         error: 'Internal server error',
-        message: 'Failed to merge changes'
+        message: 'Failed to merge changes',
       });
     }
   }
@@ -310,54 +313,49 @@ router.post(
  * GET /api/v1/recovery/export
  * Export current system state
  */
-router.get(
-  '/export',
-  authenticate,
-  requireAdmin,
-  async (req: Request, res: Response) => {
-    try {
-      // Get all data
-      const [queue, delegates, settings, speakingInstances] = await Promise.all([
-        pool.query('SELECT * FROM queue ORDER BY position'),
-        pool.query('SELECT * FROM delegates ORDER BY name'),
-        pool.query('SELECT * FROM settings'),
-        pool.query('SELECT * FROM speaking_instances ORDER BY started_at DESC LIMIT 100')
-      ]);
+router.get('/export', authenticate, requireAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get all data
+    const [queue, delegates, settings, speakingInstances] = await Promise.all([
+      pool.query('SELECT * FROM queue ORDER BY position'),
+      pool.query('SELECT * FROM delegates ORDER BY name'),
+      pool.query('SELECT * FROM settings'),
+      pool.query('SELECT * FROM speaking_instances ORDER BY started_at DESC LIMIT 100'),
+    ]);
 
-      const exportData = {
-        version: '1.0.0',
-        exportedAt: new Date().toISOString(),
-        exportedBy: (req as any).user.userId,
-        data: {
-          queue: queue.rows,
-          delegates: delegates.rows,
-          settings: settings.rows[0] || {},
-          speakingInstances: speakingInstances.rows
-        },
-        metadata: {
-          queueCount: queue.rowCount,
-          delegateCount: delegates.rowCount,
-          instanceCount: speakingInstances.rowCount
-        }
-      };
+    const exportData = {
+      version: '1.0.0',
+      exportedAt: new Date().toISOString(),
+      exportedBy: (req as any).user.userId,
+      data: {
+        queue: queue.rows,
+        delegates: delegates.rows,
+        settings: settings.rows[0] || {},
+        speakingInstances: speakingInstances.rows,
+      },
+      metadata: {
+        queueCount: queue.rowCount,
+        delegateCount: delegates.rowCount,
+        instanceCount: speakingInstances.rowCount,
+      },
+    };
 
-      // Set response headers for file download
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="speaker-list-export-${Date.now()}.json"`
-      );
+    // Set response headers for file download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="speaker-list-export-${Date.now()}.json"`
+    );
 
-      res.json(exportData);
-    } catch (error) {
-      logger.error('Failed to export data:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        message: 'Failed to export data'
-      });
-    }
+    res.json(exportData);
+  } catch (error) {
+    logger.error('Failed to export data:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to export data',
+    });
   }
-);
+});
 
 /**
  * POST /api/v1/recovery/import
@@ -375,7 +373,7 @@ router.post(
       if (!data || !data.data) {
         res.status(400).json({
           error: 'Bad request',
-          message: 'Invalid import data format'
+          message: 'Invalid import data format',
         });
         return;
       }
@@ -411,9 +409,15 @@ router.post(
               organization = EXCLUDED.organization,
               role = EXCLUDED.role`,
             [
-              delegate.id, delegate.name, delegate.country, delegate.organization,
-              delegate.role, delegate.location, delegate.personal_notes,
-              delegate.email, delegate.phone
+              delegate.id,
+              delegate.name,
+              delegate.country,
+              delegate.organization,
+              delegate.role,
+              delegate.location,
+              delegate.personal_notes,
+              delegate.email,
+              delegate.phone,
             ]
           );
         }
@@ -453,15 +457,15 @@ router.post(
         imported: {
           delegates: data.data.delegates?.length || 0,
           queueItems: data.data.queue?.length || 0,
-          settings: data.data.settings ? 1 : 0
-        }
+          settings: data.data.settings ? 1 : 0,
+        },
       });
     } catch (error) {
       await pool.query('ROLLBACK');
       logger.error('Failed to import data:', error);
       res.status(500).json({
         error: 'Internal server error',
-        message: 'Failed to import data'
+        message: 'Failed to import data',
       });
     }
   }
@@ -474,22 +478,20 @@ async function applyChange(change: any, conflictResolution: string): Promise<any
   try {
     // Check for conflicts
     if (change.type === 'queue' && change.action === 'update') {
-      const current = await pool.query(
-        'SELECT * FROM queue WHERE id = $1',
-        [change.entityId]
-      );
+      const current = await pool.query('SELECT * FROM queue WHERE id = $1', [change.entityId]);
 
       if (current.rows.length > 0) {
         const currentData = current.rows[0];
-        
+
         // Simple timestamp-based conflict detection
         if (currentData.updated_at > change.timestamp) {
           if (conflictResolution === 'client') {
             // Apply client change
-            await pool.query(
-              'UPDATE queue SET position = $1, speaking_time = $2 WHERE id = $3',
-              [change.data.position, change.data.speaking_time, change.entityId]
-            );
+            await pool.query('UPDATE queue SET position = $1, speaking_time = $2 WHERE id = $3', [
+              change.data.position,
+              change.data.speaking_time,
+              change.entityId,
+            ]);
             return { changeId: change.id, success: true, conflict: true, resolved: 'client' };
           } else {
             // Keep server version

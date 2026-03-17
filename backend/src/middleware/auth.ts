@@ -4,6 +4,7 @@ import logger from '../utils/logger';
 
 // Extend Express Request type to include user
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: JWTPayload;
@@ -25,7 +26,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     if (!token) {
       res.status(401).json({
         error: 'Authentication required',
-        message: 'No token provided'
+        message: 'No token provided',
       });
       return;
     }
@@ -36,7 +37,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     if (!decoded) {
       res.status(401).json({
         error: 'Invalid token',
-        message: 'Token verification failed'
+        message: 'Token verification failed',
       });
       return;
     }
@@ -53,7 +54,7 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
     logger.error('Authentication error:', error);
     res.status(401).json({
       error: 'Authentication failed',
-      message: 'An error occurred during authentication'
+      message: 'An error occurred during authentication',
     });
   }
 }
@@ -66,7 +67,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
-      message: 'User not authenticated'
+      message: 'User not authenticated',
     });
     return;
   }
@@ -75,7 +76,7 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
     logger.warn(`Access denied for user ${req.user.userId}: admin role required`);
     res.status(403).json({
       error: 'Access denied',
-      message: 'Admin role required'
+      message: 'Admin role required',
     });
     return;
   }
@@ -91,7 +92,7 @@ export function requireSpectator(req: Request, res: Response, next: NextFunction
   if (!req.user) {
     res.status(401).json({
       error: 'Authentication required',
-      message: 'User not authenticated'
+      message: 'User not authenticated',
     });
     return;
   }
@@ -100,7 +101,7 @@ export function requireSpectator(req: Request, res: Response, next: NextFunction
     logger.warn(`Access denied for user ${req.user.userId}: spectator role required`);
     res.status(403).json({
       error: 'Access denied',
-      message: 'Spectator or admin role required'
+      message: 'Spectator or admin role required',
     });
     return;
   }
@@ -142,7 +143,7 @@ export function requireOwnership(resourceUserIdField: string = 'userId') {
     if (!req.user) {
       res.status(401).json({
         error: 'Authentication required',
-        message: 'User not authenticated'
+        message: 'User not authenticated',
       });
       return;
     }
@@ -155,11 +156,11 @@ export function requireOwnership(resourceUserIdField: string = 'userId') {
 
     // Check ownership
     const resourceUserId = req.params[resourceUserIdField] || req.body[resourceUserIdField];
-    
+
     if (!resourceUserId) {
       res.status(400).json({
         error: 'Bad request',
-        message: 'Resource user ID not found'
+        message: 'Resource user ID not found',
       });
       return;
     }
@@ -168,7 +169,7 @@ export function requireOwnership(resourceUserIdField: string = 'userId') {
       logger.warn(`Access denied for user ${req.user.userId}: not resource owner`);
       res.status(403).json({
         error: 'Access denied',
-        message: 'You do not have permission to access this resource'
+        message: 'You do not have permission to access this resource',
       });
       return;
     }
@@ -197,11 +198,11 @@ export function authRateLimit(adminLimit: number = 1000, userLimit: number = 100
 
     // Get or create user's request tracking
     let userRequests = requests.get(userId);
-    
+
     if (!userRequests || now > userRequests.resetTime) {
       userRequests = {
         count: 0,
-        resetTime: now + windowMs
+        resetTime: now + windowMs,
       };
       requests.set(userId, userRequests);
     }
@@ -211,11 +212,11 @@ export function authRateLimit(adminLimit: number = 1000, userLimit: number = 100
     // Check if limit exceeded
     if (userRequests.count > limit) {
       const retryAfter = Math.ceil((userRequests.resetTime - now) / 1000);
-      
+
       res.status(429).json({
         error: 'Too many requests',
         message: `Rate limit exceeded. Try again in ${retryAfter} seconds`,
-        retryAfter
+        retryAfter,
       });
       return;
     }
@@ -233,7 +234,11 @@ export function authRateLimit(adminLimit: number = 1000, userLimit: number = 100
  * Session validation middleware
  * Checks if the user's session is still valid
  */
-export async function validateSession(req: Request, res: Response, next: NextFunction): Promise<void> {
+export async function validateSession(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   if (!req.user || !req.user.sessionId) {
     next();
     return;
@@ -243,9 +248,9 @@ export async function validateSession(req: Request, res: Response, next: NextFun
     // Import database connection
     const { Pool } = await import('pg');
     const { config } = await import('../config');
-    
+
     const pool = new Pool({
-      connectionString: config.database.url
+      connectionString: config.database.url,
     });
 
     // Check if session exists and is not expired
@@ -261,7 +266,7 @@ export async function validateSession(req: Request, res: Response, next: NextFun
       await pool.end();
       res.status(401).json({
         error: 'Session expired',
-        message: 'Your session has expired. Please log in again.'
+        message: 'Your session has expired. Please log in again.',
       });
       return;
     }
@@ -280,7 +285,7 @@ export async function validateSession(req: Request, res: Response, next: NextFun
     logger.error('Session validation error:', error);
     res.status(500).json({
       error: 'Internal server error',
-      message: 'Failed to validate session'
+      message: 'Failed to validate session',
     });
   }
 }

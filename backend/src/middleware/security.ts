@@ -60,8 +60,8 @@ export const createRateLimiter = (
 // In development, use much higher limits to accommodate polling
 const isDevelopment = process.env.NODE_ENV === 'development';
 export const apiLimiter = createRateLimiter(
-  15 * 60 * 1000, 
-  isDevelopment ? 10000 : 100  // 10000 requests in dev, 100 in production
+  15 * 60 * 1000,
+  isDevelopment ? 10000 : 100 // 10000 requests in dev, 100 in production
 );
 export const authLimiter = createRateLimiter(15 * 60 * 1000, 5);
 export const bulkOperationLimiter = createRateLimiter(60 * 60 * 1000, 10);

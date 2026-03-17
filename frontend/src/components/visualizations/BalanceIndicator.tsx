@@ -19,25 +19,25 @@ const INDICATOR_CONFIG = {
     colors: {
       primary: '#8B5CF6',
       secondary: '#EC4899',
-      background: '#F3F4F6'
-    }
+      background: '#F3F4F6',
+    },
   },
   age: {
     label: 'Age Distribution',
     colors: {
       primary: '#3B82F6',
       secondary: '#10B981',
-      background: '#F3F4F6'
-    }
+      background: '#F3F4F6',
+    },
   },
   race: {
     label: 'Racial Diversity',
     colors: {
       primary: '#F59E0B',
       secondary: '#EF4444',
-      background: '#F3F4F6'
-    }
-  }
+      background: '#F3F4F6',
+    },
+  },
 };
 
 export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
@@ -47,15 +47,15 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
   height = 300,
   width = 80,
   animated = true,
-  className = ''
+  className = '',
 }) => {
   const config = INDICATOR_CONFIG[type];
   const displayLabel = label || config.label;
-  
+
   // Calculate lever position (0% at bottom, 100% at top)
   const leverY = useMemo(() => {
     const range = height - 60; // Leave margin for lever handle
-    return height - 30 - (range * (percentage / 100));
+    return height - 30 - range * (percentage / 100);
   }, [percentage, height]);
 
   // Determine color based on balance
@@ -70,15 +70,15 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
   }, [percentage]);
 
   const LeverComponent = animated ? motion.g : 'g';
-  const leverProps = animated 
+  const leverProps = animated
     ? {
         initial: { y: height - 30 },
         animate: { y: leverY },
-        transition: { 
-          type: 'spring',
+        transition: {
+          type: 'spring' as const,
           stiffness: 100,
-          damping: 20
-        }
+          damping: 20,
+        },
       }
     : { transform: `translate(0, ${leverY})` };
 
@@ -90,10 +90,10 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
           {percentage.toFixed(1)}%
         </p>
       </div>
-      
-      <svg 
-        width={width} 
-        height={height} 
+
+      <svg
+        width={width}
+        height={height}
         viewBox={`0 0 ${width} ${height}`}
         className="balance-indicator-svg"
       >
@@ -106,7 +106,7 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
           fill={config.colors.background}
           rx={4}
         />
-        
+
         {/* Gradient fill showing current level */}
         <defs>
           <linearGradient id={`gradient-${type}`} x1="0%" y1="100%" x2="0%" y2="0%">
@@ -114,7 +114,7 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
             <stop offset="100%" stopColor={config.colors.primary} />
           </linearGradient>
         </defs>
-        
+
         <rect
           x={width / 2 - 4}
           y={leverY}
@@ -124,30 +124,16 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
           rx={4}
           opacity={0.3}
         />
-        
+
         {/* Lever handle */}
         <LeverComponent {...leverProps}>
-          <circle
-            cx={width / 2}
-            cy={0}
-            r={12}
-            fill={leverColor}
-            stroke="white"
-            strokeWidth={2}
-          />
-          <rect
-            x={10}
-            y={-2}
-            width={width - 20}
-            height={4}
-            fill={leverColor}
-            rx={2}
-          />
+          <circle cx={width / 2} cy={0} r={12} fill={leverColor} stroke="white" strokeWidth={2} />
+          <rect x={10} y={-2} width={width - 20} height={4} fill={leverColor} rx={2} />
         </LeverComponent>
-        
+
         {/* Scale marks */}
         {[0, 25, 50, 75, 100].map((mark) => {
-          const markY = height - 30 - ((height - 60) * (mark / 100));
+          const markY = height - 30 - (height - 60) * (mark / 100);
           return (
             <g key={mark}>
               <line
@@ -158,13 +144,7 @@ export const BalanceIndicator: React.FC<BalanceIndicatorProps> = ({
                 stroke="#9CA3AF"
                 strokeWidth={1}
               />
-              <text
-                x={width / 2 - 16}
-                y={markY + 4}
-                fontSize={10}
-                fill="#6B7280"
-                textAnchor="end"
-              >
+              <text x={width / 2 - 16} y={markY + 4} fontSize={10} fill="#6B7280" textAnchor="end">
                 {mark}%
               </text>
             </g>

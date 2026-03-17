@@ -6,13 +6,13 @@ export interface SpeakingInstance {
   id: string;
   delegate_id: string;
   session_id: string;
-  queue_item_id?: string;  // Optional reference to queue item
+  queue_item_id?: string; // Optional reference to queue item
   start_time: Date;
   end_time?: Date;
   duration_seconds?: number;
   position_in_queue: number;
   is_tracked: boolean;
-  status?: 'active' | 'completed' | 'interrupted';  // Track speaking status
+  status?: 'active' | 'completed' | 'interrupted'; // Track speaking status
   created_at: Date;
   updated_at: Date;
 }

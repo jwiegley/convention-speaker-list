@@ -32,7 +32,7 @@ export function useResponsive(): ResponsiveState {
     const width = typeof window !== 'undefined' ? window.innerWidth : 1024;
     const height = typeof window !== 'undefined' ? window.innerHeight : 768;
     const breakpoint = getBreakpoint(width);
-    
+
     return {
       width,
       height,
@@ -52,7 +52,7 @@ export function useResponsive(): ResponsiveState {
       const width = window.innerWidth;
       const height = window.innerHeight;
       const breakpoint = getBreakpoint(width);
-      
+
       setState({
         width,
         height,
@@ -69,7 +69,7 @@ export function useResponsive(): ResponsiveState {
 
     // Add resize listener
     window.addEventListener('resize', handleResize);
-    
+
     // Initial call
     handleResize();
 
@@ -98,11 +98,11 @@ export function useBreakpoint(breakpoint: Breakpoint): boolean {
   const responsive = useResponsive();
   const breakpointValue = breakpoints[breakpoint];
   const nextBreakpointValue = getNextBreakpointValue(breakpoint);
-  
+
   if (nextBreakpointValue === null) {
     return responsive.width >= breakpointValue;
   }
-  
+
   return responsive.width >= breakpointValue && responsive.width < nextBreakpointValue;
 }
 
@@ -112,11 +112,11 @@ export function useBreakpoint(breakpoint: Breakpoint): boolean {
 function getNextBreakpointValue(breakpoint: Breakpoint): number | null {
   const orderedBreakpoints: Breakpoint[] = ['mobile', 'tablet', 'desktop', 'wide'];
   const currentIndex = orderedBreakpoints.indexOf(breakpoint);
-  
+
   if (currentIndex === -1 || currentIndex === orderedBreakpoints.length - 1) {
     return null;
   }
-  
+
   return breakpoints[orderedBreakpoints[currentIndex + 1]];
 }
 
@@ -134,11 +134,11 @@ export function useMinBreakpoint(breakpoint: Breakpoint): boolean {
 export function useMaxBreakpoint(breakpoint: Breakpoint): boolean {
   const responsive = useResponsive();
   const nextBreakpointValue = getNextBreakpointValue(breakpoint);
-  
+
   if (nextBreakpointValue === null) {
     return true;
   }
-  
+
   return responsive.width < nextBreakpointValue;
 }
 
@@ -150,7 +150,7 @@ export function useMediaQuery(query: string): boolean {
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(query);
-    
+
     // Set initial value
     setMatches(mediaQuery.matches);
 
@@ -191,7 +191,7 @@ export function useResponsiveValue<T>(values: {
   default: T;
 }): T {
   const { breakpoint } = useResponsive();
-  
+
   // Return the value for the current breakpoint, or fall through to smaller breakpoints
   switch (breakpoint) {
     case 'wide':

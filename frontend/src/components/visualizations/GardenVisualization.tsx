@@ -19,9 +19,9 @@ export const GardenVisualization: React.FC<GardenVisualizationProps> = ({
   animationDuration = 1000,
   className = '',
   onStateChange,
-  preloadImages = true
+  preloadImages = true,
 }) => {
-  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
+  const [_loadedImages, setLoadedImages] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [imageError, setImageError] = useState<string | null>(null);
   const [displayState, setDisplayState] = useState(currentState);
@@ -46,19 +46,15 @@ export const GardenVisualization: React.FC<GardenVisualizationProps> = ({
     }
 
     const preloadPromises: Promise<void>[] = [];
-    
-    // Preload current state and adjacent states first
-    const priorityStates = [
-      validState,
-      Math.max(0, validState - 1),
-      Math.min(32, validState + 1)
-    ];
 
-    priorityStates.forEach(state => {
+    // Preload current state and adjacent states first
+    const priorityStates = [validState, Math.max(0, validState - 1), Math.min(32, validState + 1)];
+
+    priorityStates.forEach((state) => {
       const img = new Image();
       const promise = new Promise<void>((resolve, reject) => {
         img.onload = () => {
-          setLoadedImages(prev => new Set(prev).add(state));
+          setLoadedImages((prev) => new Set(prev).add(state));
           resolve();
         };
         img.onerror = () => {
@@ -74,19 +70,19 @@ export const GardenVisualization: React.FC<GardenVisualizationProps> = ({
     Promise.all(preloadPromises)
       .then(() => {
         setIsLoading(false);
-        
+
         // Load remaining images in background
         for (let i = 0; i < TOTAL_STATES; i++) {
           if (!priorityStates.includes(i)) {
             const img = new Image();
             img.onload = () => {
-              setLoadedImages(prev => new Set(prev).add(i));
+              setLoadedImages((prev) => new Set(prev).add(i));
             };
             img.src = getImagePath(i);
           }
         }
       })
-      .catch(err => {
+      .catch((err) => {
         setImageError(err.message);
         setIsLoading(false);
       });
@@ -133,9 +129,17 @@ export const GardenVisualization: React.FC<GardenVisualizationProps> = ({
     return (
       <div className={`garden-visualization garden-error ${className}`}>
         <div className="flex flex-col items-center justify-center h-64 bg-red-50 rounded-lg p-4">
-          <svg className="w-16 h-16 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" 
+          <svg
+            className="w-16 h-16 text-red-400 mb-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
           <p className="text-red-600 text-center">{imageError}</p>
@@ -154,10 +158,10 @@ export const GardenVisualization: React.FC<GardenVisualizationProps> = ({
             <span className="text-sm font-semibold text-gray-900">{getStateDescription}</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2.5">
-            <motion.div 
+            <motion.div
               className="h-2.5 rounded-full"
               style={{
-                background: `linear-gradient(90deg, #DC2626 0%, #F59E0B 33%, #10B981 66%, #059669 100%)`
+                background: `linear-gradient(90deg, #DC2626 0%, #F59E0B 33%, #10B981 66%, #059669 100%)`,
               }}
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}

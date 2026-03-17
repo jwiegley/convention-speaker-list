@@ -1,0 +1,49 @@
+pre-commit:
+  parallel: true
+  commands:
+    prettier-check:
+      glob: '*.{ts,tsx,js,jsx,json,css,md}'
+      run: npx prettier --check {staged_files}
+    eslint-backend:
+      glob: 'backend/src/**/*.ts'
+      exclude: 'backend/src/database/**'
+      run: npx eslint --max-warnings=0 {staged_files}
+    eslint-frontend:
+      root: frontend/
+      glob: 'src/**/*.{ts,tsx}'
+      run: npx eslint --max-warnings=0 {staged_files}
+    eslint-shared:
+      glob: 'shared/src/**/*.ts'
+      run: npx eslint --max-warnings=0 {staged_files}
+    typecheck-backend:
+      glob: '*.{ts,tsx}'
+      run: npx tsc --noEmit -p backend/tsconfig.json
+    typecheck-frontend:
+      glob: '*.{ts,tsx}'
+      run: npx tsc --noEmit -p frontend/tsconfig.app.json
+    typecheck-shared:
+      glob: '*.{ts,tsx}'
+      run: npx tsc --noEmit -p shared/tsconfig.json
+    shellcheck:
+      glob: '*.sh'
+      run: bash -c 'command -v shellcheck >/dev/null 2>&1 && shellcheck {staged_files} || true'
+    shfmt-check:
+      glob: '*.sh'
+      run: shfmt -d {staged_files}
+    test-backend:
+      glob: '*.{ts,tsx}'
+      run: cd backend && npx jest --passWithNoTests --ci --silent
+    test-frontend:
+      glob: '*.{ts,tsx}'
+      run: cd frontend && npx vitest run --passWithNoTests
+    test-coverage:
+      glob: '*.{ts,tsx}'
+      run: |
+        cd backend && npx jest --coverage --passWithNoTests --ci --silent \
+          --coverageReporters=text-summary 2>&1 | tail -5
+    build-check:
+      glob: '*.{ts,tsx,json}'
+      run: npm run build
+    nix-check:
+      glob: '*.{ts,tsx,js,jsx,json,css,nix,yml,yaml,sh}'
+      run: bash -c 'command -v nix >/dev/null 2>&1 && nix flake check --no-warn-dirty 2>&1 || true'

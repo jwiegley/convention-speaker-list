@@ -1,14 +1,11 @@
 import { io, Socket } from 'socket.io-client';
-import { 
-  ServerToClientEvents, 
-  ClientToServerEvents 
-} from '../../../shared/src/types/socket';
+import { ServerToClientEvents, ClientToServerEvents } from '../../../shared/src/types/socket';
 
 type TestSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 async function testSocketConnection() {
   console.log('Testing Socket.io connection...');
-  
+
   // Connect to main namespace
   const socket: TestSocket = io('http://localhost:3001', {
     transports: ['websocket'],
@@ -18,7 +15,7 @@ async function testSocketConnection() {
   socket.on('connect', () => {
     console.log('✅ Connected to Socket.io server');
     console.log('Socket ID:', socket.id);
-    
+
     // Test joining a session
     socket.emit('join:session', 'test-session-123');
   });

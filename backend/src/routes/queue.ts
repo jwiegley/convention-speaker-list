@@ -6,35 +6,30 @@ import {
   advanceQueueValidation,
   removeFromQueueValidation,
   reorderQueueValidation,
-  queueListValidation
+  queueListValidation,
 } from '../validators/queueValidator';
 
 const router = Router();
 
 // Queue management endpoints with validation
-router.get('/', 
-  queueListValidation, 
-  handleValidationErrors, 
-  queueController.getQueue
-);
-router.post('/add', 
-  addToQueueValidation, 
-  handleValidationErrors, 
-  queueController.addToQueue
-);
-router.put('/advance', 
-  advanceQueueValidation, 
-  handleValidationErrors, 
+router.get('/', queueListValidation, handleValidationErrors, queueController.getQueue);
+router.post('/add', addToQueueValidation, handleValidationErrors, queueController.addToQueue);
+router.put(
+  '/advance',
+  advanceQueueValidation,
+  handleValidationErrors,
   queueController.advanceQueue
 );
-router.delete('/:id', 
-  removeFromQueueValidation, 
-  handleValidationErrors, 
+router.delete(
+  '/:id',
+  removeFromQueueValidation,
+  handleValidationErrors,
   queueController.removeFromQueue
 );
-router.put('/reorder', 
-  reorderQueueValidation, 
-  handleValidationErrors, 
+router.put(
+  '/reorder',
+  reorderQueueValidation,
+  handleValidationErrors,
   queueController.reorderQueue
 );
 

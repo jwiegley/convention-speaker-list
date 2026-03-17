@@ -7,7 +7,7 @@ import {
   changePassword,
   getCurrentUser,
   listActiveSessions,
-  revokeSession
+  revokeSession,
 } from '../controllers/authController';
 import { authenticate, requireAdmin, validateSession, authRateLimit } from '../middleware/auth';
 
@@ -33,7 +33,7 @@ router.post(
   [
     body('username').notEmpty().withMessage('Username is required'),
     body('password').notEmpty().withMessage('Password is required'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
   authRateLimit(100, 10), // Stricter rate limit for login
   login
@@ -45,10 +45,7 @@ router.post(
  */
 router.post(
   '/admin/login',
-  [
-    body('password').notEmpty().withMessage('Password is required'),
-    handleValidationErrors
-  ],
+  [body('password').notEmpty().withMessage('Password is required'), handleValidationErrors],
   authRateLimit(100, 5), // Very strict rate limit for admin login
   (req: any, res: any) => {
     req.body.username = 'admin';
@@ -63,10 +60,7 @@ router.post(
  */
 router.post(
   '/spectator/login',
-  [
-    body('password').notEmpty().withMessage('Password is required'),
-    handleValidationErrors
-  ],
+  [body('password').notEmpty().withMessage('Password is required'), handleValidationErrors],
   authRateLimit(100, 10), // Moderate rate limit for spectator login
   (req: any, res: any) => {
     req.body.username = 'spectator';
@@ -83,7 +77,7 @@ router.post(
   '/refresh',
   [
     body('refreshToken').notEmpty().withMessage('Refresh token is required'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
   authRateLimit(100, 20),
   refreshToken
@@ -95,23 +89,13 @@ router.post(
  * POST /api/v1/auth/logout
  * Logout endpoint
  */
-router.post(
-  '/logout',
-  authenticate,
-  validateSession,
-  logout
-);
+router.post('/logout', authenticate, validateSession, logout);
 
 /**
  * GET /api/v1/auth/me
  * Get current user information
  */
-router.get(
-  '/me',
-  authenticate,
-  validateSession,
-  getCurrentUser
-);
+router.get('/me', authenticate, validateSession, getCurrentUser);
 
 /**
  * PUT /api/v1/auth/password
@@ -132,9 +116,9 @@ router.put(
       .withMessage('Password must contain at least one uppercase letter')
       .matches(/[0-9]/)
       .withMessage('Password must contain at least one number')
-      .matches(/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/)
+      .matches(/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/)
       .withMessage('Password must contain at least one special character'),
-    handleValidationErrors
+    handleValidationErrors,
   ],
   changePassword
 );
@@ -145,24 +129,12 @@ router.put(
  * GET /api/v1/auth/sessions
  * List all active sessions (admin only)
  */
-router.get(
-  '/sessions',
-  authenticate,
-  validateSession,
-  requireAdmin,
-  listActiveSessions
-);
+router.get('/sessions', authenticate, validateSession, requireAdmin, listActiveSessions);
 
 /**
  * DELETE /api/v1/auth/sessions/:sessionId
  * Revoke a specific session (admin only)
  */
-router.delete(
-  '/sessions/:sessionId',
-  authenticate,
-  validateSession,
-  requireAdmin,
-  revokeSession
-);
+router.delete('/sessions/:sessionId', authenticate, validateSession, requireAdmin, revokeSession);
 
 export default router;

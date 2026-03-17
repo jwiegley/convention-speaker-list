@@ -6,7 +6,7 @@ import path from 'path';
 export async function initSQLiteDb() {
   const db = await open({
     filename: path.join(process.cwd(), 'convention.db'),
-    driver: sqlite3.Database
+    driver: sqlite3.Database,
   });
 
   // Create tables
@@ -96,12 +96,12 @@ export const sqlitePool = {
         // Replace $1, $2, etc. with ?
         sqliteQuery = text.replace(/\$(\d+)/g, '?');
       }
-      
+
       // Handle special PostgreSQL functions
       sqliteQuery = sqliteQuery
         .replace(/EXTRACT\(EPOCH FROM \((.*?)\)\)/gi, '(strftime("%s", $1))')
         .replace(/COUNT\(\*\) FROM sessions\s*$/i, 'COUNT(*) as count FROM sessions');
-      
+
       if (sqliteQuery.toLowerCase().startsWith('select')) {
         const result = await db.all(sqliteQuery, params);
         return { rows: result, rowCount: result.length };
@@ -122,16 +122,20 @@ export const sqlitePool = {
         if (params && params.length > 0) {
           sqliteQuery = text.replace(/\$(\d+)/g, '?');
         }
-        
+
         // Handle special PostgreSQL functions
         sqliteQuery = sqliteQuery
           .replace(/EXTRACT\(EPOCH FROM \((.*?)\)\)/gi, '(strftime("%s", $1))')
           .replace(/COUNT\(\*\) FROM sessions\s*$/i, 'COUNT(*) as count FROM sessions');
-        
+
         if (sqliteQuery.toLowerCase().startsWith('select')) {
           const result = await db.all(sqliteQuery, params);
           return { rows: result, rowCount: result.length };
-        } else if (text.toUpperCase() === 'BEGIN' || text.toUpperCase() === 'COMMIT' || text.toUpperCase() === 'ROLLBACK') {
+        } else if (
+          text.toUpperCase() === 'BEGIN' ||
+          text.toUpperCase() === 'COMMIT' ||
+          text.toUpperCase() === 'ROLLBACK'
+        ) {
           await db.exec(text);
           return { rows: [], rowCount: 0 };
         } else {
@@ -139,7 +143,7 @@ export const sqlitePool = {
           return { rows: [], rowCount: result.changes };
         }
       },
-      release: () => db.close()
+      release: () => db.close(),
     };
-  }
+  },
 };

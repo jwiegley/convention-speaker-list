@@ -5,7 +5,7 @@ import { API_BASE_URL } from '@/utils/config';
 
 interface TimerConfig {
   warningTime: number; // seconds before turning yellow
-  limitTime: number;   // seconds before turning red
+  limitTime: number; // seconds before turning red
 }
 
 export function TimerSettings() {
@@ -13,17 +13,21 @@ export function TimerSettings() {
   const [limitTime, setLimitTime] = useState<number>(120);
 
   // Fetch current timer settings
-  const { data: settings, refetch } = useQuery<TimerConfig>({
+  const { data, refetch } = useQuery<TimerConfig>({
     queryKey: ['timerSettings'],
     queryFn: async () => {
       const response = await axios.get(`${API_BASE_URL}/settings/timer`);
       return response.data;
     },
-    onSuccess: (data) => {
+  });
+
+  // Sync local state when data changes (replaces onSuccess from React Query v4)
+  useEffect(() => {
+    if (data) {
       setWarningTime(data.warningTime);
       setLimitTime(data.limitTime);
-    },
-  });
+    }
+  }, [data]);
 
   // Update timer settings mutation
   const updateSettingsMutation = useMutation({
@@ -54,7 +58,7 @@ export function TimerSettings() {
   return (
     <div className="timer-settings space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Timer Settings</h2>
-      
+
       <div className="bg-white rounded-lg shadow p-6 space-y-6">
         <div>
           <h3 className="text-lg font-semibold mb-4">Speaking Time Limits</h3>
@@ -85,9 +89,7 @@ export function TimerSettings() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Time Limit (Red)
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Time Limit (Red)</label>
             <div className="flex items-center gap-3">
               <input
                 type="number"
@@ -124,7 +126,9 @@ export function TimerSettings() {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-yellow-500 rounded"></div>
-              <span>Yellow: {warningTime} - {limitTime - 1} seconds</span>
+              <span>
+                Yellow: {warningTime} - {limitTime - 1} seconds
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-red-500 rounded"></div>

@@ -2,12 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../errors';
 import logger from '../utils/logger';
 
-export const errorHandler = (
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction
-) => {
+export const errorHandler = (err: Error, req: Request, res: Response, _next: NextFunction) => {
   if (err instanceof AppError) {
     // Operational errors
     logger.error(`Operational Error: ${err.message}`, {
@@ -16,7 +11,7 @@ export const errorHandler = (
       method: req.method,
       ip: req.ip,
     });
-    
+
     res.status(err.statusCode).json({
       status: 'error',
       message: err.message,
@@ -24,7 +19,7 @@ export const errorHandler = (
     });
     return;
   }
-  
+
   // Programming or unknown errors
   logger.error(`Unexpected Error: ${err.message}`, {
     path: req.path,
@@ -32,12 +27,10 @@ export const errorHandler = (
     ip: req.ip,
     stack: err.stack,
   });
-  
+
   // Don't leak error details in production
-  const message = process.env.NODE_ENV === 'production' 
-    ? 'Something went wrong!' 
-    : err.message;
-  
+  const message = process.env.NODE_ENV === 'production' ? 'Something went wrong!' : err.message;
+
   res.status(500).json({
     status: 'error',
     message,
@@ -46,7 +39,9 @@ export const errorHandler = (
 };
 
 // Async error wrapper
-export const asyncHandler = (fn: Function) => {
+export const asyncHandler = (
+  fn: (...args: [Request, Response, NextFunction]) => Promise<void> | void
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };

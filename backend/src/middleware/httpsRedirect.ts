@@ -18,14 +18,14 @@ export function httpsRedirect(req: Request, res: Response, next: NextFunction): 
   // Build HTTPS URL
   const httpsPort = process.env.HTTPS_PORT || '443';
   const host = req.headers.host?.split(':')[0] || 'localhost';
-  
+
   let httpsUrl = `https://${host}`;
-  
+
   // Add port if not default HTTPS port
   if (httpsPort !== '443') {
     httpsUrl += `:${httpsPort}`;
   }
-  
+
   httpsUrl += req.url;
 
   // Redirect to HTTPS with 301 (permanent redirect)
@@ -38,10 +38,7 @@ export function httpsRedirect(req: Request, res: Response, next: NextFunction): 
 export function securityHeaders(req: Request, res: Response, next: NextFunction): void {
   // Strict Transport Security (HSTS)
   if (req.secure || req.headers['x-forwarded-proto'] === 'https') {
-    res.setHeader(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
-    );
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
   }
 
   // Content Security Policy
@@ -58,7 +55,7 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
+    'upgrade-insecure-requests',
   ];
 
   res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
@@ -68,12 +65,9 @@ export function securityHeaders(req: Request, res: Response, next: NextFunction)
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-XSS-Protection', '1; mode=block');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  
+
   // Permissions Policy (formerly Feature Policy)
-  res.setHeader(
-    'Permissions-Policy',
-    'camera=(), microphone=(), geolocation=(), payment=()'
-  );
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
 
   // Remove X-Powered-By header
   res.removeHeader('X-Powered-By');
@@ -92,18 +86,18 @@ export function certificatePinning(pins: string[]) {
     }
 
     // Only apply in production and over HTTPS
-    if (config.env !== 'production' || (!req.secure && req.headers['x-forwarded-proto'] !== 'https')) {
+    if (
+      config.env !== 'production' ||
+      (!req.secure && req.headers['x-forwarded-proto'] !== 'https')
+    ) {
       return next();
     }
 
     // Build Public-Key-Pins header
     const maxAge = 60 * 60 * 24 * 30; // 30 days
-    const pinHeader = pins.map(pin => `pin-sha256="${pin}"`).join('; ');
-    
-    res.setHeader(
-      'Public-Key-Pins',
-      `${pinHeader}; max-age=${maxAge}; includeSubDomains`
-    );
+    const pinHeader = pins.map((pin) => `pin-sha256="${pin}"`).join('; ');
+
+    res.setHeader('Public-Key-Pins', `${pinHeader}; max-age=${maxAge}; includeSubDomains`);
 
     next();
   };
@@ -118,10 +112,7 @@ export function expectCT(req: Request, res: Response, next: NextFunction): void 
     return next();
   }
 
-  res.setHeader(
-    'Expect-CT',
-    'max-age=86400, enforce'
-  );
+  res.setHeader('Expect-CT', 'max-age=86400, enforce');
 
   next();
 }

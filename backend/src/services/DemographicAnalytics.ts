@@ -69,7 +69,7 @@ export class DemographicAnalytics {
     limit: number = 20
   ): Promise<DemographicRanking[]> {
     const cacheKey = `demographic_rank:${demographic}:${sessionId || 'all'}:${limit}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -146,11 +146,9 @@ export class DemographicAnalytics {
   /**
    * Analyze participation by demographic combinations
    */
-  async analyzeDemographicCombinations(
-    sessionId?: string
-  ): Promise<DemographicCombination[]> {
+  async analyzeDemographicCombinations(sessionId?: string): Promise<DemographicCombination[]> {
     const cacheKey = `demographic_combinations:${sessionId || 'all'}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -233,7 +231,7 @@ export class DemographicAnalytics {
     overall: number;
   }> {
     const cacheKey = `balance_scores:${sessionId || 'all'}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -432,14 +430,16 @@ export class DemographicAnalytics {
   async getSpeakingFrequencyDistribution(
     demographic: 'gender' | 'age_group' | 'race',
     sessionId?: string
-  ): Promise<{
-    value: string;
-    frequency_0: number;
-    frequency_1_3: number;
-    frequency_4_6: number;
-    frequency_7_plus: number;
-    avg_frequency: number;
-  }[]> {
+  ): Promise<
+    {
+      value: string;
+      frequency_0: number;
+      frequency_1_3: number;
+      frequency_4_6: number;
+      frequency_7_plus: number;
+      avg_frequency: number;
+    }[]
+  > {
     const query = `
       WITH frequency_counts AS (
         SELECT 
@@ -623,21 +623,21 @@ export class DemographicAnalytics {
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_delegates_demographics 
        ON delegates(gender, age_group, race)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_speaker_history_delegate_session 
        ON speaker_history(delegate_id, session_id)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_speaker_history_session_time 
        ON speaker_history(session_id, start_time)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_delegates_gender 
        ON delegates(gender) WHERE gender IS NOT NULL`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_delegates_age_group 
        ON delegates(age_group) WHERE age_group IS NOT NULL`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_delegates_race 
-       ON delegates(race) WHERE race IS NOT NULL`
+       ON delegates(race) WHERE race IS NOT NULL`,
     ];
 
     for (const index of indexes) {
@@ -653,11 +653,9 @@ export class DemographicAnalytics {
       return;
     }
 
-    const patterns = pattern ? [pattern] : [
-      'demographic_rank:*',
-      'demographic_combinations:*',
-      'balance_scores:*'
-    ];
+    const patterns = pattern
+      ? [pattern]
+      : ['demographic_rank:*', 'demographic_combinations:*', 'balance_scores:*'];
 
     for (const p of patterns) {
       const keys = await this.redis.keys(p);

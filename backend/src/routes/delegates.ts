@@ -7,44 +7,49 @@ import {
   createDelegateValidation,
   updateDelegateValidation,
   delegateIdValidation,
-  delegateListValidation
+  delegateListValidation,
 } from '../validators/delegateValidator';
 
 const router = Router();
 
 // Delegate CRUD endpoints with validation
-router.get('/', 
-  delegateListValidation, 
-  handleValidationErrors, 
-  delegateController.getAllDelegates
-);
+router.get('/', delegateListValidation, handleValidationErrors, delegateController.getAllDelegates);
 router.get('/export', delegateController.exportDelegates);
-router.get('/:id', 
-  delegateIdValidation, 
-  handleValidationErrors, 
+router.get(
+  '/:id',
+  delegateIdValidation,
+  handleValidationErrors,
   delegateController.getDelegateById
 );
-router.post('/', 
-  createDelegateValidation, 
-  handleValidationErrors, 
+router.post(
+  '/',
+  createDelegateValidation,
+  handleValidationErrors,
   delegateController.createDelegate
 );
-router.post('/bulk', bulkOperationLimiter, (req, res, next) => {
-  uploadCSV(req, res, (err) => {
-    if (err) {
-      return res.status(400).json({ error: handleUploadError(err) });
-    }
-    return next();
-  });
-}, delegateController.bulkImport);
-router.put('/:id', 
-  updateDelegateValidation, 
-  handleValidationErrors, 
+router.post(
+  '/bulk',
+  bulkOperationLimiter,
+  (req, res, next) => {
+    uploadCSV(req, res, (err) => {
+      if (err) {
+        return res.status(400).json({ error: handleUploadError(err) });
+      }
+      return next();
+    });
+  },
+  delegateController.bulkImport
+);
+router.put(
+  '/:id',
+  updateDelegateValidation,
+  handleValidationErrors,
   delegateController.updateDelegate
 );
-router.delete('/:id', 
-  delegateIdValidation, 
-  handleValidationErrors, 
+router.delete(
+  '/:id',
+  delegateIdValidation,
+  handleValidationErrors,
   delegateController.deleteDelegate
 );
 

@@ -37,22 +37,22 @@ export class ScheduledJobsService extends EventEmitter {
   private timeAnalytics: TimeAnalytics;
   private pdfService: PDFReportService;
   private cacheService: CacheService | null;
-  
+
   private jobs: Map<string, cron.ScheduledTask> = new Map();
   private jobConfigs: Map<string, JobConfig> = new Map();
   private jobQueue: Map<string, { retries: number; lastAttempt: Date }> = new Map();
-  
+
   constructor(db: Pool, redis?: Redis, cacheService?: CacheService) {
     super();
     this.db = db;
     this.redis = redis || null;
     this.cacheService = cacheService || null;
-    
+
     this.analyticsService = new AnalyticsService(db, redis);
     this.demographicAnalytics = new DemographicAnalytics(db, redis);
     this.timeAnalytics = new TimeAnalytics(db, redis);
     this.pdfService = new PDFReportService(db);
-    
+
     this.initializeJobs();
   }
 
@@ -66,7 +66,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '0 * * * *', // Every hour
       enabled: true,
       retries: 3,
-      timeout: 300000 // 5 minutes
+      timeout: 300000, // 5 minutes
     });
 
     // Daily summary job
@@ -75,7 +75,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '0 2 * * *', // 2 AM daily
       enabled: true,
       retries: 3,
-      timeout: 600000 // 10 minutes
+      timeout: 600000, // 10 minutes
     });
 
     // Weekly trend analysis
@@ -84,7 +84,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '0 3 * * 1', // 3 AM on Mondays
       enabled: true,
       retries: 3,
-      timeout: 900000 // 15 minutes
+      timeout: 900000, // 15 minutes
     });
 
     // Cache warmup job
@@ -93,7 +93,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '*/15 * * * *', // Every 15 minutes
       enabled: true,
       retries: 1,
-      timeout: 60000 // 1 minute
+      timeout: 60000, // 1 minute
     });
 
     // Data cleanup job
@@ -102,7 +102,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '0 4 * * *', // 4 AM daily
       enabled: true,
       retries: 2,
-      timeout: 300000 // 5 minutes
+      timeout: 300000, // 5 minutes
     });
 
     // Report generation job
@@ -111,7 +111,7 @@ export class ScheduledJobsService extends EventEmitter {
       schedule: '0 6 * * *', // 6 AM daily
       enabled: true,
       retries: 2,
-      timeout: 1200000 // 20 minutes
+      timeout: 1200000, // 20 minutes
     });
   }
 
@@ -120,7 +120,7 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private registerJob(config: JobConfig): void {
     this.jobConfigs.set(config.name, config);
-    
+
     if (config.enabled) {
       this.startJob(config.name);
     }
@@ -136,18 +136,22 @@ export class ScheduledJobsService extends EventEmitter {
     // Stop existing job if running
     this.stopJob(jobName);
 
-    const task = cron.schedule(config.schedule, async () => {
-      await this.executeJob(jobName);
-    }, {
-      scheduled: false
-    });
+    const task = cron.schedule(
+      config.schedule,
+      async () => {
+        await this.executeJob(jobName);
+      },
+      {
+        scheduled: false,
+      }
+    );
 
     this.jobs.set(jobName, task);
     task.start();
-    
+
     console.log(`Started scheduled job: ${jobName}`);
     this.emit('job:started', { jobName, schedule: config.schedule });
-    
+
     return true;
   }
 
@@ -160,10 +164,10 @@ export class ScheduledJobsService extends EventEmitter {
 
     task.stop();
     this.jobs.delete(jobName);
-    
+
     console.log(`Stopped scheduled job: ${jobName}`);
     this.emit('job:stopped', { jobName });
-    
+
     return true;
   }
 
@@ -177,7 +181,7 @@ export class ScheduledJobsService extends EventEmitter {
     const startTime = new Date();
     config.lastRun = startTime;
     config.lastStatus = 'running';
-    
+
     this.emit('job:executing', { jobName, startTime });
 
     try {
@@ -187,36 +191,35 @@ export class ScheduledJobsService extends EventEmitter {
       });
 
       const jobPromise = this.runJob(jobName);
-      
+
       await Promise.race([jobPromise, timeoutPromise]);
-      
+
       config.lastStatus = 'success';
       config.lastError = undefined;
-      
+
       this.emit('job:completed', {
         jobName,
         startTime,
         endTime: new Date(),
-        status: 'success'
+        status: 'success',
       });
-      
+
       // Clear retry queue on success
       this.jobQueue.delete(jobName);
-      
     } catch (error) {
       config.lastStatus = 'failure';
       config.lastError = error instanceof Error ? error.message : 'Unknown error';
-      
+
       console.error(`Job ${jobName} failed:`, error);
-      
+
       // Handle retries
       await this.handleJobRetry(jobName, config, error as Error);
-      
+
       this.emit('job:failed', {
         jobName,
         startTime,
         endTime: new Date(),
-        error: config.lastError
+        error: config.lastError,
       });
     }
   }
@@ -226,17 +229,19 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async handleJobRetry(jobName: string, config: JobConfig, error: Error): Promise<void> {
     const queueEntry = this.jobQueue.get(jobName) || { retries: 0, lastAttempt: new Date() };
-    
+
     if (queueEntry.retries < config.retries) {
       queueEntry.retries++;
       queueEntry.lastAttempt = new Date();
       this.jobQueue.set(jobName, queueEntry);
-      
+
       // Exponential backoff
       const delay = Math.pow(2, queueEntry.retries) * 1000;
-      
-      console.log(`Retrying job ${jobName} in ${delay}ms (attempt ${queueEntry.retries}/${config.retries})`);
-      
+
+      console.log(
+        `Retrying job ${jobName} in ${delay}ms (attempt ${queueEntry.retries}/${config.retries})`
+      );
+
       setTimeout(() => {
         this.executeJob(jobName);
       }, delay);
@@ -244,7 +249,7 @@ export class ScheduledJobsService extends EventEmitter {
       // Max retries reached
       console.error(`Job ${jobName} failed after ${config.retries} retries`);
       this.jobQueue.delete(jobName);
-      
+
       // Log to database
       await this.logJobFailure(jobName, error);
     }
@@ -256,45 +261,44 @@ export class ScheduledJobsService extends EventEmitter {
   private async runJob(jobName: string): Promise<AggregationResult> {
     const startTime = new Date();
     let recordsProcessed = 0;
-    
+
     try {
       switch (jobName) {
         case 'hourly_aggregation':
           recordsProcessed = await this.runHourlyAggregation();
           break;
-          
+
         case 'daily_summary':
           recordsProcessed = await this.runDailySummary();
           break;
-          
+
         case 'weekly_trends':
           recordsProcessed = await this.runWeeklyTrends();
           break;
-          
+
         case 'cache_warmup':
           recordsProcessed = await this.runCacheWarmup();
           break;
-          
+
         case 'data_cleanup':
           recordsProcessed = await this.runDataCleanup();
           break;
-          
+
         case 'report_generation':
           recordsProcessed = await this.runReportGeneration();
           break;
-          
+
         default:
           throw new Error(`Unknown job: ${jobName}`);
       }
-      
+
       return {
         jobName,
         startTime,
         endTime: new Date(),
         recordsProcessed,
-        status: 'success'
+        status: 'success',
       };
-      
     } catch (error) {
       return {
         jobName,
@@ -302,7 +306,7 @@ export class ScheduledJobsService extends EventEmitter {
         endTime: new Date(),
         recordsProcessed,
         status: 'failure',
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -312,10 +316,10 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async runHourlyAggregation(): Promise<number> {
     const client = await this.db.connect();
-    
+
     try {
       await client.query('BEGIN');
-      
+
       // Create hourly stats table if not exists
       await client.query(`
         CREATE TABLE IF NOT EXISTS hourly_stats (
@@ -331,7 +335,7 @@ export class ScheduledJobsService extends EventEmitter {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      
+
       // Aggregate last hour's data
       const result = await client.query(`
         WITH hour_data AS (
@@ -392,16 +396,15 @@ export class ScheduledJobsService extends EventEmitter {
           race_balance = EXCLUDED.race_balance
         RETURNING *
       `);
-      
+
       await client.query('COMMIT');
-      
+
       // Invalidate related cache
       if (this.cacheService) {
         await this.cacheService.invalidatePattern('aggregated:*');
       }
-      
+
       return result.rowCount || 0;
-      
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -415,10 +418,10 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async runDailySummary(): Promise<number> {
     const client = await this.db.connect();
-    
+
     try {
       await client.query('BEGIN');
-      
+
       // Create daily summaries table if not exists
       await client.query(`
         CREATE TABLE IF NOT EXISTS daily_summaries (
@@ -438,16 +441,17 @@ export class ScheduledJobsService extends EventEmitter {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      
+
       // Aggregate yesterday's data
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
       yesterday.setHours(0, 0, 0, 0);
-      
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
-      const result = await client.query(`
+
+      const result = await client.query(
+        `
         WITH daily_data AS (
           SELECT 
             $1::DATE as date,
@@ -549,12 +553,13 @@ export class ScheduledJobsService extends EventEmitter {
           race_balance = EXCLUDED.race_balance,
           top_speakers = EXCLUDED.top_speakers
         RETURNING *
-      `, [yesterday]);
-      
+      `,
+        [yesterday]
+      );
+
       await client.query('COMMIT');
-      
+
       return result.rowCount || 0;
-      
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -568,10 +573,10 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async runWeeklyTrends(): Promise<number> {
     const client = await this.db.connect();
-    
+
     try {
       await client.query('BEGIN');
-      
+
       // Create weekly trends table if not exists
       await client.query(`
         CREATE TABLE IF NOT EXISTS weekly_trends (
@@ -587,7 +592,7 @@ export class ScheduledJobsService extends EventEmitter {
           created_at TIMESTAMP DEFAULT NOW()
         )
       `);
-      
+
       // Analyze last week's trends
       const result = await client.query(`
         WITH current_week AS (
@@ -667,11 +672,10 @@ export class ScheduledJobsService extends EventEmitter {
           insights = EXCLUDED.insights
         RETURNING *
       `);
-      
+
       await client.query('COMMIT');
-      
+
       return result.rowCount || 0;
-      
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -685,9 +689,9 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async runCacheWarmup(): Promise<number> {
     if (!this.cacheService) return 0;
-    
+
     let warmedKeys = 0;
-    
+
     // Get active sessions
     const sessionsResult = await this.db.query(`
       SELECT id FROM sessions 
@@ -695,27 +699,27 @@ export class ScheduledJobsService extends EventEmitter {
       ORDER BY start_time DESC 
       LIMIT 5
     `);
-    
+
     for (const session of sessionsResult.rows) {
       // Warm up session metrics
       await this.analyticsService.getSessionMetrics(session.id);
       warmedKeys++;
-      
+
       // Warm up participation rates
       await this.analyticsService.calculateParticipationRate('gender', undefined, session.id);
       await this.analyticsService.calculateParticipationRate('age_group', undefined, session.id);
       await this.analyticsService.calculateParticipationRate('race', undefined, session.id);
       warmedKeys += 3;
-      
+
       // Warm up time distribution
       await this.analyticsService.generateTimeDistribution(30, session.id);
       warmedKeys++;
     }
-    
+
     // Warm up global metrics
     await this.demographicAnalytics.calculateBalanceScores();
     warmedKeys++;
-    
+
     return warmedKeys;
   }
 
@@ -725,31 +729,31 @@ export class ScheduledJobsService extends EventEmitter {
   private async runDataCleanup(): Promise<number> {
     const client = await this.db.connect();
     let deletedRecords = 0;
-    
+
     try {
       await client.query('BEGIN');
-      
+
       // Delete old hourly stats (>30 days)
       const hourlyResult = await client.query(`
         DELETE FROM hourly_stats 
         WHERE hour_timestamp < NOW() - INTERVAL '30 days'
       `);
       deletedRecords += hourlyResult.rowCount || 0;
-      
+
       // Delete old aggregated data (>90 days)
       const dailyResult = await client.query(`
         DELETE FROM daily_summaries 
         WHERE date < CURRENT_DATE - INTERVAL '90 days'
       `);
       deletedRecords += dailyResult.rowCount || 0;
-      
+
       // Delete old weekly trends (>180 days)
       const weeklyResult = await client.query(`
         DELETE FROM weekly_trends 
         WHERE week_start < CURRENT_DATE - INTERVAL '180 days'
       `);
       deletedRecords += weeklyResult.rowCount || 0;
-      
+
       // Clean up orphaned queue entries
       const queueResult = await client.query(`
         DELETE FROM queue 
@@ -757,16 +761,15 @@ export class ScheduledJobsService extends EventEmitter {
         AND joined_at < NOW() - INTERVAL '7 days'
       `);
       deletedRecords += queueResult.rowCount || 0;
-      
+
       await client.query('COMMIT');
-      
+
       // Clear old cache entries
       if (this.cacheService) {
         await this.cacheService.clearAll();
       }
-      
+
       return deletedRecords;
-      
     } catch (error) {
       await client.query('ROLLBACK');
       throw error;
@@ -781,15 +784,18 @@ export class ScheduledJobsService extends EventEmitter {
   private async runReportGeneration(): Promise<number> {
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    
+
     // Get yesterday's sessions
-    const sessionsResult = await this.db.query(`
+    const sessionsResult = await this.db.query(
+      `
       SELECT id FROM sessions 
       WHERE DATE(start_time) = $1
-    `, [yesterday]);
-    
+    `,
+      [yesterday]
+    );
+
     let reportsGenerated = 0;
-    
+
     for (const session of sessionsResult.rows) {
       try {
         const report = await this.pdfService.generateReport({
@@ -797,19 +803,19 @@ export class ScheduledJobsService extends EventEmitter {
           includeCharts: true,
           includeHeatmap: true,
           includeSummary: true,
-          includeRecommendations: true
+          includeRecommendations: true,
         });
-        
+
         // Save report to storage or send via email
         // This is a placeholder - implement actual storage logic
         await this.saveReport(session.id, report);
-        
+
         reportsGenerated++;
       } catch (error) {
         console.error(`Failed to generate report for session ${session.id}:`, error);
       }
     }
-    
+
     return reportsGenerated;
   }
 
@@ -831,7 +837,7 @@ export class ScheduledJobsService extends EventEmitter {
     if (!config) {
       throw new Error(`Job ${jobName} not found`);
     }
-    
+
     console.log(`Manually triggering job: ${jobName}`);
     return await this.runJob(jobName);
   }
@@ -845,7 +851,7 @@ export class ScheduledJobsService extends EventEmitter {
       if (!config) throw new Error(`Job ${jobName} not found`);
       return config;
     }
-    
+
     return this.jobConfigs;
   }
 
@@ -855,10 +861,10 @@ export class ScheduledJobsService extends EventEmitter {
   updateJobConfig(jobName: string, updates: Partial<JobConfig>): void {
     const config = this.jobConfigs.get(jobName);
     if (!config) throw new Error(`Job ${jobName} not found`);
-    
+
     const wasEnabled = config.enabled;
     Object.assign(config, updates);
-    
+
     // Restart job if enable status changed
     if (wasEnabled !== config.enabled) {
       if (config.enabled) {
@@ -878,14 +884,17 @@ export class ScheduledJobsService extends EventEmitter {
    */
   private async logJobFailure(jobName: string, error: Error): Promise<void> {
     try {
-      await this.db.query(`
+      await this.db.query(
+        `
         INSERT INTO job_failures (
           job_name,
           error_message,
           stack_trace,
           occurred_at
         ) VALUES ($1, $2, $3, NOW())
-      `, [jobName, error.message, error.stack]);
+      `,
+        [jobName, error.message, error.stack]
+      );
     } catch (logError) {
       console.error('Failed to log job failure:', logError);
     }

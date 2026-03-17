@@ -57,67 +57,92 @@ export function Analytics() {
 
   // Calculate statistics
   const totalDelegates = delegates.length;
-  const totalSpoken = delegates.filter(d => d.has_spoken).length;
+  const totalSpoken = delegates.filter((d) => d.has_spoken).length;
   const totalNotSpoken = totalDelegates - totalSpoken;
   const speakerHistory = queueData?.history || [];
-  
-  // Gender statistics
-  const genderStats = delegates.reduce((acc, d) => {
-    acc[d.gender] = (acc[d.gender] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
 
-  const genderSpeakerStats = delegates.filter(d => d.has_spoken).reduce((acc, d) => {
-    acc[d.gender] = (acc[d.gender] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  // Gender statistics
+  const genderStats = delegates.reduce(
+    (acc, d) => {
+      acc[d.gender] = (acc[d.gender] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
+
+  const genderSpeakerStats = delegates
+    .filter((d) => d.has_spoken)
+    .reduce(
+      (acc, d) => {
+        acc[d.gender] = (acc[d.gender] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
   // Age group statistics
-  const ageStats = delegates.reduce((acc, d) => {
-    const age = d.age_group || 'Unknown';
-    acc[age] = (acc[age] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const ageStats = delegates.reduce(
+    (acc, d) => {
+      const age = d.age_group || 'Unknown';
+      acc[age] = (acc[age] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
-  const ageSpeakerStats = delegates.filter(d => d.has_spoken).reduce((acc, d) => {
-    const age = d.age_group || 'Unknown';
-    acc[age] = (acc[age] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const ageSpeakerStats = delegates
+    .filter((d) => d.has_spoken)
+    .reduce(
+      (acc, d) => {
+        const age = d.age_group || 'Unknown';
+        acc[age] = (acc[age] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
   // Race/Orientation statistics
-  const raceStats = delegates.reduce((acc, d) => {
-    const race = d.race_orientation || 'Unknown';
-    acc[race] = (acc[race] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const raceStats = delegates.reduce(
+    (acc, d) => {
+      const race = d.race_orientation || 'Unknown';
+      acc[race] = (acc[race] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
-  const raceSpeakerStats = delegates.filter(d => d.has_spoken).reduce((acc, d) => {
-    const race = d.race_orientation || 'Unknown';
-    acc[race] = (acc[race] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const raceSpeakerStats = delegates
+    .filter((d) => d.has_spoken)
+    .reduce(
+      (acc, d) => {
+        const race = d.race_orientation || 'Unknown';
+        acc[race] = (acc[race] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>
+    );
 
   // Calculate average speaking time
   const totalSpeakingTime = speakerHistory.reduce((sum, item) => {
     return sum + (item.speakingTime || 0);
   }, 0);
-  const avgSpeakingTime = speakerHistory.length > 0 
-    ? Math.round(totalSpeakingTime / speakerHistory.length)
-    : 0;
+  const avgSpeakingTime =
+    speakerHistory.length > 0 ? Math.round(totalSpeakingTime / speakerHistory.length) : 0;
 
   // Find longest and shortest speakers
-  const speakersWithTime = speakerHistory.filter(s => s.speakingTime);
-  const longestSpeaker = speakersWithTime.reduce((max, item) => 
-    (item.speakingTime || 0) > (max?.speakingTime || 0) ? item : max
-  , speakersWithTime[0]);
-  const shortestSpeaker = speakersWithTime.reduce((min, item) => 
-    (item.speakingTime || 0) < (min?.speakingTime || 999999) ? item : min
-  , speakersWithTime[0]);
+  const speakersWithTime = speakerHistory.filter((s) => s.speakingTime);
+  const longestSpeaker = speakersWithTime.reduce(
+    (max, item) => ((item.speakingTime || 0) > (max?.speakingTime || 0) ? item : max),
+    speakersWithTime[0]
+  );
+  const shortestSpeaker = speakersWithTime.reduce(
+    (min, item) => ((item.speakingTime || 0) < (min?.speakingTime || 999999) ? item : min),
+    speakersWithTime[0]
+  );
 
   // Most active speakers (by total time)
   const speakerTimes = delegates
-    .filter(d => d.total_speaking_time && d.total_speaking_time > 0)
+    .filter((d) => d.total_speaking_time && d.total_speaking_time > 0)
     .sort((a, b) => (b.total_speaking_time || 0) - (a.total_speaking_time || 0))
     .slice(0, 5);
 
@@ -135,7 +160,7 @@ export function Analytics() {
   return (
     <div className="analytics space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Session Analytics</h2>
-      
+
       {/* Overall Statistics */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white rounded-lg shadow p-4">
@@ -171,7 +196,7 @@ export function Analytics() {
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-blue-600 h-2 rounded-full"
                     style={{ width: `${calculatePercentage(count, totalDelegates)}%` }}
                   />
@@ -188,25 +213,27 @@ export function Analytics() {
         <div className="bg-white rounded-lg shadow p-4">
           <h3 className="text-lg font-semibold mb-3">Age Distribution</h3>
           <div className="space-y-2">
-            {Object.entries(ageStats).sort().map(([age, count]) => (
-              <div key={age}>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">{age}</span>
-                  <span className="text-sm text-gray-600">
-                    {count} ({calculatePercentage(count, totalDelegates)}%)
-                  </span>
+            {Object.entries(ageStats)
+              .sort()
+              .map(([age, count]) => (
+                <div key={age}>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-sm font-medium">{age}</span>
+                    <span className="text-sm text-gray-600">
+                      {count} ({calculatePercentage(count, totalDelegates)}%)
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-green-600 h-2 rounded-full"
+                      style={{ width: `${calculatePercentage(count, totalDelegates)}%` }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Spoken: {ageSpeakerStats[age] || 0} / {count}
+                  </div>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${calculatePercentage(count, totalDelegates)}%` }}
-                  />
-                </div>
-                <div className="text-xs text-gray-500 mt-1">
-                  Spoken: {ageSpeakerStats[age] || 0} / {count}
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
 
@@ -223,7 +250,7 @@ export function Analytics() {
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-purple-600 h-2 rounded-full"
                     style={{ width: `${calculatePercentage(count, totalDelegates)}%` }}
                   />
@@ -338,14 +365,19 @@ export function Analytics() {
                     {item.delegate.name}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-600">
-                    {item.delegate.gender} • {item.delegate.age_group} • {item.delegate.race_orientation}
+                    {item.delegate.gender} • {item.delegate.age_group} •{' '}
+                    {item.delegate.race_orientation}
                   </td>
                   <td className="px-4 py-2 whitespace-nowrap text-sm font-medium">
-                    <span className={`${
-                      (item.speakingTime || 0) >= 120 ? 'text-red-600' : 
-                      (item.speakingTime || 0) >= 90 ? 'text-yellow-600' : 
-                      'text-green-600'
-                    }`}>
+                    <span
+                      className={`${
+                        (item.speakingTime || 0) >= 120
+                          ? 'text-red-600'
+                          : (item.speakingTime || 0) >= 90
+                            ? 'text-yellow-600'
+                            : 'text-green-600'
+                      }`}
+                    >
                       {formatTime(item.speakingTime || 0)}
                     </span>
                   </td>

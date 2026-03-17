@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWebSocket } from './useWebSocket';
-import type { QueueState, Speaker } from '../types';
+import type { QueueState } from '../types';
 
 export function useQueue() {
   const { on, off } = useWebSocket();
@@ -25,7 +25,7 @@ export function useQueue() {
     };
 
     const handleSpeakerChange = (data: any) => {
-      setQueueState(prev => ({
+      setQueueState((prev) => ({
         ...prev,
         currentSpeaker: data.currentSpeaker,
         nextSpeaker: data.nextSpeaker,

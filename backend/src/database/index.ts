@@ -10,21 +10,21 @@ export const getPool = (): Pool => {
   if (process.env.NODE_ENV === 'development' && !process.env.USE_POSTGRES) {
     return sqlitePool as any;
   }
-  
+
   if (!pool) {
     pool = new Pool(getDatabaseConfig());
-    
+
     // Handle pool errors
     pool.on('error', (err) => {
       console.error('Unexpected error on idle client', err);
     });
-    
+
     // Log successful connection
     pool.on('connect', () => {
       console.log('Database pool: New client connected');
     });
   }
-  
+
   return pool;
 };
 
@@ -34,11 +34,11 @@ export const query = async (text: string, params?: any[]) => {
   const start = Date.now();
   const res = await pool.query(text, params);
   const duration = Date.now() - start;
-  
+
   if (process.env.NODE_ENV === 'development') {
     console.log('Executed query', { text, duration, rows: res.rowCount });
   }
-  
+
   return res;
 };
 
@@ -46,19 +46,19 @@ export const query = async (text: string, params?: any[]) => {
 export const getClient = async () => {
   const pool = getPool();
   const client = await pool.connect();
-  
+
   const release = client.release.bind(client);
-  
+
   // Override the release method to set a timeout
   const timeout = setTimeout(() => {
     console.error('A client has been checked out for more than 5 seconds!');
   }, 5000);
-  
+
   client.release = () => {
     clearTimeout(timeout);
     return release();
   };
-  
+
   return client;
 };
 

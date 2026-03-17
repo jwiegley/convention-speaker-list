@@ -14,7 +14,7 @@ export function setupMiddleware(io: SocketServer): void {
   io.use(async (socket: SocketClient, next) => {
     try {
       const token = socket.handshake.auth.token;
-      
+
       if (token) {
         // Verify JWT token
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'default-secret');
@@ -26,7 +26,7 @@ export function setupMiddleware(io: SocketServer): void {
         socket.data.role = 'delegate';
         logger.info(`Anonymous connection ${socket.id}`);
       }
-      
+
       next();
     } catch (error) {
       logger.error('Socket authentication error:', error);
@@ -37,34 +37,34 @@ export function setupMiddleware(io: SocketServer): void {
   // Session validation middleware
   io.use(async (socket: SocketClient, next) => {
     const sessionId = socket.handshake.query.sessionId as string;
-    
+
     if (sessionId) {
       socket.data.sessionId = sessionId;
       // Join session room automatically
       socket.join(`session:${sessionId}`);
       logger.info(`Socket ${socket.id} joined session: ${sessionId}`);
     }
-    
+
     next();
   });
 
   // Rate limiting middleware
   io.use((socket: SocketClient, next) => {
     const clientId = socket.data.userId || socket.handshake.address;
-    
+
     // Wrap original emit to add rate limiting
     const originalEmit = socket.emit.bind(socket);
-    (socket as any).emit = function(event: string, ...args: any[]) {
+    (socket as any).emit = function (event: string, ...args: any[]) {
       if (!checkRateLimit(clientId, event)) {
-        originalEmit('error', { 
-          code: 'RATE_LIMIT_EXCEEDED', 
-          message: 'Too many requests, please slow down' 
+        originalEmit('error', {
+          code: 'RATE_LIMIT_EXCEEDED',
+          message: 'Too many requests, please slow down',
         });
         return false;
       }
       return originalEmit(event as any, ...args);
     };
-    
+
     next();
   });
 
@@ -72,12 +72,12 @@ export function setupMiddleware(io: SocketServer): void {
   io.use((socket: SocketClient, next) => {
     socket.on('error', (error) => {
       logger.error(`Socket error for ${socket.id}:`, error);
-      socket.emit('error', { 
-        code: 'SOCKET_ERROR', 
-        message: 'An error occurred processing your request' 
+      socket.emit('error', {
+        code: 'SOCKET_ERROR',
+        message: 'An error occurred processing your request',
       });
     });
-    
+
     next();
   });
 
@@ -85,11 +85,11 @@ export function setupMiddleware(io: SocketServer): void {
   io.use((socket: SocketClient, next) => {
     // Log all incoming events
     const originalOnevent = (socket as any).onevent;
-    (socket as any).onevent = function(packet: any) {
+    (socket as any).onevent = function (packet: any) {
       logger.debug(`Socket ${socket.id} event:`, packet.data[0]);
       originalOnevent.call(this, packet);
     };
-    
+
     next();
   });
 }
@@ -101,22 +101,22 @@ function checkRateLimit(clientId: string, event: string): boolean {
   const now = Date.now();
   const limits = (rateLimits as any)[event] || rateLimits.default;
   const key = `${clientId}:${event}`;
-  
+
   const current = rateLimitMap.get(key);
-  
+
   if (!current || current.resetAt < now) {
     // Reset or initialize
     rateLimitMap.set(key, {
       points: limits.points - 1,
-      resetAt: now + (limits.duration * 1000),
+      resetAt: now + limits.duration * 1000,
     });
     return true;
   }
-  
+
   if (current.points <= 0) {
     return false;
   }
-  
+
   current.points--;
   return true;
 }

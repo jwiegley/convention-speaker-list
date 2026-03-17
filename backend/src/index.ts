@@ -10,7 +10,12 @@ dotenv.config();
 // Import middleware
 import { corsMiddleware } from './middleware/cors';
 import { helmetMiddleware, apiLimiter } from './middleware/security';
-import { errorHandler, notFoundHandler, handleUncaughtException, handleUnhandledRejection } from './middleware/errorHandler';
+import {
+  errorHandler,
+  notFoundHandler,
+  handleUncaughtException,
+  handleUnhandledRejection,
+} from './middleware/errorHandler';
 import { correlationId, requestLogger } from './middleware/requestLogger';
 import { httpsRedirect, securityHeaders, expectCT } from './middleware/httpsRedirect';
 import { useMockData } from './middleware/mockData';
@@ -28,7 +33,11 @@ import websocketMonitoringRoutes from './routes/websocket-monitoring';
 import { initializeSocketServer, shutdownSocketServer } from './socket';
 
 // Import HTTPS configuration
-import { getHTTPSConfig, setupCertificateRenewalReminder, generateSelfSignedCert } from './config/https';
+import {
+  getHTTPSConfig,
+  setupCertificateRenewalReminder,
+  generateSelfSignedCert,
+} from './config/https';
 
 // Handle uncaught exceptions and rejections
 handleUncaughtException();
@@ -47,7 +56,7 @@ let httpsServer: any = null;
 if (httpsConfig.enabled && httpsConfig.options) {
   httpsServer = createHTTPSServer(httpsConfig.options, app);
   logger.info('HTTPS server configured');
-  
+
   // Set up certificate renewal reminder
   setupCertificateRenewalReminder();
 }
@@ -73,11 +82,11 @@ app.use('/api', apiLimiter);
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
-  res.json({ 
-    status: 'healthy', 
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    https: httpsConfig.enabled
+    https: httpsConfig.enabled,
   });
 });
 
@@ -93,9 +102,9 @@ app.get('/api/v1', (_req: Request, res: Response) => {
       queue: '/api/v1/queue',
       delegates: '/api/v1/delegates',
       analytics: '/api/v1/analytics',
-      monitoring: '/api/v1/monitoring'
+      monitoring: '/api/v1/monitoring',
     },
-    secure: httpsConfig.enabled
+    secure: httpsConfig.enabled,
   });
 });
 
@@ -126,11 +135,11 @@ async function startServer() {
     if (process.env.NODE_ENV === 'development' && process.env.GENERATE_SELF_SIGNED === 'true') {
       await generateSelfSignedCert();
     }
-    
+
     // Initialize Socket.io server with the appropriate server
     const primaryServer = httpsServer || httpServer;
     await initializeSocketServer(primaryServer);
-    
+
     // Start HTTP server
     httpServer.listen(PORT, () => {
       logger.info(`HTTP server running on port ${PORT}`);
@@ -138,7 +147,7 @@ async function startServer() {
         logger.info('HTTP requests will be redirected to HTTPS');
       }
     });
-    
+
     // Start HTTPS server if configured
     if (httpsServer) {
       httpsServer.listen(HTTPS_PORT, () => {
@@ -146,10 +155,10 @@ async function startServer() {
         logger.info('SSL/TLS enabled for secure connections');
       });
     }
-    
+
     logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
     logger.info('Socket.io server initialized and ready with scaling support');
-    
+
     // Log security configuration
     if (httpsConfig.enabled) {
       logger.info('Security features enabled:');
@@ -170,17 +179,17 @@ startServer();
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM signal received: closing servers');
   await shutdownSocketServer();
-  
+
   httpServer.close(() => {
     logger.info('HTTP server closed');
   });
-  
+
   if (httpsServer) {
     httpsServer.close(() => {
       logger.info('HTTPS server closed');
     });
   }
-  
+
   setTimeout(() => {
     process.exit(0);
   }, 1000);
@@ -189,17 +198,17 @@ process.on('SIGTERM', async () => {
 process.on('SIGINT', async () => {
   logger.info('SIGINT signal received: closing servers');
   await shutdownSocketServer();
-  
+
   httpServer.close(() => {
     logger.info('HTTP server closed');
   });
-  
+
   if (httpsServer) {
     httpsServer.close(() => {
       logger.info('HTTPS server closed');
     });
   }
-  
+
   setTimeout(() => {
     process.exit(0);
   }, 1000);

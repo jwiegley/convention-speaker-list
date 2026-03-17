@@ -11,13 +11,13 @@ const delegateSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   number: z.number().min(1, 'Number must be positive').max(999, 'Number must be less than 1000'),
   gender: z.enum(['Male', 'Female', 'Other'], {
-    errorMap: () => ({ message: 'Please select a gender' })
+    errorMap: () => ({ message: 'Please select a gender' }),
   }),
   age_group: z.enum(['Under 20', '20-29', '30-39', '40-49', '50-59', '60-69', '70+'], {
-    errorMap: () => ({ message: 'Please select an age group' })
+    errorMap: () => ({ message: 'Please select an age group' }),
   }),
   race_orientation: z.enum(['Majority', 'Minority'], {
-    errorMap: () => ({ message: 'Please select race orientation' })
+    errorMap: () => ({ message: 'Please select race orientation' }),
   }),
   has_spoken: z.boolean().default(false),
 });
@@ -65,14 +65,18 @@ export function DelegateManagement() {
   });
 
   // Fetch delegates
-  const { data: delegates = [], isLoading, error } = useQuery({
+  const {
+    data: delegates = [],
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['delegates'],
     queryFn: async () => {
       try {
         console.log('API_BASE_URL:', API_BASE_URL);
         console.log('Full URL:', `${API_BASE_URL}/delegates`);
         console.log('Window location:', window.location.origin);
-        
+
         const response = await axios.get(`${API_BASE_URL}/delegates`);
         console.log('Delegates response:', response.data);
         return response.data;
@@ -83,7 +87,7 @@ export function DelegateManagement() {
           code: err.code,
           response: err.response,
           request: err.request,
-          config: err.config
+          config: err.config,
         });
         throw err;
       }
@@ -321,38 +325,28 @@ export function DelegateManagement() {
         </h3>
         <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
             <input
               {...register('name')}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter delegate name"
             />
-            {errors.name && (
-              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
-            )}
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Number *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Number *</label>
             <input
               {...register('number', { valueAsNumber: true })}
               type="number"
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="Enter delegate number"
             />
-            {errors.number && (
-              <p className="text-red-500 text-sm mt-1">{errors.number.message}</p>
-            )}
+            {errors.number && <p className="text-red-500 text-sm mt-1">{errors.number.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Gender *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Gender *</label>
             <select
               {...register('gender')}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -361,15 +355,11 @@ export function DelegateManagement() {
               <option value="Female">Female</option>
               <option value="Other">Other</option>
             </select>
-            {errors.gender && (
-              <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>
-            )}
+            {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender.message}</p>}
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Age Group *
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Age Group *</label>
             <select
               {...register('age_group')}
               className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -405,14 +395,8 @@ export function DelegateManagement() {
 
           <div className="col-span-2">
             <label className="flex items-center">
-              <input
-                {...register('has_spoken')}
-                type="checkbox"
-                className="mr-2"
-              />
-              <span className="text-sm font-medium text-gray-700">
-                Has spoken before
-              </span>
+              <input {...register('has_spoken')} type="checkbox" className="mr-2" />
+              <span className="text-sm font-medium text-gray-700">Has spoken before</span>
             </label>
           </div>
 
@@ -472,7 +456,10 @@ export function DelegateManagement() {
             <label className="flex items-center">
               <input
                 type="checkbox"
-                checked={selectedDelegates.size === filteredDelegates.length && filteredDelegates.length > 0}
+                checked={
+                  selectedDelegates.size === filteredDelegates.length &&
+                  filteredDelegates.length > 0
+                }
                 onChange={handleSelectAll}
                 className="mr-2"
               />
@@ -497,27 +484,15 @@ export function DelegateManagement() {
                   <th className="px-4 py-3 text-left">
                     <input type="checkbox" className="invisible" />
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Number
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Gender
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Number</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Name</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Gender</th>
                   <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
                     Age Group
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Race
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Spoken
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                    Actions
-                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Race</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Spoken</th>
+                  <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -600,9 +575,7 @@ export function DelegateManagement() {
               onClick={(e) => e.stopPropagation()}
             >
               <h3 className="text-lg font-semibold mb-2">Confirm Delete</h3>
-              <p className="text-gray-600 mb-4">
-                Are you sure you want to delete this delegate?
-              </p>
+              <p className="text-gray-600 mb-4">Are you sure you want to delete this delegate?</p>
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setShowDeleteConfirm(null)}
@@ -663,9 +636,12 @@ export function DelegateManagement() {
                 </button>
               </div>
               <div className="mt-4 text-sm text-gray-600">
-                <p className="mb-2">CSV Format: name, number, gender (Male/Female/Other), age_group (e.g., 30-39), race_orientation (Majority/Minority), has_spoken (true/false)</p>
-                <a 
-                  href="/sample-delegates.csv" 
+                <p className="mb-2">
+                  CSV Format: name, number, gender (Male/Female/Other), age_group (e.g., 30-39),
+                  race_orientation (Majority/Minority), has_spoken (true/false)
+                </p>
+                <a
+                  href="/sample-delegates.csv"
                   download="sample-delegates.csv"
                   className="text-blue-600 hover:underline"
                 >

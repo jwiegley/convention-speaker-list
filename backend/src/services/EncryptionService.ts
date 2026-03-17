@@ -18,7 +18,7 @@ export class EncryptionService {
   constructor() {
     // Get encryption key from environment or generate one
     const masterKey = process.env.ENCRYPTION_MASTER_KEY || config.security?.encryptionKey;
-    
+
     if (!masterKey) {
       logger.error('ENCRYPTION_MASTER_KEY not set in environment');
       throw new Error('Encryption key not configured');
@@ -51,22 +51,23 @@ export class EncryptionService {
     try {
       // Generate random IV
       const iv = crypto.randomBytes(this.ivLength);
-      
+
       // Create cipher
-      const cipher = crypto.createCipheriv(this.algorithm, this.encryptionKey, iv);
-      
+      const cipher = crypto.createCipheriv(
+        this.algorithm,
+        this.encryptionKey,
+        iv
+      ) as crypto.CipherGCM;
+
       // Encrypt the data
-      const encrypted = Buffer.concat([
-        cipher.update(plaintext, 'utf8'),
-        cipher.final()
-      ]);
-      
+      const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+
       // Get the authentication tag
       const tag = cipher.getAuthTag();
-      
+
       // Combine iv + tag + encrypted data
       const combined = Buffer.concat([iv, tag, encrypted]);
-      
+
       // Return base64 encoded
       return combined.toString('base64');
     } catch (error) {
@@ -87,22 +88,23 @@ export class EncryptionService {
     try {
       // Decode from base64
       const combined = Buffer.from(encryptedData, 'base64');
-      
+
       // Extract components
       const iv = combined.slice(0, this.ivLength);
       const tag = combined.slice(this.ivLength, this.ivLength + this.tagLength);
       const encrypted = combined.slice(this.ivLength + this.tagLength);
-      
+
       // Create decipher
-      const decipher = crypto.createDecipheriv(this.algorithm, this.encryptionKey, iv);
+      const decipher = crypto.createDecipheriv(
+        this.algorithm,
+        this.encryptionKey,
+        iv
+      ) as crypto.DecipherGCM;
       decipher.setAuthTag(tag);
-      
+
       // Decrypt the data
-      const decrypted = Buffer.concat([
-        decipher.update(encrypted),
-        decipher.final()
-      ]);
-      
+      const decrypted = Buffer.concat([decipher.update(encrypted), decipher.final()]);
+
       return decrypted.toString('utf8');
     } catch (error) {
       logger.error('Decryption failed:', error);
@@ -113,36 +115,30 @@ export class EncryptionService {
   /**
    * Encrypt an object's specified fields
    */
-  public encryptFields<T extends Record<string, any>>(
-    obj: T,
-    fields: (keyof T)[]
-  ): T {
+  public encryptFields<T extends Record<string, any>>(obj: T, fields: readonly (keyof T)[]): T {
     const encrypted = { ...obj };
-    
+
     for (const field of fields) {
       if (encrypted[field] !== null && encrypted[field] !== undefined) {
         encrypted[field] = this.encrypt(String(encrypted[field])) as any;
       }
     }
-    
+
     return encrypted;
   }
 
   /**
    * Decrypt an object's specified fields
    */
-  public decryptFields<T extends Record<string, any>>(
-    obj: T,
-    fields: (keyof T)[]
-  ): T {
+  public decryptFields<T extends Record<string, any>>(obj: T, fields: readonly (keyof T)[]): T {
     const decrypted = { ...obj };
-    
+
     for (const field of fields) {
       if (decrypted[field] !== null && decrypted[field] !== undefined) {
         decrypted[field] = this.decrypt(String(decrypted[field])) as any;
       }
     }
-    
+
     return decrypted;
   }
 
@@ -150,14 +146,14 @@ export class EncryptionService {
    * Batch encrypt multiple values
    */
   public encryptBatch(values: (string | null | undefined)[]): (string | null)[] {
-    return values.map(value => this.encrypt(value));
+    return values.map((value) => this.encrypt(value));
   }
 
   /**
    * Batch decrypt multiple values
    */
   public decryptBatch(values: (string | null | undefined)[]): (string | null)[] {
-    return values.map(value => this.decrypt(value));
+    return values.map((value) => this.decrypt(value));
   }
 
   /**
@@ -173,20 +169,23 @@ export class EncryptionService {
    */
   public async rotateKey(
     newMasterKey: string,
-    reencryptCallback: (oldService: EncryptionService, newService: EncryptionService) => Promise<void>
+    reencryptCallback: (
+      oldService: EncryptionService,
+      newService: EncryptionService
+    ) => Promise<void>
   ): Promise<void> {
     logger.info('Starting encryption key rotation...');
-    
+
     // Create new service with new key
     const newService = new EncryptionService();
     newService.encryptionKey = newService.deriveKey(newMasterKey);
-    
+
     // Call the callback to re-encrypt all data
     await reencryptCallback(this, newService);
-    
+
     // Update this service to use the new key
     this.encryptionKey = newService.encryptionKey;
-    
+
     logger.info('Encryption key rotation completed');
   }
 
@@ -198,12 +197,12 @@ export class EncryptionService {
       const testData = 'test-encryption-data-' + Date.now();
       const encrypted = this.encrypt(testData);
       const decrypted = this.decrypt(encrypted);
-      
+
       if (decrypted !== testData) {
         logger.error('Encryption self-test failed: decrypted data does not match original');
         return false;
       }
-      
+
       logger.info('Encryption self-test passed');
       return true;
     } catch (error) {
@@ -220,5 +219,5 @@ export default new EncryptionService();
 export const ENCRYPTED_FIELDS = {
   delegates: ['location', 'personal_notes', 'email', 'phone'] as const,
   speaking_instances: ['notes'] as const,
-  audit_logs: [] as const // Audit logs should not be encrypted
+  audit_logs: [] as const, // Audit logs should not be encrypted
 };

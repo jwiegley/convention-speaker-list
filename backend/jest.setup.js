@@ -9,16 +9,18 @@ jest.setTimeout(10000);
 
 // Mock logger to reduce noise in tests
 jest.mock('./src/utils/logger', () => ({
+  __esModule: true,
   default: {
     info: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
+    http: jest.fn(),
   },
 }));
 
 // Clean up after tests
 afterAll(async () => {
   // Close any open handles
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 });

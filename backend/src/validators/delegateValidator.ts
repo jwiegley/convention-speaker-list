@@ -7,9 +7,7 @@ const RACE_CATEGORY_VALUES = ['white', 'black', 'asian', 'hispanic', 'mixed', 'o
 
 // Validation rules for creating a delegate
 export const createDelegateValidation = [
-  body('number')
-    .isInt({ min: 1 })
-    .withMessage('Delegate number must be a positive integer'),
+  body('number').isInt({ min: 1 }).withMessage('Delegate number must be a positive integer'),
   body('name')
     .trim()
     .notEmpty()
@@ -43,14 +41,12 @@ export const createDelegateValidation = [
   body('has_spoken_count')
     .optional()
     .isInt({ min: 0 })
-    .withMessage('Has spoken count must be a non-negative integer')
+    .withMessage('Has spoken count must be a non-negative integer'),
 ];
 
 // Validation rules for updating a delegate
 export const updateDelegateValidation = [
-  param('id')
-    .isUUID()
-    .withMessage('Invalid delegate ID format'),
+  param('id').isUUID().withMessage('Invalid delegate ID format'),
   body('number')
     .optional()
     .isInt({ min: 1 })
@@ -89,22 +85,17 @@ export const updateDelegateValidation = [
   body('has_spoken_count')
     .optional()
     .isInt({ min: 0 })
-    .withMessage('Has spoken count must be a non-negative integer')
+    .withMessage('Has spoken count must be a non-negative integer'),
 ];
 
 // Validation for delegate ID parameter
 export const delegateIdValidation = [
-  param('id')
-    .isUUID()
-    .withMessage('Invalid delegate ID format')
+  param('id').isUUID().withMessage('Invalid delegate ID format'),
 ];
 
 // Validation for delegate list query parameters
 export const delegateListValidation = [
-  query('page')
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage('Page must be a positive integer'),
+  query('page').optional().isInt({ min: 1 }).withMessage('Page must be a positive integer'),
   query('limit')
     .optional()
     .isInt({ min: 1, max: 100 })
@@ -125,5 +116,5 @@ export const delegateListValidation = [
     .trim()
     .toLowerCase()
     .isIn(RACE_CATEGORY_VALUES)
-    .withMessage(`Race category filter must be one of: ${RACE_CATEGORY_VALUES.join(', ')}`)
+    .withMessage(`Race category filter must be one of: ${RACE_CATEGORY_VALUES.join(', ')}`),
 ];

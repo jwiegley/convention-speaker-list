@@ -3,7 +3,7 @@ export enum Gender {
   FEMALE = 'female',
   NON_BINARY = 'non-binary',
   OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer-not-to-say'
+  PREFER_NOT_TO_SAY = 'prefer-not-to-say',
 }
 
 export enum AgeBracket {
@@ -14,7 +14,7 @@ export enum AgeBracket {
   AGE_45_54 = '45-54',
   AGE_55_64 = '55-64',
   AGE_65_PLUS = '65-plus',
-  PREFER_NOT_TO_SAY = 'prefer-not-to-say'
+  PREFER_NOT_TO_SAY = 'prefer-not-to-say',
 }
 
 export enum RaceCategory {
@@ -27,7 +27,7 @@ export enum RaceCategory {
   MIDDLE_EASTERN = 'middle-eastern',
   MIXED = 'mixed',
   OTHER = 'other',
-  PREFER_NOT_TO_SAY = 'prefer-not-to-say'
+  PREFER_NOT_TO_SAY = 'prefer-not-to-say',
 }
 
 export enum QueueStatus {
@@ -35,18 +35,18 @@ export enum QueueStatus {
   SPEAKING = 'speaking',
   COMPLETED = 'completed',
   SKIPPED = 'skipped',
-  REMOVED = 'removed'
+  REMOVED = 'removed',
 }
 
 export enum SessionStatus {
   SETUP = 'setup',
   ACTIVE = 'active',
   PAUSED = 'paused',
-  ENDED = 'ended'
+  ENDED = 'ended',
 }
 
 export enum MicrophoneStatus {
   AVAILABLE = 'available',
   IN_USE = 'in-use',
-  DISABLED = 'disabled'
+  DISABLED = 'disabled',
 }

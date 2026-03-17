@@ -1,23 +1,22 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useStore } from '../store';
 
 // Keyboard shortcuts mapping
 const KEYBOARD_SHORTCUTS = {
   // Navigation
   'Ctrl+K': 'openSearch',
   'Ctrl+/': 'showShortcuts',
-  'Escape': 'closeModal',
+  Escape: 'closeModal',
   'Alt+1': 'navigateQueue',
   'Alt+2': 'navigateSpectator',
   'Alt+3': 'navigateAdmin',
   'Alt+4': 'navigateAnalytics',
-  
+
   // Queue operations
   'Ctrl+Enter': 'advanceQueue',
   'Ctrl+A': 'addSpeaker',
   'Ctrl+R': 'removeSpeaker',
   'Ctrl+T': 'toggleTimer',
-  
+
   // Accessibility
   'Alt+H': 'showHelp',
   'Alt+S': 'skipToContent',
@@ -25,7 +24,7 @@ const KEYBOARD_SHORTCUTS = {
   'Alt+C': 'announceCurrent',
 } as const;
 
-type ShortcutAction = typeof KEYBOARD_SHORTCUTS[keyof typeof KEYBOARD_SHORTCUTS];
+type ShortcutAction = (typeof KEYBOARD_SHORTCUTS)[keyof typeof KEYBOARD_SHORTCUTS];
 
 interface UseKeyboardNavigationOptions {
   onSearch?: () => void;
@@ -44,7 +43,7 @@ interface UseKeyboardNavigationOptions {
  */
 export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}) {
   const [isShortcutsModalOpen, setIsShortcutsModalOpen] = useState(false);
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Build the key combination string
@@ -52,7 +51,7 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
       if (e.ctrlKey || e.metaKey) key.push('Ctrl');
       if (e.altKey) key.push('Alt');
       if (e.shiftKey) key.push('Shift');
-      
+
       // Add the actual key
       if (e.key === ' ') {
         key.push('Space');
@@ -61,13 +60,13 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
       } else {
         key.push(e.key);
       }
-      
+
       const combination = key.join('+');
       const action = KEYBOARD_SHORTCUTS[combination as keyof typeof KEYBOARD_SHORTCUTS];
-      
+
       if (action) {
         e.preventDefault();
-        
+
         // Handle built-in actions
         switch (action) {
           case 'openSearch':
@@ -118,16 +117,16 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
             announceToScreenReader('Current speaker announcement');
             break;
         }
-        
+
         // Handle custom handlers
         options.customHandlers?.[action]?.();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [options]);
-  
+
   return {
     isShortcutsModalOpen,
     setIsShortcutsModalOpen,
@@ -137,21 +136,21 @@ export function useKeyboardNavigation(options: UseKeyboardNavigationOptions = {}
 /**
  * Hook for focus management
  */
-export function useFocusTrap(containerRef: React.RefObject<HTMLElement>, isActive = true) {
+export function useFocusTrap(containerRef: React.RefObject<HTMLElement | null>, isActive = true) {
   useEffect(() => {
     if (!isActive || !containerRef.current) return;
-    
+
     const container = containerRef.current;
     const focusableElements = container.querySelectorAll(
       'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
     );
-    
+
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
-    
+
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;
-      
+
       if (e.shiftKey) {
         if (document.activeElement === firstElement) {
           e.preventDefault();
@@ -164,10 +163,10 @@ export function useFocusTrap(containerRef: React.RefObject<HTMLElement>, isActiv
         }
       }
     };
-    
+
     container.addEventListener('keydown', handleTabKey);
     firstElement?.focus();
-    
+
     return () => {
       container.removeEventListener('keydown', handleTabKey);
     };
@@ -179,17 +178,17 @@ export function useFocusTrap(containerRef: React.RefObject<HTMLElement>, isActiv
  */
 export function useFocusRestoration() {
   const lastFocusedElement = useRef<HTMLElement | null>(null);
-  
+
   const saveFocus = useCallback(() => {
     lastFocusedElement.current = document.activeElement as HTMLElement;
   }, []);
-  
+
   const restoreFocus = useCallback(() => {
     if (lastFocusedElement.current && lastFocusedElement.current.focus) {
       lastFocusedElement.current.focus();
     }
   }, []);
-  
+
   return { saveFocus, restoreFocus };
 }
 
@@ -199,15 +198,15 @@ export function useFocusRestoration() {
 export function useLiveAnnouncer() {
   const [announcement, setAnnouncement] = useState('');
   const [politeness, setPoliteness] = useState<'polite' | 'assertive'>('polite');
-  
+
   const announce = useCallback((message: string, level: 'polite' | 'assertive' = 'polite') => {
     setPoliteness(level);
     setAnnouncement(message);
-    
+
     // Clear the announcement after a short delay to allow re-announcement of the same message
     setTimeout(() => setAnnouncement(''), 100);
   }, []);
-  
+
   return {
     announcement,
     politeness,
@@ -220,7 +219,10 @@ export function useLiveAnnouncer() {
  */
 let announcer: HTMLDivElement | null = null;
 
-export function announceToScreenReader(message: string, politeness: 'polite' | 'assertive' = 'polite') {
+export function announceToScreenReader(
+  message: string,
+  politeness: 'polite' | 'assertive' = 'polite'
+) {
   if (!announcer) {
     announcer = document.createElement('div');
     announcer.setAttribute('role', 'status');
@@ -233,10 +235,10 @@ export function announceToScreenReader(message: string, politeness: 'polite' | '
     announcer.style.overflow = 'hidden';
     document.body.appendChild(announcer);
   }
-  
+
   announcer.setAttribute('aria-live', politeness);
   announcer.textContent = message;
-  
+
   // Clear after announcement
   setTimeout(() => {
     if (announcer) {
@@ -250,21 +252,21 @@ export function announceToScreenReader(message: string, politeness: 'polite' | '
  */
 export function useReducedMotion() {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-  
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     setPrefersReducedMotion(mediaQuery.matches);
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       setPrefersReducedMotion(e.matches);
     };
-    
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else {
       mediaQuery.addListener(handleChange);
     }
-    
+
     return () => {
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener('change', handleChange);
@@ -273,7 +275,7 @@ export function useReducedMotion() {
       }
     };
   }, []);
-  
+
   return prefersReducedMotion;
 }
 
@@ -282,21 +284,21 @@ export function useReducedMotion() {
  */
 export function useHighContrast() {
   const [prefersHighContrast, setPrefersHighContrast] = useState(false);
-  
+
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-contrast: high)');
     setPrefersHighContrast(mediaQuery.matches);
-    
+
     const handleChange = (e: MediaQueryListEvent) => {
       setPrefersHighContrast(e.matches);
     };
-    
+
     if (mediaQuery.addEventListener) {
       mediaQuery.addEventListener('change', handleChange);
     } else {
       mediaQuery.addListener(handleChange);
     }
-    
+
     return () => {
       if (mediaQuery.removeEventListener) {
         mediaQuery.removeEventListener('change', handleChange);
@@ -305,7 +307,7 @@ export function useHighContrast() {
       }
     };
   }, []);
-  
+
   return prefersHighContrast;
 }
 
@@ -314,40 +316,43 @@ export function useHighContrast() {
  */
 export function useRovingTabIndex(items: HTMLElement[]) {
   const [focusedIndex, setFocusedIndex] = useState(0);
-  
+
   useEffect(() => {
     items.forEach((item, index) => {
       item.setAttribute('tabindex', index === focusedIndex ? '0' : '-1');
     });
   }, [items, focusedIndex]);
-  
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    switch (e.key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev + 1) % items.length);
-        break;
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        e.preventDefault();
-        setFocusedIndex((prev) => (prev - 1 + items.length) % items.length);
-        break;
-      case 'Home':
-        e.preventDefault();
-        setFocusedIndex(0);
-        break;
-      case 'End':
-        e.preventDefault();
-        setFocusedIndex(items.length - 1);
-        break;
-    }
-  }, [items.length]);
-  
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      switch (e.key) {
+        case 'ArrowDown':
+        case 'ArrowRight':
+          e.preventDefault();
+          setFocusedIndex((prev) => (prev + 1) % items.length);
+          break;
+        case 'ArrowUp':
+        case 'ArrowLeft':
+          e.preventDefault();
+          setFocusedIndex((prev) => (prev - 1 + items.length) % items.length);
+          break;
+        case 'Home':
+          e.preventDefault();
+          setFocusedIndex(0);
+          break;
+        case 'End':
+          e.preventDefault();
+          setFocusedIndex(items.length - 1);
+          break;
+      }
+    },
+    [items.length]
+  );
+
   useEffect(() => {
     items[focusedIndex]?.focus();
   }, [focusedIndex, items]);
-  
+
   return {
     focusedIndex,
     handleKeyDown,
@@ -376,11 +381,17 @@ export function SkipLinks() {
 /**
  * Component for keyboard shortcuts modal
  */
-export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function KeyboardShortcutsModal({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const modalRef = useRef<HTMLDivElement>(null);
   useFocusTrap(modalRef, isOpen);
   const { saveFocus, restoreFocus } = useFocusRestoration();
-  
+
   useEffect(() => {
     if (isOpen) {
       saveFocus();
@@ -388,31 +399,23 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; o
       restoreFocus();
     }
   }, [isOpen, saveFocus, restoreFocus]);
-  
+
   if (!isOpen) return null;
-  
+
   return (
-    <div 
+    <div
       className="modal-overlay"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-labelledby="shortcuts-title"
     >
-      <div 
-        ref={modalRef}
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div ref={modalRef} className="modal-content" onClick={(e) => e.stopPropagation()}>
         <h2 id="shortcuts-title">Keyboard Shortcuts</h2>
-        <button
-          onClick={onClose}
-          className="close-button"
-          aria-label="Close shortcuts modal"
-        >
+        <button onClick={onClose} className="close-button" aria-label="Close shortcuts modal">
           ×
         </button>
-        
+
         <div className="shortcuts-list">
           <h3>Navigation</h3>
           <dl>
@@ -425,7 +428,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; o
             <dt>Escape</dt>
             <dd>Close modals</dd>
           </dl>
-          
+
           <h3>Queue Operations</h3>
           <dl>
             <dt>Ctrl + Enter</dt>
@@ -437,7 +440,7 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; o
             <dt>Ctrl + T</dt>
             <dd>Toggle timer</dd>
           </dl>
-          
+
           <h3>Accessibility</h3>
           <dl>
             <dt>Alt + H</dt>
@@ -458,14 +461,15 @@ export function KeyboardShortcutsModal({ isOpen, onClose }: { isOpen: boolean; o
 /**
  * Live region component for dynamic announcements
  */
-export function LiveRegion({ message, politeness = 'polite' }: { message: string; politeness?: 'polite' | 'assertive' }) {
+export function LiveRegion({
+  message,
+  politeness = 'polite',
+}: {
+  message: string;
+  politeness?: 'polite' | 'assertive';
+}) {
   return (
-    <div
-      role="status"
-      aria-live={politeness}
-      aria-atomic="true"
-      className="sr-only"
-    >
+    <div role="status" aria-live={politeness} aria-atomic="true" className="sr-only">
       {message}
     </div>
   );

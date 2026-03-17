@@ -4,33 +4,33 @@ const isDevelopment = process.env.NODE_ENV !== 'production';
 
 export const socketConfig: Partial<ServerOptions> = {
   cors: {
-    origin: isDevelopment 
+    origin: isDevelopment
       ? ['http://localhost:5173', 'http://localhost:3000', 'http://localhost:3001']
       : process.env.FRONTEND_URL || 'https://convention-speaker-list.com',
     methods: ['GET', 'POST'],
     credentials: true,
   },
-  
+
   // Transport options
   transports: ['websocket', 'polling'],
-  
+
   // Connection parameters
   pingTimeout: 60000, // 60 seconds
   pingInterval: 25000, // 25 seconds
   connectTimeout: 45000, // 45 seconds
-  
+
   // Max HTTP buffer size (1MB)
   maxHttpBufferSize: 1e6,
-  
+
   // Allow binary data
   allowEIO3: true,
-  
+
   // Path for socket.io endpoint
   path: '/socket.io/',
-  
+
   // Server options
   serveClient: false, // Don't serve client files
-  
+
   // Adapter options (for scaling with Redis in production)
   // adapter: production ? createAdapter(redisClient) : undefined
 };

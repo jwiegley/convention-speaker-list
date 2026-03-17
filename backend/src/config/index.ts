@@ -2,11 +2,12 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables based on NODE_ENV
-const envFile = process.env.NODE_ENV === 'production' 
-  ? '.env.production' 
-  : process.env.NODE_ENV === 'docker'
-  ? '.env.docker'
-  : '.env.development';
+const envFile =
+  process.env.NODE_ENV === 'production'
+    ? '.env.production'
+    : process.env.NODE_ENV === 'docker'
+      ? '.env.docker'
+      : '.env.development';
 
 dotenv.config({ path: path.resolve(process.cwd(), '..', envFile) });
 dotenv.config({ path: path.resolve(process.cwd(), '..', '.env') });
@@ -44,18 +45,16 @@ interface Config {
   admin: {
     defaultPin: string;
   };
+  security?: {
+    encryptionKey?: string;
+  };
   logging: {
     level: string;
   };
 }
 
 // Validate required environment variables
-const requiredEnvVars = [
-  'DATABASE_URL',
-  'REDIS_URL',
-  'JWT_SECRET',
-  'SESSION_SECRET',
-];
+const requiredEnvVars = ['DATABASE_URL', 'REDIS_URL', 'JWT_SECRET', 'SESSION_SECRET'];
 
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {

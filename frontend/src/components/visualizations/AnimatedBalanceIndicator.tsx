@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { BalanceIndicator, DemographicType } from './BalanceIndicator';
+import { BalanceIndicator } from './BalanceIndicator';
+import type { DemographicType } from './BalanceIndicator';
 
 interface AnimatedBalanceIndicatorProps {
   type: DemographicType;
@@ -22,11 +23,11 @@ export const AnimatedBalanceIndicator: React.FC<AnimatedBalanceIndicatorProps> =
   className = '',
   animationDuration = 1000,
   animationType = 'spring',
-  onAnimationComplete
+  onAnimationComplete,
 }) => {
   const [currentPercentage, setCurrentPercentage] = useState(targetPercentage);
-  const animationRef = useRef<number>();
-  const startTimeRef = useRef<number>();
+  const animationRef = useRef<number | undefined>(undefined);
+  const startTimeRef = useRef<number | undefined>(undefined);
   const startValueRef = useRef<number>(targetPercentage);
 
   useEffect(() => {
@@ -58,8 +59,8 @@ export const AnimatedBalanceIndicator: React.FC<AnimatedBalanceIndicatorProps> =
         return t === 0
           ? 0
           : t === 1
-          ? 1
-          : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
+            ? 1
+            : Math.pow(2, -10 * t) * Math.sin((t * 10 - 0.75) * c4) + 1;
       },
       bounce: (t: number) => {
         // Bounce effect
@@ -74,7 +75,7 @@ export const AnimatedBalanceIndicator: React.FC<AnimatedBalanceIndicatorProps> =
         } else {
           return n1 * (t -= 2.625 / d1) * t + 0.984375;
         }
-      }
+      },
     };
 
     const easing = easingFunctions[animationType];
@@ -87,8 +88,8 @@ export const AnimatedBalanceIndicator: React.FC<AnimatedBalanceIndicatorProps> =
       const elapsed = timestamp - startTimeRef.current;
       const progress = Math.min(elapsed / animationDuration, 1);
       const easedProgress = easing(progress);
-      
-      const newValue = startValueRef.current + (valueDiff * easedProgress);
+
+      const newValue = startValueRef.current + valueDiff * easedProgress;
       setCurrentPercentage(newValue);
 
       if (progress < 1) {
@@ -145,7 +146,7 @@ export const useBalanceIndicators = (demographics: {
     values,
     updateValues,
     isAnimating,
-    handleAnimationComplete
+    handleAnimationComplete,
   };
 };
 

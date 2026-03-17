@@ -12,9 +12,7 @@ export function NextSpeaker({ speaker }: NextSpeakerProps) {
         <div className="space-y-2">
           <p className="text-2xl font-bold text-orange-300">{speaker.name}</p>
           <p className="text-lg text-gray-300">{speaker.country}</p>
-          {speaker.organization && (
-            <p className="text-sm text-gray-400">{speaker.organization}</p>
-          )}
+          {speaker.organization && <p className="text-sm text-gray-400">{speaker.organization}</p>}
         </div>
       ) : (
         <p className="text-gray-500 italic">No next speaker</p>

@@ -8,38 +8,38 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     id: {
       type: 'uuid',
       primaryKey: true,
-      default: pgm.func('gen_random_uuid()')
+      default: pgm.func('gen_random_uuid()'),
     },
     session_id: {
       type: 'uuid',
       notNull: true,
       references: 'sessions(id)',
-      onDelete: 'CASCADE'
+      onDelete: 'CASCADE',
     },
     snapshot_data: {
       type: 'jsonb',
-      notNull: true
+      notNull: true,
     },
     created_at: {
       type: 'timestamp',
       notNull: true,
-      default: pgm.func('CURRENT_TIMESTAMP')
+      default: pgm.func('CURRENT_TIMESTAMP'),
     },
     created_by: {
-      type: 'varchar(255)'
+      type: 'varchar(255)',
     },
     notes: {
-      type: 'text'
-    }
+      type: 'text',
+    },
   });
-  
+
   // Add indexes
   pgm.addIndex('queue_snapshots', 'session_id');
   pgm.addIndex('queue_snapshots', 'created_at');
-  
+
   // Add composite index for efficient queries
   pgm.addIndex('queue_snapshots', ['session_id', 'created_at'], {
-    name: 'idx_queue_snapshots_session_created'
+    name: 'idx_queue_snapshots_session_created',
   });
 }
 

@@ -1,5 +1,5 @@
-import { getPool } from './index';
+import { getClient as getClientFromPool } from './index';
 
 export const getClient = () => {
-  return getPool();
+  return getClientFromPool();
 };

@@ -30,7 +30,7 @@ export function getHTTPSConfig(): HTTPSConfig {
     return {
       enabled: false,
       port: httpsPort,
-      redirectHTTP: false
+      redirectHTTP: false,
     };
   }
 
@@ -46,7 +46,7 @@ export function getHTTPSConfig(): HTTPSConfig {
     if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
       sslOptions = {
         cert: fs.readFileSync(certPath),
-        key: fs.readFileSync(keyPath)
+        key: fs.readFileSync(keyPath),
       };
 
       // Add CA certificate if it exists
@@ -66,7 +66,7 @@ export function getHTTPSConfig(): HTTPSConfig {
       return {
         enabled: false,
         port: httpsPort,
-        redirectHTTP: false
+        redirectHTTP: false,
       };
     }
   } catch (error) {
@@ -74,7 +74,7 @@ export function getHTTPSConfig(): HTTPSConfig {
     return {
       enabled: false,
       port: httpsPort,
-      redirectHTTP: false
+      redirectHTTP: false,
     };
   }
 
@@ -82,7 +82,7 @@ export function getHTTPSConfig(): HTTPSConfig {
     enabled: true,
     options: sslOptions,
     port: httpsPort,
-    redirectHTTP
+    redirectHTTP,
   };
 }
 
@@ -115,9 +115,9 @@ export async function generateSelfSignedCert(): Promise<void> {
   try {
     // Generate self-signed certificate using OpenSSL
     const command = `openssl req -x509 -newkey rsa:4096 -keyout ${keyPath} -out ${certPath} -days 365 -nodes -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"`;
-    
+
     execSync(command, { stdio: 'inherit' });
-    
+
     console.log('Self-signed certificates generated successfully');
     console.log(`Certificate: ${certPath}`);
     console.log(`Private Key: ${keyPath}`);
@@ -135,30 +135,30 @@ export const securityHeaders = {
   hsts: {
     maxAge: 31536000, // 1 year
     includeSubDomains: true,
-    preload: true
+    preload: true,
   },
-  
+
   // Content Security Policy
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Adjust for your needs
       styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "wss:", "https:"],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'wss:', 'https:'],
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
       frameSrc: ["'none'"],
-    }
+    },
   },
-  
+
   // Other security headers
-  referrerPolicy: "no-referrer",
-  xContentTypeOptions: "nosniff",
-  xFrameOptions: "DENY",
-  xXssProtection: "1; mode=block",
-  
+  referrerPolicy: 'no-referrer',
+  xContentTypeOptions: 'nosniff',
+  xFrameOptions: 'DENY',
+  xXssProtection: '1; mode=block',
+
   // Permissions Policy
   permissionsPolicy: {
     features: {
@@ -166,8 +166,8 @@ export const securityHeaders = {
       microphone: ["'none'"],
       geolocation: ["'none'"],
       payment: ["'none'"],
-    }
-  }
+    },
+  },
 };
 
 /**
@@ -179,31 +179,38 @@ export function setupCertificateRenewalReminder(): void {
   }
 
   const certPath = process.env.SSL_CERT_PATH || path.join(process.cwd(), 'certs', 'server.crt');
-  
+
   try {
     const certContent = fs.readFileSync(certPath, 'utf8');
-    
+
     // Parse certificate expiration (basic implementation)
     // In production, use a proper certificate parser library
     const expirationMatch = certContent.match(/Not After\s*:\s*(.+)/);
     if (expirationMatch) {
       const expirationDate = new Date(expirationMatch[1]);
-      const daysUntilExpiration = Math.floor((expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-      
+      const daysUntilExpiration = Math.floor(
+        (expirationDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
+      );
+
       if (daysUntilExpiration < 30) {
-        console.warn(`⚠️  SSL certificate expires in ${daysUntilExpiration} days. Please renew soon!`);
+        console.warn(
+          `⚠️  SSL certificate expires in ${daysUntilExpiration} days. Please renew soon!`
+        );
       } else {
         console.log(`SSL certificate valid for ${daysUntilExpiration} more days`);
       }
-      
+
       // Set up daily check
-      setInterval(() => {
-        const now = Date.now();
-        const remaining = Math.floor((expirationDate.getTime() - now) / (1000 * 60 * 60 * 24));
-        if (remaining < 30) {
-          console.warn(`⚠️  SSL certificate expires in ${remaining} days. Please renew!`);
-        }
-      }, 24 * 60 * 60 * 1000); // Check daily
+      setInterval(
+        () => {
+          const now = Date.now();
+          const remaining = Math.floor((expirationDate.getTime() - now) / (1000 * 60 * 60 * 24));
+          if (remaining < 30) {
+            console.warn(`⚠️  SSL certificate expires in ${remaining} days. Please renew!`);
+          }
+        },
+        24 * 60 * 60 * 1000
+      ); // Check daily
     }
   } catch (error) {
     console.error('Error checking certificate expiration:', error);

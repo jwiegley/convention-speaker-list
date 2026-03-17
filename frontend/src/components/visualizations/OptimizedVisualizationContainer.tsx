@@ -2,7 +2,7 @@ import React, { memo, useMemo, useCallback, useRef, useEffect } from 'react';
 import { DemographicsToggle } from './DemographicsToggle';
 import { GardenTransitionManager } from './GardenTransitionManager';
 import { AnimatedBalanceIndicator } from './AnimatedBalanceIndicator';
-import { SpeakerPerformance } from '../../utils/gardenStateCalculator';
+import type { SpeakerPerformance } from '../../utils/gardenStateCalculator';
 
 interface OptimizedVisualizationContainerProps {
   sessionId: string;
@@ -27,14 +27,17 @@ interface PerformanceMetrics {
 // Memoized balance indicator component
 const MemoizedBalanceIndicator = memo(AnimatedBalanceIndicator, (prevProps, nextProps) => {
   // Only re-render if percentage changes by more than 0.5%
-  return Math.abs(prevProps.targetPercentage - nextProps.targetPercentage) < 0.5 &&
-         prevProps.type === nextProps.type;
+  return (
+    Math.abs(prevProps.targetPercentage - nextProps.targetPercentage) < 0.5 &&
+    prevProps.type === nextProps.type
+  );
 });
 
 // Memoized garden component
 const MemoizedGardenTransition = memo(GardenTransitionManager, (prevProps, nextProps) => {
-  return prevProps.sessionId === nextProps.sessionId &&
-         prevProps.initialState === nextProps.initialState;
+  return (
+    prevProps.sessionId === nextProps.sessionId && prevProps.initialState === nextProps.initialState
+  );
 });
 
 export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationContainerProps> = ({
@@ -43,11 +46,11 @@ export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationCon
   demographics,
   initialGardenState = 16,
   className = '',
-  onPerformanceMetrics
+  onPerformanceMetrics,
 }) => {
   const [gardenState, setGardenState] = React.useState(initialGardenState);
   const [showDemographics, setShowDemographics] = React.useState(true);
-  
+
   // Performance monitoring
   const performanceRef = useRef({
     frameCount: 0,
@@ -55,14 +58,14 @@ export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationCon
     fps: 60,
     renderTimes: [] as number[],
     updateCount: 0,
-    droppedFrames: 0
+    droppedFrames: 0,
   });
 
-  const rafIdRef = useRef<number>();
+  const rafIdRef = useRef<number | undefined>(undefined);
 
   // Throttled demographic updates
   const throttledDemographicsRef = useRef(demographics);
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+  const updateTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const throttledUpdateDemographics = useCallback((newDemographics: typeof demographics) => {
     // Clear existing timeout
@@ -90,23 +93,25 @@ export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationCon
       if (deltaTime >= 1000) {
         const fps = Math.round((frames * 1000) / deltaTime);
         performanceRef.current.fps = fps;
-        
+
         // Detect dropped frames (target 60fps)
         const expectedFrames = Math.round(deltaTime / 16.67);
         const droppedFrames = Math.max(0, expectedFrames - frames);
         performanceRef.current.droppedFrames += droppedFrames;
 
         // Calculate average render time
-        const avgRenderTime = performanceRef.current.renderTimes.length > 0
-          ? performanceRef.current.renderTimes.reduce((a, b) => a + b, 0) / performanceRef.current.renderTimes.length
-          : 0;
+        const avgRenderTime =
+          performanceRef.current.renderTimes.length > 0
+            ? performanceRef.current.renderTimes.reduce((a, b) => a + b, 0) /
+              performanceRef.current.renderTimes.length
+            : 0;
 
         // Report metrics
         onPerformanceMetrics?.({
           fps,
           renderTime: avgRenderTime,
           updateCount: performanceRef.current.updateCount,
-          droppedFrames: performanceRef.current.droppedFrames
+          droppedFrames: performanceRef.current.droppedFrames,
         });
 
         // Reset counters
@@ -140,13 +145,17 @@ export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationCon
   }, []);
 
   // Optimized speaker performance handler
-  const handleSpeakerPerformance = useCallback((performance: SpeakerPerformance) => {
+  const handleSpeakerPerformance = useCallback((_performance: SpeakerPerformance) => {
     // Process in next animation frame to avoid blocking
     requestAnimationFrame(() => {
       // Update garden state calculation
       // This would be connected to the actual garden state calculator
     });
   }, []);
+
+  // Expose methods for external consumers via ref
+  const apiRef = useRef({ throttledUpdateDemographics, handleSpeakerPerformance });
+  apiRef.current = { throttledUpdateDemographics, handleSpeakerPerformance };
 
   // Memoized demographic indicators
   const demographicIndicators = useMemo(() => {
@@ -180,17 +189,17 @@ export const OptimizedVisualizationContainer: React.FC<OptimizedVisualizationCon
   }, [showDemographics, isSpectatorView, throttledDemographicsRef.current]);
 
   // Use CSS containment for performance
-  const containerStyle = useMemo(() => ({
-    contain: 'layout style paint',
-    willChange: 'transform',
-    transform: 'translateZ(0)', // Force GPU acceleration
-  }), []);
+  const containerStyle = useMemo(
+    () => ({
+      contain: 'layout style paint',
+      willChange: 'transform',
+      transform: 'translateZ(0)', // Force GPU acceleration
+    }),
+    []
+  );
 
   return (
-    <div 
-      className={`optimized-visualization-container ${className}`}
-      style={containerStyle}
-    >
+    <div className={`optimized-visualization-container ${className}`} style={containerStyle}>
       {/* Main content area */}
       <div className="visualization-content">
         {/* Garden Visualization - Always visible */}
@@ -239,20 +248,23 @@ export const useOptimizedUpdates = <T extends object>(
 ): [T, (updates: Partial<T>) => void] => {
   const [value, setValue] = React.useState(initialValue);
   const pendingUpdates = useRef<Partial<T>>({});
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
-  const update = useCallback((updates: Partial<T>) => {
-    pendingUpdates.current = { ...pendingUpdates.current, ...updates };
+  const update = useCallback(
+    (updates: Partial<T>) => {
+      pendingUpdates.current = { ...pendingUpdates.current, ...updates };
 
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
 
-    timeoutRef.current = setTimeout(() => {
-      setValue(prev => ({ ...prev, ...pendingUpdates.current }));
-      pendingUpdates.current = {};
-    }, delay);
-  }, [delay]);
+      timeoutRef.current = setTimeout(() => {
+        setValue((prev) => ({ ...prev, ...pendingUpdates.current }));
+        pendingUpdates.current = {};
+      }, delay);
+    },
+    [delay]
+  );
 
   useEffect(() => {
     return () => {
@@ -284,7 +296,7 @@ export const useWebWorkerCalculation = <T, R>(
   workerFunction: (data: T) => R
 ): [(data: T) => Promise<R>, boolean] => {
   const [isCalculating, setIsCalculating] = React.useState(false);
-  const workerRef = useRef<Worker>();
+  const workerRef = useRef<Worker | undefined>(undefined);
 
   useEffect(() => {
     // Create worker from function
@@ -312,7 +324,7 @@ export const useWebWorkerCalculation = <T, R>(
       }
 
       setIsCalculating(true);
-      
+
       workerRef.current.onmessage = (e) => {
         setIsCalculating(false);
         resolve(e.data);

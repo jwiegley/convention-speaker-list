@@ -6,7 +6,7 @@ import { ISession } from './session';
 export interface QueueUpdatePayload {
   sessionId: string;
   queue: IQueueItem[];
-  action: 'added' | 'removed' | 'reordered' | 'advanced' | 'reset';
+  action: 'added' | 'removed' | 'reordered' | 'advanced' | 'reset' | 'locked' | 'unlocked';
   affectedItems?: string[];
   timestamp: Date;
 }
@@ -52,33 +52,112 @@ export interface GardenStatePayload {
 
 export interface ServerToClientEvents {
   'queue:updated': (payload: QueueUpdatePayload) => void;
-  'queue:joined': (payload: { sessionId: string; queueItem: IQueueItem; position: number; timestamp: Date }) => void;
-  'queue:left': (payload: { sessionId: string; queueItemId: string; delegateId: string; reason: 'completed' | 'removed' | 'timeout'; timestamp: Date }) => void;
-  'queue:snapshot': (payload: { sessionId: string; queue: IQueueItem[]; currentSpeaker: IQueueItem | null; onDeck: IQueueItem[]; totalInQueue: number; timestamp: Date }) => void;
+  'queue:joined': (payload: {
+    sessionId: string;
+    queueItem: IQueueItem;
+    position: number;
+    timestamp: Date;
+  }) => void;
+  'queue:left': (payload: {
+    sessionId: string;
+    queueItemId: string;
+    delegateId: string;
+    reason: 'completed' | 'removed' | 'timeout';
+    timestamp: Date;
+  }) => void;
+  'queue:snapshot': (payload: {
+    sessionId: string;
+    queue: IQueueItem[];
+    currentSpeaker: IQueueItem | null;
+    onDeck: IQueueItem[];
+    totalInQueue: number;
+    timestamp: Date;
+  }) => void;
   'speaker:advanced': (payload: SpeakerAdvancedPayload) => void;
   'speaker:started': (queueItem: IQueueItem) => void;
   'speaker:finished': (queueItem: IQueueItem) => void;
   'delegate:joined': (delegate: IDelegate) => void;
   'delegate:left': (delegateId: string) => void;
-  'session:created': (payload: { sessionId: string; name: string; participantCount: number; timestamp: Date }) => void;
-  'session:ended': (payload: { sessionId: string; totalSpeakers: number; totalDuration: number; timestamp: Date }) => void;
-  'session:participant:joined': (payload: { sessionId: string; participantId: string; role: string; timestamp: Date }) => void;
-  'session:participant:left': (payload: { sessionId: string; participantId: string; role: string; timestamp: Date }) => void;
+  'session:created': (payload: {
+    sessionId: string;
+    name: string;
+    participantCount: number;
+    timestamp: Date;
+  }) => void;
+  'session:ended': (payload: {
+    sessionId: string;
+    totalSpeakers: number;
+    totalDuration: number;
+    timestamp: Date;
+  }) => void;
+  'session:participant:joined': (payload: {
+    sessionId: string;
+    participantId: string;
+    role: string;
+    timestamp: Date;
+  }) => void;
+  'session:participant:left': (payload: {
+    sessionId: string;
+    participantId: string;
+    role: string;
+    timestamp: Date;
+  }) => void;
   'session:updated': (session: ISession) => void;
   'timer:tick': (payload: TimerTickPayload) => void;
   'timer:warning': (remainingTime: number) => void;
   'timer:expired': () => void;
-  'timer:pause': (payload: { sessionId: string; remainingTime: number; timestamp: Date }) => void;
-  'timer:resume': (payload: { sessionId: string; remainingTime: number; timestamp: Date }) => void;
-  'timer:stop': (payload: { sessionId: string; remainingTime: number; timestamp: Date }) => void;
-  'timer:state': (payload: { sessionId: string; remainingTime: number; totalTime: number; isRunning: boolean; isPaused: boolean; serverTimestamp: Date }) => void;
+  'timer:pause': (payload: {
+    sessionId: string;
+    delegateId?: string;
+    remainingTime: number;
+    timestamp: Date;
+  }) => void;
+  'timer:resume': (payload: {
+    sessionId: string;
+    delegateId?: string;
+    remainingTime: number;
+    timestamp: Date;
+  }) => void;
+  'timer:stop': (payload: {
+    sessionId: string;
+    delegateId?: string;
+    remainingTime: number;
+    timestamp: Date;
+  }) => void;
+  'timer:state': (payload: {
+    sessionId: string;
+    remainingTime: number;
+    totalTime: number;
+    isRunning: boolean;
+    isPaused: boolean;
+    serverTimestamp: Date;
+  }) => void;
   'demographics:updated': (payload: DemographicsUpdatePayload) => void;
-  'demographics:snapshot': (payload: { sessionId: string; totalDelegates: number; demographics: any; balance: any; timestamp: Date }) => void;
-  'balance:update': (payload: { sessionId: string; balance: any; deltas?: any; timestamp: Date }) => void;
+  'demographics:snapshot': (payload: {
+    sessionId: string;
+    totalDelegates: number;
+    demographics: Record<string, unknown>;
+    balance: Record<string, unknown>;
+    timestamp: Date;
+  }) => void;
+  'balance:update': (payload: {
+    sessionId: string;
+    balance: Record<string, unknown>;
+    deltas?: Record<string, unknown>;
+    timestamp: Date;
+  }) => void;
   'garden:stateChanged': (payload: GardenStatePayload) => void;
-  'garden:snapshot': (payload: { sessionId: string; imageIndex: number; performanceScore: number; averageTime: number; onTimePercentage: number; timestamp: Date }) => void;
+  'garden:snapshot': (payload: {
+    sessionId: string;
+    imageIndex: number;
+    performanceScore: number;
+    averageTime: number;
+    onTimePercentage: number;
+    timestamp: Date;
+  }) => void;
   'connection:restored': (data: { sessionId: string; missedEvents: number }) => void;
-  'error': (error: { code: string; message: string }) => void;
+  error: (error: { code: string; message: string }) => void;
+  'server:shutdown': (data: { message: string; reconnectIn: number }) => void;
 }
 
 export interface ClientToServerEvents {
@@ -140,7 +219,7 @@ export enum SocketEventNames {
   GARDEN_SNAPSHOT = 'garden:snapshot',
   CONNECTION_RESTORED = 'connection:restored',
   ERROR = 'error',
-  
+
   // Client to Server
   JOIN_SESSION = 'join:session',
   LEAVE_SESSION = 'leave:session',

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GardenVisualization } from './GardenVisualization';
-import { gardenStateCalculator, SpeakerPerformance } from '../../utils/gardenStateCalculator';
+import { gardenStateCalculator } from '../../utils/gardenStateCalculator';
+import type { SpeakerPerformance } from '../../utils/gardenStateCalculator';
 import { imagePreloader } from '../../utils/imagePreloader';
 
 interface GardenTransitionManagerProps {
@@ -19,13 +20,13 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
   className = '',
   onStateChange,
   autoPreload = true,
-  transitionDuration = 2000
+  transitionDuration = 2000,
 }) => {
   const [currentState, setCurrentState] = useState(initialState);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [preloadProgress, setPreloadProgress] = useState(0);
   const [statistics, setStatistics] = useState(gardenStateCalculator.getStatistics());
-  
+
   const transitionQueue = useRef<number[]>([]);
   const isProcessingQueue = useRef(false);
 
@@ -40,19 +41,12 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
 
     const preloadImages = async () => {
       // Preload priority states first
-      await imagePreloader.preloadGardenStates(
-        '/images/garden-states/',
-        'priority',
-        (progress) => {
-          setPreloadProgress(progress.percentage);
-        }
-      );
+      await imagePreloader.preloadGardenStates('/images/garden-states/', 'priority', (progress) => {
+        setPreloadProgress(progress.percentage);
+      });
 
       // Then preload all in background
-      imagePreloader.preloadGardenStates(
-        '/images/garden-states/',
-        'all'
-      );
+      imagePreloader.preloadGardenStates('/images/garden-states/', 'all');
     };
 
     preloadImages();
@@ -72,64 +66,67 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
       const oldState = currentState;
 
       // Preload adjacent states for smooth transition
-      const adjacentStates = [
-        Math.max(0, nextState - 1),
-        nextState,
-        Math.min(32, nextState + 1)
-      ];
-      
-      await imagePreloader.preloadGardenStates(
-        '/images/garden-states/',
-        adjacentStates
-      );
+      const adjacentStates = [Math.max(0, nextState - 1), nextState, Math.min(32, nextState + 1)];
+
+      await imagePreloader.preloadGardenStates('/images/garden-states/', adjacentStates);
 
       // Animate to new state
       setCurrentState(nextState);
       onStateChange?.(nextState, oldState);
 
       // Wait for transition to complete
-      await new Promise(resolve => setTimeout(resolve, transitionDuration));
+      await new Promise((resolve) => setTimeout(resolve, transitionDuration));
     }
 
     setIsTransitioning(false);
     isProcessingQueue.current = false;
   }, [currentState, transitionDuration, onStateChange]);
 
-  // Handle speaker performance updates
-  const updateGardenState = useCallback((performance: SpeakerPerformance) => {
-    const change = gardenStateCalculator.calculateStateChange(performance);
-    const newStats = gardenStateCalculator.getStatistics();
-    setStatistics(newStats);
+  // Handle speaker performance updates (exposed via apiRef for external use)
+  const updateGardenState = useCallback(
+    (performance: SpeakerPerformance) => {
+      const change = gardenStateCalculator.calculateStateChange(performance);
+      const newStats = gardenStateCalculator.getStatistics();
+      setStatistics(newStats);
 
-    if (change.change !== 0) {
-      // Add to transition queue
-      transitionQueue.current.push(change.newState);
+      if (change.change !== 0) {
+        // Add to transition queue
+        transitionQueue.current.push(change.newState);
+        processTransitionQueue();
+      }
+    },
+    [processTransitionQueue]
+  );
+
+  // Smooth multi-step transition (exposed via apiRef for external use)
+  const transitionToState = useCallback(
+    async (targetState: number) => {
+      const steps = Math.abs(targetState - currentState);
+      if (steps === 0) return;
+
+      const direction = targetState > currentState ? 1 : -1;
+      const states: number[] = [];
+
+      // Create smooth transition path
+      for (let i = 1; i <= steps; i++) {
+        states.push(currentState + direction * i);
+      }
+
+      // Add all states to queue
+      transitionQueue.current.push(...states);
       processTransitionQueue();
-    }
-  }, [processTransitionQueue]);
+    },
+    [currentState, processTransitionQueue]
+  );
 
-  // Smooth multi-step transition
-  const transitionToState = useCallback(async (targetState: number) => {
-    const steps = Math.abs(targetState - currentState);
-    if (steps === 0) return;
-
-    const direction = targetState > currentState ? 1 : -1;
-    const states: number[] = [];
-
-    // Create smooth transition path
-    for (let i = 1; i <= steps; i++) {
-      states.push(currentState + (direction * i));
-    }
-
-    // Add all states to queue
-    transitionQueue.current.push(...states);
-    processTransitionQueue();
-  }, [currentState, processTransitionQueue]);
+  // Expose methods for external consumers
+  const apiRef = useRef({ updateGardenState, transitionToState });
+  apiRef.current = { updateGardenState, transitionToState };
 
   // Get transition variant based on change magnitude
   const getTransitionVariant = (change: number) => {
     const absChange = Math.abs(change);
-    
+
     if (absChange === 0) return 'none';
     if (absChange === 1) return 'subtle';
     if (absChange <= 3) return 'moderate';
@@ -140,45 +137,45 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
     none: {
       initial: { opacity: 1 },
       animate: { opacity: 1 },
-      exit: { opacity: 1 }
+      exit: { opacity: 1 },
     },
     subtle: {
       initial: { opacity: 0.8, scale: 1.02 },
       animate: { opacity: 1, scale: 1 },
       exit: { opacity: 0.8, scale: 0.98 },
-      transition: { duration: transitionDuration / 1000 }
+      transition: { duration: transitionDuration / 1000 },
     },
     moderate: {
       initial: { opacity: 0.6, scale: 1.05, filter: 'blur(2px)' },
       animate: { opacity: 1, scale: 1, filter: 'blur(0px)' },
       exit: { opacity: 0.6, scale: 0.95, filter: 'blur(2px)' },
-      transition: { duration: transitionDuration / 1000 }
+      transition: { duration: transitionDuration / 1000 },
     },
     dramatic: {
-      initial: { 
-        opacity: 0, 
-        scale: 1.1, 
+      initial: {
+        opacity: 0,
+        scale: 1.1,
         filter: 'blur(4px)',
-        rotateY: 10
+        rotateY: 10,
       },
-      animate: { 
-        opacity: 1, 
-        scale: 1, 
+      animate: {
+        opacity: 1,
+        scale: 1,
         filter: 'blur(0px)',
-        rotateY: 0
+        rotateY: 0,
       },
-      exit: { 
-        opacity: 0, 
-        scale: 0.9, 
+      exit: {
+        opacity: 0,
+        scale: 0.9,
         filter: 'blur(4px)',
-        rotateY: -10
+        rotateY: -10,
       },
-      transition: { 
+      transition: {
         duration: transitionDuration / 1000,
         type: 'spring',
-        stiffness: 100
-      }
-    }
+        stiffness: 100,
+      },
+    },
   };
 
   return (
@@ -202,11 +199,15 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
         </div>
         <div className="mt-2">
           <span className="text-gray-600">Trend:</span>
-          <span className={`ml-2 font-bold ${
-            statistics.currentTrend === 'improving' ? 'text-green-600' :
-            statistics.currentTrend === 'declining' ? 'text-red-600' :
-            'text-gray-600'
-          }`}>
+          <span
+            className={`ml-2 font-bold ${
+              statistics.currentTrend === 'improving'
+                ? 'text-green-600'
+                : statistics.currentTrend === 'declining'
+                  ? 'text-red-600'
+                  : 'text-gray-600'
+            }`}
+          >
             {statistics.currentTrend.charAt(0).toUpperCase() + statistics.currentTrend.slice(1)}
           </span>
         </div>
@@ -234,11 +235,13 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
         <AnimatePresence mode="wait">
           <motion.div
             key={currentState}
-            variants={transitionVariants[getTransitionVariant(
-              transitionQueue.current.length > 0 
-                ? transitionQueue.current[0] - currentState 
-                : 0
-            )]}
+            variants={
+              transitionVariants[
+                getTransitionVariant(
+                  transitionQueue.current.length > 0 ? transitionQueue.current[0] - currentState : 0
+                )
+              ]
+            }
             initial="initial"
             animate="animate"
             exit="exit"
@@ -261,7 +264,7 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
             Loading images: {Math.round(preloadProgress)}%
           </div>
           <div className="w-full bg-gray-200 rounded-full h-1">
-            <div 
+            <div
               className="bg-green-500 h-1 rounded-full transition-all duration-300"
               style={{ width: `${preloadProgress}%` }}
             />
@@ -273,27 +276,29 @@ export const GardenTransitionManager: React.FC<GardenTransitionManagerProps> = (
 };
 
 // Hook for managing garden state transitions
-export const useGardenTransitions = (sessionId: string, initialState = 16) => {
-  const [state, setState] = useState(initialState);
-  const managerRef = useRef<{ 
-    updateGardenState: (perf: SpeakerPerformance) => void;
-    transitionToState: (state: number) => void;
-  }>();
+export const useGardenTransitions = (_sessionId: string, initialState = 16) => {
+  const [state, _setState] = useState(initialState);
+  const managerRef = useRef<
+    | {
+        updateGardenState: (perf: SpeakerPerformance) => void;
+        transitionToState: (state: number) => void;
+      }
+    | undefined
+  >(undefined);
 
-  const handleSpeakerComplete = useCallback((
-    speakerId: string,
-    allocatedTime: number,
-    actualTime: number
-  ) => {
-    const performance: SpeakerPerformance = {
-      speakerId,
-      allocatedTime,
-      actualTime,
-      timestamp: new Date()
-    };
+  const handleSpeakerComplete = useCallback(
+    (speakerId: string, allocatedTime: number, actualTime: number) => {
+      const performance: SpeakerPerformance = {
+        speakerId,
+        allocatedTime,
+        actualTime,
+        timestamp: new Date(),
+      };
 
-    managerRef.current?.updateGardenState(performance);
-  }, []);
+      managerRef.current?.updateGardenState(performance);
+    },
+    []
+  );
 
   const jumpToState = useCallback((newState: number) => {
     managerRef.current?.transitionToState(newState);
@@ -305,7 +310,7 @@ export const useGardenTransitions = (sessionId: string, initialState = 16) => {
     jumpToState,
     setManagerRef: (ref: typeof managerRef.current) => {
       managerRef.current = ref;
-    }
+    },
   };
 };
 

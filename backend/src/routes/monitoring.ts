@@ -12,19 +12,19 @@ const router = Router();
 router.get('/sessions', async (req, res) => {
   try {
     const io = getSocketServer();
-    
+
     if (!io) {
-      return res.status(503).json({ 
-        error: 'WebSocket server not initialized' 
+      return res.status(503).json({
+        error: 'WebSocket server not initialized',
       });
     }
-    
+
     const activeSessions = getActiveSessions();
     const sessionsData = [];
-    
+
     for (const [sessionId, sessionInfo] of activeSessions) {
       const roomStats = await getRoomStats(io, sessionId);
-      
+
       sessionsData.push({
         sessionId,
         name: sessionInfo.name || `Session ${sessionId}`,
@@ -39,7 +39,7 @@ router.get('/sessions', async (req, res) => {
         roomStats, // Additional stats from getRoomStats
       });
     }
-    
+
     res.json({
       totalSessions: sessionsData.length,
       sessions: sessionsData,
@@ -47,8 +47,8 @@ router.get('/sessions', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching session monitoring data:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch session data' 
+    res.status(500).json({
+      error: 'Failed to fetch session data',
     });
   }
 });
@@ -61,34 +61,34 @@ router.get('/sessions/:sessionId', async (req, res) => {
   try {
     const { sessionId } = req.params;
     const io = getSocketServer();
-    
+
     if (!io) {
-      return res.status(503).json({ 
-        error: 'WebSocket server not initialized' 
+      return res.status(503).json({
+        error: 'WebSocket server not initialized',
       });
     }
-    
+
     const activeSessions = getActiveSessions();
     const sessionInfo = activeSessions.get(sessionId);
-    
+
     if (!sessionInfo) {
-      return res.status(404).json({ 
-        error: 'Session not found' 
+      return res.status(404).json({
+        error: 'Session not found',
       });
     }
-    
+
     const roomStats = await getRoomStats(io, sessionId);
     const roomName = `session:${sessionId}`;
     const sockets = await io.in(roomName).fetchSockets();
-    
+
     // Get detailed participant information
-    const participants = sockets.map(socket => ({
+    const participants = sockets.map((socket) => ({
       socketId: socket.id,
       role: socket.data.role || 'delegate',
       connectedAt: socket.data.connectedAt,
       userId: socket.data.userId,
     }));
-    
+
     res.json({
       sessionId,
       name: sessionInfo.name || `Session ${sessionId}`,
@@ -106,8 +106,8 @@ router.get('/sessions/:sessionId', async (req, res) => {
     });
   } catch (error) {
     logger.error('Error fetching session details:', error);
-    res.status(500).json({ 
-      error: 'Failed to fetch session details' 
+    res.status(500).json({
+      error: 'Failed to fetch session details',
     });
   }
 });
@@ -118,14 +118,14 @@ router.get('/sessions/:sessionId', async (req, res) => {
  */
 router.get('/health', (req, res) => {
   const io = getSocketServer();
-  
+
   if (!io) {
-    return res.status(503).json({ 
+    return res.status(503).json({
       status: 'unhealthy',
-      message: 'WebSocket server not initialized' 
+      message: 'WebSocket server not initialized',
     });
   }
-  
+
   res.json({
     status: 'healthy',
     message: 'WebSocket server is running',

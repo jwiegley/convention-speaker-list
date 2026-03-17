@@ -11,7 +11,7 @@ export class AuditService {
 
   constructor() {
     this.pool = new Pool({
-      connectionString: config.database.url
+      connectionString: config.database.url,
     });
   }
 
@@ -32,17 +32,9 @@ export class AuditService {
         `INSERT INTO audit_logs 
          (user_id, action, resource_type, resource_id, details, ip_address, user_agent, created_at)
          VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
-        [
-          userId,
-          action,
-          resourceType,
-          resourceId,
-          JSON.stringify(details),
-          ipAddress,
-          userAgent
-        ]
+        [userId, action, resourceType, resourceId, JSON.stringify(details), ipAddress, userAgent]
       );
-      
+
       logger.info(`Audit log: User ${userId} performed ${action} on ${resourceType}:${resourceId}`);
     } catch (error) {
       logger.error('Failed to log audit event:', error);
@@ -53,7 +45,12 @@ export class AuditService {
   /**
    * Log admin login
    */
-  async logLogin(userId: string, role: string, ipAddress?: string, userAgent?: string): Promise<void> {
+  async logLogin(
+    userId: string,
+    role: string,
+    ipAddress?: string,
+    userAgent?: string
+  ): Promise<void> {
     await this.logEvent(
       userId,
       'LOGIN',
@@ -244,7 +241,7 @@ export class AuditService {
     return {
       userId,
       period: `${days} days`,
-      activities: result.rows
+      activities: result.rows,
     };
   }
 
@@ -273,26 +270,28 @@ export function auditMiddleware(action: string, resourceType: string) {
     const originalSend = res.send;
 
     // Override send to capture response and log audit
-    res.send = function(data: any) {
+    res.send = function (data: any) {
       // Log audit event if request was successful
       if (res.statusCode >= 200 && res.statusCode < 300 && req.user) {
         const auditService = new AuditService();
-        auditService.logEvent(
-          req.user.userId,
-          action,
-          resourceType,
-          req.params.id || null,
-          {
-            method: req.method,
-            path: req.path,
-            body: req.body,
-            query: req.query
-          },
-          req.ip,
-          req.headers['user-agent']
-        ).catch(error => {
-          logger.error('Audit middleware failed:', error);
-        });
+        auditService
+          .logEvent(
+            req.user.userId,
+            action,
+            resourceType,
+            req.params.id || null,
+            {
+              method: req.method,
+              path: req.path,
+              body: req.body,
+              query: req.query,
+            },
+            req.ip,
+            req.headers['user-agent']
+          )
+          .catch((error) => {
+            logger.error('Audit middleware failed:', error);
+          });
       }
 
       // Call original send

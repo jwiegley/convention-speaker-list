@@ -36,7 +36,9 @@ export function ResponsiveNav() {
         >
           <div className={`hamburger-line ${isMobileMenuOpen ? 'rotate-45 translate-y-2' : ''}`} />
           <div className={`hamburger-line ${isMobileMenuOpen ? 'opacity-0' : ''}`} />
-          <div className={`hamburger-line ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
+          <div
+            className={`hamburger-line ${isMobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`}
+          />
         </button>
 
         {/* Mobile menu overlay */}
@@ -88,9 +90,7 @@ export function ResponsiveNav() {
                 key={item.path}
                 to={item.path}
                 className={`flex flex-col items-center justify-center flex-1 h-full ${
-                  location.pathname === item.path
-                    ? 'text-blue-600'
-                    : 'text-gray-600'
+                  location.pathname === item.path ? 'text-blue-600' : 'text-gray-600'
                 }`}
               >
                 <span className="text-xl mb-1">{item.icon}</span>
@@ -140,9 +140,7 @@ export function ResponsiveNav() {
       <div className="container mx-auto px-6">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <h1 className="text-xl font-bold text-gray-900">
-              Convention Speaker List Manager
-            </h1>
+            <h1 className="text-xl font-bold text-gray-900">Convention Speaker List Manager</h1>
             <div className="flex items-center gap-1">
               {navItems.map((item) => (
                 <Link
@@ -182,7 +180,7 @@ export function useKeyboardNavigation() {
           window.location.href = navItems[index].path;
         }
       }
-      
+
       // Escape to close mobile menu
       if (e.key === 'Escape') {
         const event = new CustomEvent('closeMobileMenu');

@@ -69,12 +69,12 @@ export class DemographicsService {
   private gardenStates: Map<string, GardenState> = new Map();
   private updateBatch: Map<string, NodeJS.Timeout> = new Map();
   private readonly BATCH_DELAY = 2000; // 2 seconds for batching rapid changes
-  
+
   constructor() {
     this.eventEmitter = new EventEmitter();
     logger.info('DemographicsService initialized');
   }
-  
+
   /**
    * Calculate demographics for a session
    */
@@ -89,10 +89,10 @@ export class DemographicsService {
          WHERE si.session_id = $1`,
         [sessionId]
       );
-      
+
       const speakers = speakersResult.rows;
       const totalDelegates = speakers.length;
-      
+
       // Initialize counters
       const demographics: DemographicsData['demographics'] = {
         gender: { male: 0, female: 0, nonBinary: 0, other: 0 },
@@ -103,32 +103,32 @@ export class DemographicsService {
           asia: 0,
           africa: 0,
           southAmerica: 0,
-          oceania: 0
+          oceania: 0,
         },
-        firstTime: { yes: 0, no: 0 }
+        firstTime: { yes: 0, no: 0 },
       };
-      
+
       // Count demographics
-      speakers.forEach(speaker => {
+      speakers.forEach((speaker) => {
         // Gender
         const gender = speaker.gender?.toLowerCase() || 'other';
         if (gender === 'male') demographics.gender.male++;
         else if (gender === 'female') demographics.gender.female++;
         else if (gender === 'non-binary' || gender === 'nonbinary') demographics.gender.nonBinary++;
         else demographics.gender.other++;
-        
+
         // Age
         const age = speaker.age_range || '';
         if (age in demographics.age) {
           demographics.age[age as keyof typeof demographics.age]++;
         }
-        
+
         // Region
         const region = this.mapCountryToRegion(speaker.country);
         if (region in demographics.region) {
           demographics.region[region as keyof typeof demographics.region]++;
         }
-        
+
         // First time
         if (speaker.has_spoken_count === 0) {
           demographics.firstTime.yes++;
@@ -136,31 +136,33 @@ export class DemographicsService {
           demographics.firstTime.no++;
         }
       });
-      
+
       // Calculate balance scores
       const balance = this.calculateBalance(demographics, totalDelegates);
-      
+
       // Get previous data for deltas
       const previous = this.demographicsCache.get(sessionId);
-      const deltas = previous ? this.calculateDeltas(previous.demographics, demographics) : undefined;
-      
+      const deltas = previous
+        ? this.calculateDeltas(previous.demographics, demographics)
+        : undefined;
+
       const data: DemographicsData = {
         sessionId,
         totalDelegates,
         demographics,
         balance,
-        deltas
+        deltas,
       };
-      
+
       // Cache the result
       this.demographicsCache.set(sessionId, data);
-      
+
       return data;
     } finally {
       client.release();
     }
   }
-  
+
   /**
    * Calculate balance scores
    */
@@ -171,30 +173,30 @@ export class DemographicsService {
     if (total === 0) {
       return { genderBalance: 50, ageBalance: 0, regionBalance: 0 };
     }
-    
+
     // Gender balance (0-100, 50 is perfect)
     const genderValues = Object.values(demographics.gender);
     const maxGender = Math.max(...genderValues);
-    const minGender = Math.min(...genderValues.filter(v => v > 0));
+    const minGender = Math.min(...genderValues.filter((v) => v > 0));
     const genderBalance = minGender > 0 ? (minGender / maxGender) * 100 : 0;
-    
+
     // Age diversity (0-100, higher is more diverse)
     const ageValues = Object.values(demographics.age);
-    const ageWithSpeakers = ageValues.filter(v => v > 0).length;
+    const ageWithSpeakers = ageValues.filter((v) => v > 0).length;
     const ageBalance = (ageWithSpeakers / Object.keys(demographics.age).length) * 100;
-    
+
     // Region diversity (0-100, higher is more diverse)
     const regionValues = Object.values(demographics.region);
-    const regionWithSpeakers = regionValues.filter(v => v > 0).length;
+    const regionWithSpeakers = regionValues.filter((v) => v > 0).length;
     const regionBalance = (regionWithSpeakers / Object.keys(demographics.region).length) * 100;
-    
+
     return {
       genderBalance: Math.round(genderBalance),
       ageBalance: Math.round(ageBalance),
-      regionBalance: Math.round(regionBalance)
+      regionBalance: Math.round(regionBalance),
     };
   }
-  
+
   /**
    * Calculate deltas between two demographic states
    */
@@ -203,75 +205,75 @@ export class DemographicsService {
     current: DemographicsData['demographics']
   ): DemographicsData['deltas'] {
     const deltas: DemographicsData['deltas'] = {};
-    
+
     // Gender deltas
     deltas.gender = {};
     for (const key in current.gender) {
       const k = key as keyof typeof current.gender;
       deltas.gender[key] = current.gender[k] - previous.gender[k];
     }
-    
+
     // Age deltas
     deltas.age = {};
     for (const key in current.age) {
       const k = key as keyof typeof current.age;
       deltas.age[key] = current.age[k] - previous.age[k];
     }
-    
+
     // Region deltas
     deltas.region = {};
     for (const key in current.region) {
       const k = key as keyof typeof current.region;
       deltas.region[key] = current.region[k] - previous.region[k];
     }
-    
+
     return deltas;
   }
-  
+
   /**
    * Map country to region
    */
   private mapCountryToRegion(country: string): string {
     const countryUpper = (country || '').toUpperCase();
-    
+
     // Simple mapping - can be expanded
     const regionMap: Record<string, string> = {
       // North America
-      'USA': 'northAmerica',
-      'CANADA': 'northAmerica',
-      'MEXICO': 'northAmerica',
-      
+      USA: 'northAmerica',
+      CANADA: 'northAmerica',
+      MEXICO: 'northAmerica',
+
       // Europe
-      'UK': 'europe',
-      'FRANCE': 'europe',
-      'GERMANY': 'europe',
-      'SPAIN': 'europe',
-      'ITALY': 'europe',
-      
+      UK: 'europe',
+      FRANCE: 'europe',
+      GERMANY: 'europe',
+      SPAIN: 'europe',
+      ITALY: 'europe',
+
       // Asia
-      'CHINA': 'asia',
-      'JAPAN': 'asia',
-      'INDIA': 'asia',
-      'KOREA': 'asia',
-      
+      CHINA: 'asia',
+      JAPAN: 'asia',
+      INDIA: 'asia',
+      KOREA: 'asia',
+
       // Africa
       'SOUTH AFRICA': 'africa',
-      'NIGERIA': 'africa',
-      'EGYPT': 'africa',
-      
+      NIGERIA: 'africa',
+      EGYPT: 'africa',
+
       // South America
-      'BRAZIL': 'southAmerica',
-      'ARGENTINA': 'southAmerica',
-      'CHILE': 'southAmerica',
-      
+      BRAZIL: 'southAmerica',
+      ARGENTINA: 'southAmerica',
+      CHILE: 'southAmerica',
+
       // Oceania
-      'AUSTRALIA': 'oceania',
-      'NEW ZEALAND': 'oceania'
+      AUSTRALIA: 'oceania',
+      'NEW ZEALAND': 'oceania',
     };
-    
+
     return regionMap[countryUpper] || 'other';
   }
-  
+
   /**
    * Update garden state based on timing performance
    */
@@ -288,34 +290,34 @@ export class DemographicsService {
          WHERE session_id = $1 AND actual_duration IS NOT NULL`,
         [sessionId]
       );
-      
+
       const stats = statsResult.rows[0];
       const avgDuration = parseFloat(stats.avg_duration) || 0;
       const onTimePercentage = parseFloat(stats.on_time_percentage) || 0;
-      
+
       // Calculate performance score (0-100)
       const performanceScore = Math.round(onTimePercentage);
-      
+
       // Map to garden image index (0-32)
       const imageIndex = Math.round((performanceScore / 100) * 32);
-      
+
       const gardenState: GardenState = {
         sessionId,
         imageIndex,
         performanceScore,
         averageTime: Math.round(avgDuration),
-        onTimePercentage: Math.round(onTimePercentage)
+        onTimePercentage: Math.round(onTimePercentage),
       };
-      
+
       // Cache the state
       this.gardenStates.set(sessionId, gardenState);
-      
+
       return gardenState;
     } finally {
       client.release();
     }
   }
-  
+
   /**
    * Trigger demographics update with batching
    */
@@ -323,21 +325,21 @@ export class DemographicsService {
     const update = async () => {
       try {
         const demographics = await this.calculateDemographics(sessionId);
-        
+
         const event: DemographicsEvent = {
           type: 'demographics:updated',
           sessionId,
           data: demographics,
-          timestamp: new Date()
+          timestamp: new Date(),
         };
-        
+
         this.eventEmitter.emit('demographics:event', event);
         logger.debug(`Demographics updated for session ${sessionId}`);
       } catch (error) {
         logger.error(`Error updating demographics for session ${sessionId}:`, error);
       }
     };
-    
+
     if (immediate) {
       // Clear any pending batch
       const existing = this.updateBatch.get(sessionId);
@@ -352,65 +354,67 @@ export class DemographicsService {
       if (existing) {
         clearTimeout(existing);
       }
-      
+
       const timeout = setTimeout(() => {
         update();
         this.updateBatch.delete(sessionId);
       }, this.BATCH_DELAY);
-      
+
       this.updateBatch.set(sessionId, timeout);
     }
   }
-  
+
   /**
    * Trigger garden state update
    */
   async triggerGardenUpdate(sessionId: string): Promise<void> {
     try {
       const gardenState = await this.updateGardenState(sessionId);
-      
+
       const event: DemographicsEvent = {
         type: 'garden:stateChanged',
         sessionId,
         data: gardenState,
-        timestamp: new Date()
+        timestamp: new Date(),
       };
-      
+
       this.eventEmitter.emit('demographics:event', event);
-      logger.debug(`Garden state updated for session ${sessionId}, index: ${gardenState.imageIndex}`);
+      logger.debug(
+        `Garden state updated for session ${sessionId}, index: ${gardenState.imageIndex}`
+      );
     } catch (error) {
       logger.error(`Error updating garden state for session ${sessionId}:`, error);
     }
   }
-  
+
   /**
    * Get cached demographics
    */
   getCachedDemographics(sessionId: string): DemographicsData | null {
     return this.demographicsCache.get(sessionId) || null;
   }
-  
+
   /**
    * Get cached garden state
    */
   getCachedGardenState(sessionId: string): GardenState | null {
     return this.gardenStates.get(sessionId) || null;
   }
-  
+
   /**
    * Subscribe to demographics events
    */
   onDemographicsEvent(callback: (event: DemographicsEvent) => void): void {
     this.eventEmitter.on('demographics:event', callback);
   }
-  
+
   /**
    * Unsubscribe from demographics events
    */
   offDemographicsEvent(callback: (event: DemographicsEvent) => void): void {
     this.eventEmitter.off('demographics:event', callback);
   }
-  
+
   /**
    * Cleanup service (for graceful shutdown)
    */
@@ -420,12 +424,12 @@ export class DemographicsService {
       clearTimeout(timeout);
       logger.debug(`Cleared pending demographics update for session ${sessionId}`);
     }
-    
+
     this.updateBatch.clear();
     this.demographicsCache.clear();
     this.gardenStates.clear();
     this.eventEmitter.removeAllListeners();
-    
+
     logger.info('DemographicsService cleaned up');
   }
 }

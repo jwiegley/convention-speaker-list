@@ -1,6 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 import { config } from '../utils/config';
+
+type Socket = ReturnType<typeof io>;
 
 interface UseWebSocketReturn {
   socket: Socket | null;
@@ -40,7 +42,7 @@ export function useWebSocket(): UseWebSocketReturn {
       }
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', (error: unknown) => {
       if (config.features.enableDebug) {
         console.error('WebSocket error:', error);
       }

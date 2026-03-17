@@ -69,8 +69,8 @@ class IndexedDBService {
   private createSchema(db: IDBDatabase): void {
     // Store for pending updates
     if (!db.objectStoreNames.contains('pendingUpdates')) {
-      const pendingStore = db.createObjectStore('pendingUpdates', { 
-        keyPath: 'id' 
+      const pendingStore = db.createObjectStore('pendingUpdates', {
+        keyPath: 'id',
       });
       pendingStore.createIndex('timestamp', 'timestamp', { unique: false });
       pendingStore.createIndex('synced', 'synced', { unique: false });
@@ -79,16 +79,16 @@ class IndexedDBService {
 
     // Store for queue state snapshots
     if (!db.objectStoreNames.contains('queueStates')) {
-      const queueStore = db.createObjectStore('queueStates', { 
-        keyPath: 'id' 
+      const queueStore = db.createObjectStore('queueStates', {
+        keyPath: 'id',
       });
       queueStore.createIndex('timestamp', 'timestamp', { unique: false });
     }
 
     // Store for delegates cache
     if (!db.objectStoreNames.contains('delegates')) {
-      const delegatesStore = db.createObjectStore('delegates', { 
-        keyPath: 'id' 
+      const delegatesStore = db.createObjectStore('delegates', {
+        keyPath: 'id',
       });
       delegatesStore.createIndex('name', 'name', { unique: false });
       delegatesStore.createIndex('location', 'location', { unique: false });
@@ -96,8 +96,8 @@ class IndexedDBService {
 
     // Store for conflict resolutions
     if (!db.objectStoreNames.contains('conflicts')) {
-      const conflictsStore = db.createObjectStore('conflicts', { 
-        keyPath: 'id' 
+      const conflictsStore = db.createObjectStore('conflicts', {
+        keyPath: 'id',
       });
       conflictsStore.createIndex('timestamp', 'timestamp', { unique: false });
       conflictsStore.createIndex('resolution', 'resolution', { unique: false });
@@ -114,7 +114,9 @@ class IndexedDBService {
   /**
    * Add a pending update to the queue
    */
-  async addPendingUpdate(update: Omit<PendingUpdate, 'id' | 'timestamp' | 'synced' | 'retries'>): Promise<string> {
+  async addPendingUpdate(
+    update: Omit<PendingUpdate, 'id' | 'timestamp' | 'synced' | 'retries'>
+  ): Promise<string> {
     if (!this.db) throw new Error('Database not initialized');
 
     const pendingUpdate: PendingUpdate = {
@@ -122,7 +124,7 @@ class IndexedDBService {
       id: this.generateId(),
       timestamp: Date.now(),
       synced: false,
-      retries: 0
+      retries: 0,
     };
 
     return new Promise((resolve, reject) => {
@@ -151,11 +153,10 @@ class IndexedDBService {
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(['pendingUpdates'], 'readonly');
       const store = transaction.objectStore('pendingUpdates');
-      const index = store.index('synced');
-      const request = index.getAll(false);
+      const request = store.getAll();
 
       request.onsuccess = () => {
-        resolve(request.result);
+        resolve(request.result.filter((u: PendingUpdate) => !u.synced));
       };
 
       request.onerror = () => {
@@ -181,12 +182,12 @@ class IndexedDBService {
         if (update) {
           update.synced = true;
           const putRequest = store.put(update);
-          
+
           putRequest.onsuccess = () => {
             console.log('Update marked as synced:', id);
             resolve();
           };
-          
+
           putRequest.onerror = () => {
             reject(putRequest.error);
           };
@@ -210,7 +211,7 @@ class IndexedDBService {
     const queueState: LocalQueueState = {
       ...state,
       id: this.generateId(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     return new Promise((resolve, reject) => {
@@ -220,10 +221,10 @@ class IndexedDBService {
 
       request.onsuccess = () => {
         console.log('Queue state saved:', queueState.id);
-        
+
         // Clean up old snapshots (keep last 10)
         this.cleanupOldSnapshots();
-        
+
         resolve(queueState.id);
       };
 
@@ -274,18 +275,18 @@ class IndexedDBService {
 
       // Clear existing delegates
       const clearRequest = store.clear();
-      
+
       clearRequest.onsuccess = () => {
         // Add new delegates
-        delegates.forEach(delegate => {
+        delegates.forEach((delegate) => {
           store.add(delegate);
         });
-        
+
         transaction.oncomplete = () => {
           console.log(`Saved ${delegates.length} delegates to cache`);
           resolve();
         };
-        
+
         transaction.onerror = () => {
           console.error('Failed to save delegates:', transaction.error);
           reject(transaction.error);
@@ -325,7 +326,7 @@ class IndexedDBService {
     const conflictRecord: ConflictResolution = {
       ...conflict,
       id: this.generateId(),
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     return new Promise((resolve, reject) => {
@@ -397,19 +398,19 @@ class IndexedDBService {
     if (!this.db) throw new Error('Database not initialized');
 
     const storeNames = ['pendingUpdates', 'queueStates', 'delegates', 'conflicts', 'settings'];
-    
+
     return new Promise((resolve, reject) => {
       const transaction = this.db!.transaction(storeNames, 'readwrite');
-      
-      storeNames.forEach(storeName => {
+
+      storeNames.forEach((storeName) => {
         transaction.objectStore(storeName).clear();
       });
-      
+
       transaction.oncomplete = () => {
         console.log('All IndexedDB data cleared');
         resolve();
       };
-      
+
       transaction.onerror = () => {
         console.error('Failed to clear data:', transaction.error);
         reject(transaction.error);
@@ -427,9 +428,9 @@ class IndexedDBService {
     const store = transaction.objectStore('queueStates');
     const index = store.index('timestamp');
     const request = index.openCursor();
-    
+
     const snapshots: LocalQueueState[] = [];
-    
+
     request.onsuccess = () => {
       const cursor = request.result;
       if (cursor) {
@@ -438,14 +439,12 @@ class IndexedDBService {
       } else {
         // Keep only the last 10 snapshots
         if (snapshots.length > 10) {
-          const toDelete = snapshots
-            .sort((a, b) => b.timestamp - a.timestamp)
-            .slice(10);
-          
-          toDelete.forEach(snapshot => {
+          const toDelete = snapshots.sort((a, b) => b.timestamp - a.timestamp).slice(10);
+
+          toDelete.forEach((snapshot) => {
             store.delete(snapshot.id);
           });
-          
+
           console.log(`Cleaned up ${toDelete.length} old snapshots`);
         }
       }
@@ -472,7 +471,7 @@ class IndexedDBService {
       const transaction = this.db.transaction([storeName], 'readonly');
       const store = transaction.objectStore(storeName);
       const countRequest = store.count();
-      
+
       await new Promise((resolve) => {
         countRequest.onsuccess = () => {
           stats[storeName] = countRequest.result;

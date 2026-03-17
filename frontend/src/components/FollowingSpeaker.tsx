@@ -12,9 +12,7 @@ export function FollowingSpeaker({ speaker }: FollowingSpeakerProps) {
         <div className="space-y-2">
           <p className="text-xl font-bold text-sky-300">{speaker.name}</p>
           <p className="text-base text-gray-300">{speaker.country}</p>
-          {speaker.organization && (
-            <p className="text-sm text-gray-400">{speaker.organization}</p>
-          )}
+          {speaker.organization && <p className="text-sm text-gray-400">{speaker.organization}</p>}
         </div>
       ) : (
         <p className="text-gray-500 italic">No following speaker</p>

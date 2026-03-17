@@ -13,14 +13,14 @@ export interface CacheConfig {
 }
 
 export interface CacheTTLConfig {
-  participationRates: number;      // 5 minutes
-  timeDistributions: number;       // 2 minutes
-  demographicSummaries: number;    // 10 minutes
-  sessionMetrics: number;          // 1 minute
-  speakerStatistics: number;       // 3 minutes
-  aggregatedMetrics: number;       // 15 minutes
-  queueStatus: number;             // 30 seconds
-  realtimeStats: number;           // 10 seconds
+  participationRates: number; // 5 minutes
+  timeDistributions: number; // 2 minutes
+  demographicSummaries: number; // 10 minutes
+  sessionMetrics: number; // 1 minute
+  speakerStatistics: number; // 3 minutes
+  aggregatedMetrics: number; // 15 minutes
+  queueStatus: number; // 30 seconds
+  realtimeStats: number; // 10 seconds
 }
 
 export interface CacheStats {
@@ -43,18 +43,18 @@ export class CacheService extends EventEmitter {
     hitRate: 0,
     totalKeys: 0,
     memoryUsage: 0,
-    evictedKeys: 0
+    evictedKeys: 0,
   };
 
   private ttlConfig: CacheTTLConfig = {
-    participationRates: 300,      // 5 minutes
-    timeDistributions: 120,       // 2 minutes
-    demographicSummaries: 600,    // 10 minutes
-    sessionMetrics: 60,           // 1 minute
-    speakerStatistics: 180,       // 3 minutes
-    aggregatedMetrics: 900,       // 15 minutes
-    queueStatus: 30,              // 30 seconds
-    realtimeStats: 10             // 10 seconds
+    participationRates: 300, // 5 minutes
+    timeDistributions: 120, // 2 minutes
+    demographicSummaries: 600, // 10 minutes
+    sessionMetrics: 60, // 1 minute
+    speakerStatistics: 180, // 3 minutes
+    aggregatedMetrics: 900, // 15 minutes
+    queueStatus: 30, // 30 seconds
+    realtimeStats: 10, // 10 seconds
   };
 
   private readonly INVALIDATION_CHANNEL = 'cache:invalidation';
@@ -76,12 +76,14 @@ export class CacheService extends EventEmitter {
         port: this.config.port,
         password: this.config.password,
         db: this.config.db || 0,
-        retryStrategy: this.config.retryStrategy || ((times) => {
-          const delay = Math.min(times * 50, 2000);
-          return delay;
-        }),
+        retryStrategy:
+          this.config.retryStrategy ||
+          ((times) => {
+            const delay = Math.min(times * 50, 2000);
+            return delay;
+          }),
         enableOfflineQueue: this.config.enableOfflineQueue !== false,
-        maxRetriesPerRequest: this.config.maxRetries || 3
+        maxRetriesPerRequest: this.config.maxRetries || 3,
       });
 
       // Pub/Sub clients for cache invalidation
@@ -99,7 +101,6 @@ export class CacheService extends EventEmitter {
 
       // Start monitoring
       this.startMonitoring();
-
     } catch (error) {
       console.error('Failed to initialize cache service:', error);
       this.emit('error', error);
@@ -153,7 +154,7 @@ export class CacheService extends EventEmitter {
   private async handleInvalidationMessage(message: string): Promise<void> {
     try {
       const { pattern, keys } = JSON.parse(message);
-      
+
       if (pattern) {
         await this.invalidatePattern(pattern, false); // Don't broadcast again
       } else if (keys && Array.isArray(keys)) {
@@ -184,7 +185,7 @@ export class CacheService extends EventEmitter {
 
     try {
       const value = await this.redis.get(key);
-      
+
       if (value) {
         this.stats.hits++;
         this.updateHitRate();
@@ -209,13 +210,13 @@ export class CacheService extends EventEmitter {
     try {
       const serialized = JSON.stringify(value);
       const effectiveTTL = ttl || this.getDefaultTTL(key);
-      
+
       if (effectiveTTL > 0) {
         await this.redis.setex(key, effectiveTTL, serialized);
       } else {
         await this.redis.set(key, serialized);
       }
-      
+
       return true;
     } catch (error) {
       console.error(`Cache set error for key ${key}:`, error);
@@ -226,11 +227,7 @@ export class CacheService extends EventEmitter {
   /**
    * Get or set value (cache-aside pattern)
    */
-  async getOrSet<T>(
-    key: string,
-    factory: () => Promise<T>,
-    ttl?: number
-  ): Promise<T> {
+  async getOrSet<T>(key: string, factory: () => Promise<T>, ttl?: number): Promise<T> {
     // Try to get from cache
     const cached = await this.get<T>(key);
     if (cached !== null) {
@@ -239,10 +236,10 @@ export class CacheService extends EventEmitter {
 
     // Generate value
     const value = await factory();
-    
+
     // Store in cache
     await this.set(key, value, ttl);
-    
+
     return value;
   }
 
@@ -255,12 +252,9 @@ export class CacheService extends EventEmitter {
     try {
       if (keys.length > 0) {
         await this.redis.del(...keys);
-        
+
         if (broadcast && this.pubClient) {
-          await this.pubClient.publish(
-            this.INVALIDATION_CHANNEL,
-            JSON.stringify({ keys })
-          );
+          await this.pubClient.publish(this.INVALIDATION_CHANNEL, JSON.stringify({ keys }));
         }
       }
     } catch (error) {
@@ -276,15 +270,12 @@ export class CacheService extends EventEmitter {
 
     try {
       const keys = await this.redis.keys(pattern);
-      
+
       if (keys.length > 0) {
         await this.redis.del(...keys);
-        
+
         if (broadcast && this.pubClient) {
-          await this.pubClient.publish(
-            this.INVALIDATION_CHANNEL,
-            JSON.stringify({ pattern })
-          );
+          await this.pubClient.publish(this.INVALIDATION_CHANNEL, JSON.stringify({ pattern }));
         }
       }
     } catch (error) {
@@ -305,21 +296,21 @@ export class CacheService extends EventEmitter {
           patterns.push(`session:${context.sessionId}:*`);
         }
         break;
-        
+
       case 'delegate:updated':
         patterns.push('demographic_*', 'participation:*');
         if (context?.delegateId) {
           patterns.push(`delegate:${context.delegateId}:*`);
         }
         break;
-        
+
       case 'session:ended':
         if (context?.sessionId) {
           patterns.push(`session:${context.sessionId}:*`);
         }
         patterns.push('aggregated:*');
         break;
-        
+
       case 'queue:updated':
         patterns.push('queue:*', 'realtime:*');
         break;
@@ -340,14 +331,11 @@ export class CacheService extends EventEmitter {
       { type: 'participationRates', params: { sessionId } },
       { type: 'timeDistributions', params: { sessionId } },
       { type: 'demographicSummaries', params: { sessionId } },
-      { type: 'sessionMetrics', params: { sessionId } }
+      { type: 'sessionMetrics', params: { sessionId } },
     ];
 
     for (const task of warmupTasks) {
-      await this.pubClient.publish(
-        this.WARMUP_CHANNEL,
-        JSON.stringify(task)
-      );
+      await this.pubClient.publish(this.WARMUP_CHANNEL, JSON.stringify(task));
     }
   }
 
@@ -363,7 +351,7 @@ export class CacheService extends EventEmitter {
     if (key.includes('aggregated')) return this.ttlConfig.aggregatedMetrics;
     if (key.includes('queue')) return this.ttlConfig.queueStatus;
     if (key.includes('realtime')) return this.ttlConfig.realtimeStats;
-    
+
     return 300; // Default 5 minutes
   }
 
@@ -426,10 +414,10 @@ export class CacheService extends EventEmitter {
       this.emit('stats:updated', stats);
 
       // Alert if hit rate is too low
-      if (stats.hitRate < 50 && (stats.hits + stats.misses) > 100) {
+      if (stats.hitRate < 50 && stats.hits + stats.misses > 100) {
         this.emit('performance:warning', {
           message: 'Cache hit rate below 50%',
-          hitRate: stats.hitRate
+          hitRate: stats.hitRate,
         });
       }
 
@@ -437,7 +425,7 @@ export class CacheService extends EventEmitter {
       if (stats.evictedKeys > 1000) {
         this.emit('performance:warning', {
           message: 'High number of evicted keys',
-          evictedKeys: stats.evictedKeys
+          evictedKeys: stats.evictedKeys,
         });
       }
     }, 60000); // Every minute
@@ -460,9 +448,9 @@ export class CacheService extends EventEmitter {
         speakerStatistics: Math.min(this.ttlConfig.speakerStatistics * 1.5, 360),
         aggregatedMetrics: Math.min(this.ttlConfig.aggregatedMetrics * 1.5, 1800),
         queueStatus: this.ttlConfig.queueStatus, // Keep real-time data fresh
-        realtimeStats: this.ttlConfig.realtimeStats // Keep real-time data fresh
+        realtimeStats: this.ttlConfig.realtimeStats, // Keep real-time data fresh
       };
-      
+
       console.log('Cache TTLs increased due to low hit rate');
     } else if (stats.hitRate > 90 && stats.evictedKeys < 100) {
       // Decrease TTLs if hit rate is very high and few evictions
@@ -474,9 +462,9 @@ export class CacheService extends EventEmitter {
         speakerStatistics: Math.max(this.ttlConfig.speakerStatistics * 0.8, 120),
         aggregatedMetrics: Math.max(this.ttlConfig.aggregatedMetrics * 0.8, 600),
         queueStatus: this.ttlConfig.queueStatus,
-        realtimeStats: this.ttlConfig.realtimeStats
+        realtimeStats: this.ttlConfig.realtimeStats,
       };
-      
+
       console.log('Cache TTLs decreased for fresher data');
     }
 
@@ -497,7 +485,7 @@ export class CacheService extends EventEmitter {
         hitRate: 0,
         totalKeys: 0,
         memoryUsage: 0,
-        evictedKeys: 0
+        evictedKeys: 0,
       };
       console.log('Cache cleared');
     } catch (error) {
@@ -518,7 +506,7 @@ export class CacheService extends EventEmitter {
     if (this.subClient) {
       await this.subClient.quit();
     }
-    
+
     this.isConnected = false;
     this.emit('disconnected');
   }

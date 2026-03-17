@@ -41,7 +41,7 @@ export class GardenStateCalculator {
       lateThreshold: config.lateThreshold ?? 1.1,
       sensitivityFactor: config.sensitivityFactor ?? 1,
       minState: config.minState ?? 0,
-      maxState: config.maxState ?? 32
+      maxState: config.maxState ?? 32,
     };
 
     this.currentState = this.config.initialState;
@@ -63,7 +63,8 @@ export class GardenStateCalculator {
       reason = 'early';
     } else if (timeRatio > this.config.lateThreshold) {
       // Speaker went over time - move toward desert
-      const latePercentage = (timeRatio - this.config.lateThreshold) / (2 - this.config.lateThreshold);
+      const latePercentage =
+        (timeRatio - this.config.lateThreshold) / (2 - this.config.lateThreshold);
       change = -Math.ceil(latePercentage * 2 * this.config.sensitivityFactor); // -1 or -2 based on how late
       reason = 'late';
     }
@@ -80,7 +81,7 @@ export class GardenStateCalculator {
       change: newState - previousState,
       reason,
       performance,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
 
     this.history.push(stateChange);
@@ -93,7 +94,7 @@ export class GardenStateCalculator {
    * Process multiple speaker performances at once
    */
   public processBatch(performances: SpeakerPerformance[]): GardenStateChange[] {
-    return performances.map(perf => this.calculateStateChange(perf));
+    return performances.map((perf) => this.calculateStateChange(perf));
   }
 
   /**
@@ -138,26 +139,25 @@ export class GardenStateCalculator {
         onTimeCount: 0,
         lateCount: 0,
         totalStateChange: 0,
-        currentTrend: 'stable' as 'improving' | 'declining' | 'stable'
+        currentTrend: 'stable' as 'improving' | 'declining' | 'stable',
       };
     }
 
-    const earlyCount = this.history.filter(h => h.reason === 'early').length;
-    const onTimeCount = this.history.filter(h => h.reason === 'on-time').length;
-    const lateCount = this.history.filter(h => h.reason === 'late').length;
-    
-    const avgTimeRatio = this.performanceHistory.reduce(
-      (sum, perf) => sum + (perf.actualTime / perf.allocatedTime),
-      0
-    ) / this.performanceHistory.length;
+    const earlyCount = this.history.filter((h) => h.reason === 'early').length;
+    const onTimeCount = this.history.filter((h) => h.reason === 'on-time').length;
+    const lateCount = this.history.filter((h) => h.reason === 'late').length;
+
+    const avgTimeRatio =
+      this.performanceHistory.reduce((sum, perf) => sum + perf.actualTime / perf.allocatedTime, 0) /
+      this.performanceHistory.length;
 
     const totalStateChange = this.currentState - this.config.initialState;
-    
+
     // Determine trend based on last 5 speakers
     const recentChanges = this.history.slice(-5);
     const recentTotalChange = recentChanges.reduce((sum, change) => sum + change.change, 0);
-    const currentTrend = recentTotalChange > 1 ? 'improving' : 
-                        recentTotalChange < -1 ? 'declining' : 'stable';
+    const currentTrend =
+      recentTotalChange > 1 ? 'improving' : recentTotalChange < -1 ? 'declining' : 'stable';
 
     return {
       totalSpeakers: this.performanceHistory.length,
@@ -166,7 +166,7 @@ export class GardenStateCalculator {
       onTimeCount,
       lateCount,
       totalStateChange,
-      currentTrend
+      currentTrend,
     };
   }
 
@@ -175,7 +175,7 @@ export class GardenStateCalculator {
    */
   public getStateDescription(): string {
     const percentage = (this.currentState / this.config.maxState) * 100;
-    
+
     if (percentage === 0) return 'Barren Desert';
     if (percentage <= 25) return 'Arid Landscape';
     if (percentage <= 50) return 'Emerging Growth';
@@ -193,31 +193,31 @@ export class GardenStateCalculator {
     pessimistic: number;
   } {
     const stats = this.getStatistics();
-    
+
     if (this.performanceHistory.length === 0) {
       return {
         optimistic: this.currentState,
         realistic: this.currentState,
-        pessimistic: this.currentState
+        pessimistic: this.currentState,
       };
     }
 
     // Calculate average change per speaker
     const avgChangePerSpeaker = stats.totalStateChange / stats.totalSpeakers;
-    
+
     // Realistic prediction based on average
     const realistic = this.clampState(
       this.currentState + Math.round(avgChangePerSpeaker * speakersAhead)
     );
-    
+
     // Optimistic: assume all speakers finish early
     const optimistic = this.clampState(
-      this.currentState + (speakersAhead * this.config.sensitivityFactor)
+      this.currentState + speakersAhead * this.config.sensitivityFactor
     );
-    
+
     // Pessimistic: assume all speakers go late
     const pessimistic = this.clampState(
-      this.currentState - (speakersAhead * this.config.sensitivityFactor)
+      this.currentState - speakersAhead * this.config.sensitivityFactor
     );
 
     return { optimistic, realistic, pessimistic };
@@ -231,7 +231,7 @@ export class GardenStateCalculator {
       currentState: this.currentState,
       config: this.config,
       history: this.history,
-      performanceHistory: this.performanceHistory
+      performanceHistory: this.performanceHistory,
     };
   }
 
@@ -249,10 +249,7 @@ export class GardenStateCalculator {
    * Clamp state value within configured bounds
    */
   private clampState(state: number): number {
-    return Math.max(
-      this.config.minState,
-      Math.min(this.config.maxState, Math.floor(state))
-    );
+    return Math.max(this.config.minState, Math.min(this.config.maxState, Math.floor(state)));
   }
 }
 
@@ -270,12 +267,12 @@ export function calculateGardenStateChange(
     speakerId: 'temp',
     allocatedTime,
     actualTime,
-    timestamp: new Date()
+    timestamp: new Date(),
   });
-  
+
   return {
     newState: result.newState,
     change: result.change,
-    reason: result.reason
+    reason: result.reason,
   };
 }

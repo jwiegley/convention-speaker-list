@@ -123,7 +123,7 @@ export function QueueControl() {
   });
 
   const handleAddToQueue = () => {
-    const delegate = delegates.find(d => d.number.toString() === delegateNumber);
+    const delegate = delegates.find((d) => d.number.toString() === delegateNumber);
     if (delegate) {
       addToQueueMutation.mutate(delegate.id);
     } else {
@@ -148,7 +148,7 @@ export function QueueControl() {
   const handleClearQueue = () => {
     if (window.confirm('Are you sure you want to clear everything (queue and current speaker)?')) {
       // Clear all items in queue
-      queueData?.queue.forEach(item => {
+      queueData?.queue.forEach((item) => {
         removeFromQueueMutation.mutate(item.id);
       });
       // If there's a current speaker, advance to clear them too
@@ -161,12 +161,12 @@ export function QueueControl() {
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
-    
+
     if (queueData?.currentSpeaker?.startedAt) {
       // Calculate initial elapsed time
       const startTime = new Date(queueData.currentSpeaker.startedAt).getTime();
       setSpeakingTime(Math.floor((Date.now() - startTime) / 1000));
-      
+
       // Update every second
       interval = setInterval(() => {
         setSpeakingTime(Math.floor((Date.now() - startTime) / 1000));
@@ -174,7 +174,7 @@ export function QueueControl() {
     } else {
       setSpeakingTime(0);
     }
-    
+
     return () => {
       if (interval) clearInterval(interval);
     };
@@ -190,7 +190,7 @@ export function QueueControl() {
   return (
     <div className="queue-control space-y-6">
       <h2 className="text-2xl font-bold text-gray-900">Queue Control</h2>
-      
+
       {/* Add to Queue */}
       <div className="bg-gray-50 rounded-lg p-4">
         <h3 className="text-lg font-semibold mb-3">Add Delegate to Queue</h3>
@@ -219,15 +219,21 @@ export function QueueControl() {
         <div className="flex gap-3">
           <button
             onClick={handleAdvanceQueue}
-            disabled={(!queueData?.queue.length && !queueData?.currentSpeaker) || advanceQueueMutation.isPending}
+            disabled={
+              (!queueData?.queue.length && !queueData?.currentSpeaker) ||
+              advanceQueueMutation.isPending
+            }
             className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
-            title={queueData?.queue.length ? "Move to next speaker" : "Clear current speaker"}
+            title={queueData?.queue.length ? 'Move to next speaker' : 'Clear current speaker'}
           >
-            {queueData?.queue.length ? "Advance Queue" : "Clear Speaker"}
+            {queueData?.queue.length ? 'Advance Queue' : 'Clear Speaker'}
           </button>
           <button
             onClick={handleUndoAdvance}
-            disabled={(!queueData?.history.length && !queueData?.currentSpeaker) || undoAdvanceMutation.isPending}
+            disabled={
+              (!queueData?.history.length && !queueData?.currentSpeaker) ||
+              undoAdvanceMutation.isPending
+            }
             className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors disabled:opacity-50"
           >
             Undo Advance
@@ -249,18 +255,24 @@ export function QueueControl() {
           <div className="flex justify-between items-center">
             <div>
               <p className="text-lg font-medium">
-                #{queueData.currentSpeaker.delegate.number} - {queueData.currentSpeaker.delegate.name}
+                #{queueData.currentSpeaker.delegate.number} -{' '}
+                {queueData.currentSpeaker.delegate.name}
               </p>
               <p className="text-sm text-gray-600">
-                {queueData.currentSpeaker.delegate.country} • {queueData.currentSpeaker.delegate.gender}
+                {queueData.currentSpeaker.delegate.country} •{' '}
+                {queueData.currentSpeaker.delegate.gender}
               </p>
             </div>
             <div className="text-right">
-              <div className={`text-2xl font-bold ${
-                speakingTime >= (timerSettings?.limitTime || 120) ? 'text-red-600' : 
-                speakingTime >= (timerSettings?.warningTime || 90) ? 'text-yellow-600' : 
-                'text-green-600'
-              }`}>
+              <div
+                className={`text-2xl font-bold ${
+                  speakingTime >= (timerSettings?.limitTime || 120)
+                    ? 'text-red-600'
+                    : speakingTime >= (timerSettings?.warningTime || 90)
+                      ? 'text-yellow-600'
+                      : 'text-green-600'
+                }`}
+              >
                 {formatTime(speakingTime)}
               </div>
               <div className="text-xs text-gray-500">

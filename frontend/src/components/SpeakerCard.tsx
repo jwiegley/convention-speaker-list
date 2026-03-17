@@ -26,7 +26,7 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
   speakingCount = 0,
   gender,
   additionalDetails,
-  className = ''
+  className = '',
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
 
@@ -36,13 +36,13 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
         borderColor: '#FFD700', // Gold for first-time speakers
         backgroundColor: 'rgba(255, 215, 0, 0.1)',
         badgeColor: '#FFD700',
-        glow: '0 0 20px rgba(255, 215, 0, 0.4)'
+        glow: '0 0 20px rgba(255, 215, 0, 0.4)',
       }
     : {
         borderColor: '#4169E1', // Royal blue for previous speakers
         backgroundColor: 'rgba(65, 105, 225, 0.1)',
         badgeColor: '#4169E1',
-        glow: '0 0 20px rgba(65, 105, 225, 0.4)'
+        glow: '0 0 20px rgba(65, 105, 225, 0.4)',
       };
 
   const handleCardClick = () => {
@@ -118,20 +118,18 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
               <div className="card-header" style={{ marginBottom: '0.5rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   {countryFlag && (
-                    <span 
-                      role="img" 
-                      aria-label={`${country} flag`}
-                      style={{ fontSize: '1.5rem' }}
-                    >
+                    <span role="img" aria-label={`${country} flag`} style={{ fontSize: '1.5rem' }}>
                       {countryFlag}
                     </span>
                   )}
-                  <h3 style={{ 
-                    margin: 0, 
-                    fontSize: '1.1rem', 
-                    fontWeight: '600',
-                    color: '#1a1a1a'
-                  }}>
+                  <h3
+                    style={{
+                      margin: 0,
+                      fontSize: '1.1rem',
+                      fontWeight: '600',
+                      color: '#1a1a1a',
+                    }}
+                  >
                     {country}
                   </h3>
                 </div>
@@ -139,27 +137,33 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
 
               {/* Delegate Info */}
               <div id={`speaker-${number}-details`} className="card-body">
-                <p style={{ 
-                  margin: '0.25rem 0', 
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  color: '#333'
-                }}>
+                <p
+                  style={{
+                    margin: '0.25rem 0',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    color: '#333',
+                  }}
+                >
                   {name}
                 </p>
-                <p style={{ 
-                  margin: '0.25rem 0', 
-                  fontSize: '0.9rem',
-                  color: '#666'
-                }}>
+                <p
+                  style={{
+                    margin: '0.25rem 0',
+                    fontSize: '0.9rem',
+                    color: '#666',
+                  }}
+                >
                   Delegate #{number}
                 </p>
                 {gender && (
-                  <p style={{ 
-                    margin: '0.25rem 0', 
-                    fontSize: '0.85rem',
-                    color: '#888'
-                  }}>
+                  <p
+                    style={{
+                      margin: '0.25rem 0',
+                      fontSize: '0.85rem',
+                      color: '#888',
+                    }}
+                  >
                     Gender: {gender === 'M' ? 'Male' : gender === 'F' ? 'Female' : 'Other'}
                   </p>
                 )}
@@ -167,7 +171,7 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
 
               {/* First Time Speaker Indicator */}
               {isFirstTime && (
-                <div 
+                <div
                   className="first-time-indicator"
                   style={{
                     marginTop: '0.5rem',
@@ -183,22 +187,24 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
 
               {/* Flip Indicator */}
               {additionalDetails && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: '5px',
-                  right: '5px',
-                  fontSize: '0.75rem',
-                  color: '#999',
-                }}>
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '5px',
+                    right: '5px',
+                    fontSize: '0.75rem',
+                    color: '#999',
+                  }}
+                >
                   ↻ Tap for details
                 </div>
               )}
             </div>
           ) : (
             // Back of card (additional details)
-            <div 
+            <div
               className="card-back"
-              style={{ 
+              style={{
                 transform: 'rotateY(180deg)',
                 height: '100%',
                 display: 'flex',
@@ -206,11 +212,13 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
                 justifyContent: 'center',
               }}
             >
-              <h4 style={{ 
-                margin: '0 0 0.5rem 0',
-                fontSize: '1rem',
-                color: '#1a1a1a'
-              }}>
+              <h4
+                style={{
+                  margin: '0 0 0.5rem 0',
+                  fontSize: '1rem',
+                  color: '#1a1a1a',
+                }}
+              >
                 Additional Details
               </h4>
               {additionalDetails?.delegationType && (
@@ -228,13 +236,15 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
                   <strong>Notes:</strong> {additionalDetails.notes}
                 </p>
               )}
-              <div style={{
-                position: 'absolute',
-                bottom: '5px',
-                right: '5px',
-                fontSize: '0.75rem',
-                color: '#999',
-              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: '5px',
+                  right: '5px',
+                  fontSize: '0.75rem',
+                  color: '#999',
+                }}
+              >
                 ↻ Tap to flip back
               </div>
             </div>
@@ -248,7 +258,7 @@ const SpeakerCard: React.FC<SpeakerCardProps> = ({
 // Loading skeleton component for SpeakerCard
 export const SpeakerCardSkeleton: React.FC = () => {
   return (
-    <div 
+    <div
       className="speaker-card-skeleton"
       style={{
         border: '3px solid #e0e0e0',
@@ -259,26 +269,32 @@ export const SpeakerCardSkeleton: React.FC = () => {
         animation: 'pulse 1.5s ease-in-out infinite',
       }}
     >
-      <div style={{
-        width: '60%',
-        height: '20px',
-        backgroundColor: '#e0e0e0',
-        borderRadius: '4px',
-        marginBottom: '0.5rem',
-      }} />
-      <div style={{
-        width: '80%',
-        height: '16px',
-        backgroundColor: '#e0e0e0',
-        borderRadius: '4px',
-        marginBottom: '0.25rem',
-      }} />
-      <div style={{
-        width: '40%',
-        height: '14px',
-        backgroundColor: '#e0e0e0',
-        borderRadius: '4px',
-      }} />
+      <div
+        style={{
+          width: '60%',
+          height: '20px',
+          backgroundColor: '#e0e0e0',
+          borderRadius: '4px',
+          marginBottom: '0.5rem',
+        }}
+      />
+      <div
+        style={{
+          width: '80%',
+          height: '16px',
+          backgroundColor: '#e0e0e0',
+          borderRadius: '4px',
+          marginBottom: '0.25rem',
+        }}
+      />
+      <div
+        style={{
+          width: '40%',
+          height: '14px',
+          backgroundColor: '#e0e0e0',
+          borderRadius: '4px',
+        }}
+      />
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

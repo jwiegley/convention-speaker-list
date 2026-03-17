@@ -31,12 +31,12 @@ export function createCSRFProtection(options: CSRFOptions = {}) {
     headerName = 'x-csrf-token',
     excludePaths = ['/api/v1/auth/login', '/api/v1/auth/refresh'],
     sameSite = 'strict',
-    cookieOptions = {}
+    cookieOptions = {},
   } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
     // Skip CSRF check for excluded paths
-    if (excludePaths.some(path => req.path.startsWith(path))) {
+    if (excludePaths.some((path) => req.path.startsWith(path))) {
       next();
       return;
     }
@@ -47,11 +47,11 @@ export function createCSRFProtection(options: CSRFOptions = {}) {
       if (!req.cookies[cookieName]) {
         const token = generateCSRFToken();
         res.cookie(cookieName, token, {
-          httpOnly: false,  // Must be readable by JavaScript
+          httpOnly: false, // Must be readable by JavaScript
           secure: process.env.NODE_ENV === 'production',
           sameSite,
           maxAge: 24 * 60 * 60 * 1000, // 24 hours
-          ...cookieOptions
+          ...cookieOptions,
         });
       }
       next();
@@ -66,7 +66,7 @@ export function createCSRFProtection(options: CSRFOptions = {}) {
       logger.warn(`CSRF token missing: cookie=${!!cookieToken}, header=${!!headerToken}`);
       res.status(403).json({
         error: 'Forbidden',
-        message: 'CSRF token missing'
+        message: 'CSRF token missing',
       });
       return;
     }
@@ -75,7 +75,7 @@ export function createCSRFProtection(options: CSRFOptions = {}) {
       logger.warn('CSRF token mismatch');
       res.status(403).json({
         error: 'Forbidden',
-        message: 'CSRF token invalid'
+        message: 'CSRF token invalid',
       });
       return;
     }
@@ -87,7 +87,7 @@ export function createCSRFProtection(options: CSRFOptions = {}) {
       secure: process.env.NODE_ENV === 'production',
       sameSite,
       maxAge: 24 * 60 * 60 * 1000,
-      ...cookieOptions
+      ...cookieOptions,
     });
 
     // Add new token to response headers for client to use
@@ -109,7 +109,7 @@ export function securityHeaders(options: any = {}) {
     xXssProtection = true,
     strictTransportSecurity = true,
     referrerPolicy = true,
-    permissionsPolicy = true
+    permissionsPolicy = true,
   } = options;
 
   return (req: Request, res: Response, next: NextFunction) => {
@@ -117,14 +117,14 @@ export function securityHeaders(options: any = {}) {
     if (contentSecurityPolicy) {
       const cspDirectives = [
         "default-src 'self'",
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'",  // Adjust as needed
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Adjust as needed
         "style-src 'self' 'unsafe-inline'",
         "img-src 'self' data: https:",
         "font-src 'self' data:",
         "connect-src 'self' ws: wss:",
         "frame-ancestors 'none'",
         "base-uri 'self'",
-        "form-action 'self'"
+        "form-action 'self'",
       ];
       res.setHeader('Content-Security-Policy', cspDirectives.join('; '));
     }
@@ -146,10 +146,7 @@ export function securityHeaders(options: any = {}) {
 
     // Strict-Transport-Security (HSTS)
     if (strictTransportSecurity && req.secure) {
-      res.setHeader(
-        'Strict-Transport-Security',
-        'max-age=31536000; includeSubDomains; preload'
-      );
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     }
 
     // Referrer-Policy
@@ -167,7 +164,7 @@ export function securityHeaders(options: any = {}) {
         'magnetometer=()',
         'microphone=()',
         'payment=()',
-        'usb=()'
+        'usb=()',
       ];
       res.setHeader('Permissions-Policy', permissions.join(', '));
     }
@@ -203,14 +200,14 @@ export function mimeSniffingProtection() {
 export function xssProtection() {
   return (req: Request, res: Response, next: NextFunction) => {
     res.setHeader('X-XSS-Protection', '1; mode=block');
-    
+
     // Basic XSS sanitization for common injection points
-    ['body', 'query', 'params'].forEach(key => {
+    ['body', 'query', 'params'].forEach((key) => {
       if (req[key as keyof Request]) {
         sanitizeObject(req[key as keyof Request] as any);
       }
     });
-    
+
     next();
   };
 }
@@ -220,7 +217,7 @@ export function xssProtection() {
  */
 function sanitizeObject(obj: any): void {
   if (typeof obj !== 'object' || obj === null) return;
-  
+
   for (const key in obj) {
     if (typeof obj[key] === 'string') {
       // Remove script tags and event handlers
@@ -240,11 +237,7 @@ function sanitizeObject(obj: any): void {
  * Applies all security protections
  */
 export function applySecurity(options: any = {}) {
-  return [
-    securityHeaders(options.headers),
-    createCSRFProtection(options.csrf),
-    xssProtection()
-  ];
+  return [securityHeaders(options.headers), createCSRFProtection(options.csrf), xssProtection()];
 }
 
 /**
@@ -260,7 +253,7 @@ export function generateNonce(): string {
 export function nonceMiddleware() {
   return (req: Request, res: Response, next: NextFunction) => {
     res.locals.nonce = generateNonce();
-    
+
     // Update CSP header with nonce
     const existingCSP = res.getHeader('Content-Security-Policy') as string;
     if (existingCSP) {
@@ -270,7 +263,7 @@ export function nonceMiddleware() {
       );
       res.setHeader('Content-Security-Policy', updatedCSP);
     }
-    
+
     next();
   };
 }
@@ -284,5 +277,5 @@ export default {
   xssProtection,
   applySecurity,
   generateNonce,
-  nonceMiddleware
+  nonceMiddleware,
 };

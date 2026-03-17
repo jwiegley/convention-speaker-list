@@ -36,7 +36,7 @@ export async function hashPassword(password: string): Promise<string> {
   if (!password || password.length < 8) {
     throw new Error('Password must be at least 8 characters long');
   }
-  
+
   const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
   return hashedPassword;
 }
@@ -47,14 +47,11 @@ export async function hashPassword(password: string): Promise<string> {
  * @param hashedPassword - The hashed password to compare against
  * @returns Promise resolving to true if passwords match, false otherwise
  */
-export async function comparePassword(
-  password: string,
-  hashedPassword: string
-): Promise<boolean> {
+export async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
   if (!password || !hashedPassword) {
     return false;
   }
-  
+
   const isMatch = await bcrypt.compare(password, hashedPassword);
   return isMatch;
 }
@@ -68,7 +65,7 @@ export function generateAccessToken(payload: JWTPayload): string {
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: JWT_EXPIRES_IN,
     issuer: 'convention-speaker-list',
-    audience: payload.role
+    audience: payload.role,
   });
 }
 
@@ -78,15 +75,11 @@ export function generateAccessToken(payload: JWTPayload): string {
  * @returns The signed JWT refresh token
  */
 export function generateRefreshToken(payload: JWTPayload): string {
-  return jwt.sign(
-    { ...payload, type: 'refresh' },
-    JWT_SECRET,
-    {
-      expiresIn: REFRESH_TOKEN_EXPIRES_IN,
-      issuer: 'convention-speaker-list',
-      audience: payload.role
-    }
-  );
+  return jwt.sign({ ...payload, type: 'refresh' }, JWT_SECRET, {
+    expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    issuer: 'convention-speaker-list',
+    audience: payload.role,
+  });
 }
 
 /**
@@ -97,7 +90,7 @@ export function generateRefreshToken(payload: JWTPayload): string {
 export function generateTokenPair(payload: JWTPayload): TokenPair {
   return {
     accessToken: generateAccessToken(payload),
-    refreshToken: generateRefreshToken(payload)
+    refreshToken: generateRefreshToken(payload),
   };
 }
 
@@ -109,7 +102,7 @@ export function generateTokenPair(payload: JWTPayload): TokenPair {
 export function verifyToken(token: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(token, JWT_SECRET, {
-      issuer: 'convention-speaker-list'
+      issuer: 'convention-speaker-list',
     }) as JWTPayload;
     return decoded;
   } catch (error) {
@@ -125,16 +118,16 @@ export function verifyToken(token: string): JWTPayload | null {
 export function verifyRefreshToken(refreshToken: string): JWTPayload | null {
   try {
     const decoded = jwt.verify(refreshToken, JWT_SECRET, {
-      issuer: 'convention-speaker-list'
+      issuer: 'convention-speaker-list',
     }) as JWTPayload & { type?: string };
-    
+
     // Ensure this is actually a refresh token
     if (decoded.type !== 'refresh') {
       return null;
     }
-    
+
     // Remove the type field before returning
-    const { type, ...payload } = decoded;
+    const { type: _type, ...payload } = decoded;
     return payload as JWTPayload;
   } catch (error) {
     return null;
@@ -147,27 +140,31 @@ export function verifyRefreshToken(refreshToken: string): JWTPayload | null {
  * @returns A randomly generated password
  */
 export function generateSecurePassword(length: number = 16): string {
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
+  const charset =
+    'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?';
   let password = '';
-  
+
   // Ensure at least one of each type
   const lowercase = 'abcdefghijklmnopqrstuvwxyz';
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   const numbers = '0123456789';
   const special = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-  
+
   password += lowercase[Math.floor(Math.random() * lowercase.length)];
   password += uppercase[Math.floor(Math.random() * uppercase.length)];
   password += numbers[Math.floor(Math.random() * numbers.length)];
   password += special[Math.floor(Math.random() * special.length)];
-  
+
   // Fill the rest randomly
   for (let i = password.length; i < length; i++) {
     password += charset[Math.floor(Math.random() * charset.length)];
   }
-  
+
   // Shuffle the password
-  return password.split('').sort(() => Math.random() - 0.5).join('');
+  return password
+    .split('')
+    .sort(() => Math.random() - 0.5)
+    .join('');
 }
 
 /**
@@ -179,12 +176,12 @@ export function extractTokenFromHeader(authHeader: string | undefined): string |
   if (!authHeader) {
     return null;
   }
-  
+
   const parts = authHeader.split(' ');
   if (parts.length !== 2 || parts[0] !== 'Bearer') {
     return null;
   }
-  
+
   return parts[1] || null;
 }
 
@@ -200,37 +197,37 @@ export function validatePasswordStrength(password: string): {
   if (!password || password.length < 8) {
     return {
       isValid: false,
-      message: 'Password must be at least 8 characters long'
+      message: 'Password must be at least 8 characters long',
     };
   }
-  
+
   if (!/[a-z]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one lowercase letter'
+      message: 'Password must contain at least one lowercase letter',
     };
   }
-  
+
   if (!/[A-Z]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one uppercase letter'
+      message: 'Password must contain at least one uppercase letter',
     };
   }
-  
+
   if (!/[0-9]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one number'
+      message: 'Password must contain at least one number',
     };
   }
-  
-  if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(password)) {
+
+  if (!/[!@#$%^&*()_+\-=[\]{}|;:,.<>?]/.test(password)) {
     return {
       isValid: false,
-      message: 'Password must contain at least one special character'
+      message: 'Password must contain at least one special character',
     };
   }
-  
+
   return { isValid: true };
 }

@@ -46,7 +46,7 @@ class ImagePreloader {
           total,
           loaded,
           failed,
-          percentage: ((loaded + failed) / total) * 100
+          percentage: ((loaded + failed) / total) * 100,
         });
       }
     };
@@ -85,7 +85,7 @@ class ImagePreloader {
       // Smart loading: load in batches for optimal performance
       const batchSize = 3;
       const results: ImageCacheEntry[] = [];
-      
+
       for (let i = 0; i < imagePaths.length; i += batchSize) {
         const batch = imagePaths.slice(i, i + batchSize);
         const batchPromises = batch.map(async (path) => {
@@ -100,11 +100,11 @@ class ImagePreloader {
             return this.createErrorEntry(path, error as Error);
           }
         });
-        
+
         const batchResults = await Promise.all(batchPromises);
         results.push(...batchResults);
       }
-      
+
       return results;
     }
   }
@@ -167,7 +167,7 @@ class ImagePreloader {
    * Clear all cached images
    */
   public clearAll(): void {
-    this.cache.forEach(entry => {
+    this.cache.forEach((entry) => {
       if (entry.objectUrl) {
         URL.revokeObjectURL(entry.objectUrl);
       }
@@ -179,7 +179,6 @@ class ImagePreloader {
    * Clean up expired or least recently used images
    */
   public cleanup(): void {
-    const now = Date.now();
     const entries = Array.from(this.cache.entries());
 
     // Remove expired entries
@@ -220,12 +219,12 @@ class ImagePreloader {
       statesToLoad = states;
     }
 
-    const paths = statesToLoad.map(state => 
-      `${baseUrl}state-${String(state).padStart(2, '0')}.webp`
+    const paths = statesToLoad.map(
+      (state) => `${baseUrl}state-${String(state).padStart(2, '0')}.webp`
     );
 
     const results = await this.preloadImages(paths, onProgress, 'smart');
-    
+
     const stateMap = new Map<number, ImageCacheEntry>();
     statesToLoad.forEach((state, index) => {
       stateMap.set(state, results[index]);
@@ -254,7 +253,7 @@ class ImagePreloader {
 
       // Get blob
       const blob = await response.blob();
-      
+
       // Create object URL for performance
       const objectUrl = URL.createObjectURL(blob);
 
@@ -268,7 +267,7 @@ class ImagePreloader {
         loaded: true,
         error: null,
         loadTime: Date.now() - startTime,
-        lastAccessed: Date.now()
+        lastAccessed: Date.now(),
       };
 
       this.cache.set(url, entry);
@@ -299,7 +298,7 @@ class ImagePreloader {
       loaded: false,
       error,
       loadTime: 0,
-      lastAccessed: Date.now()
+      lastAccessed: Date.now(),
     };
   }
 
@@ -322,14 +321,10 @@ export async function preloadGardenImages(
     Math.max(0, currentState - 2),
     Math.max(0, currentState - 1),
     Math.min(32, currentState + 1),
-    Math.min(32, currentState + 2)
+    Math.min(32, currentState + 2),
   ];
 
-  await imagePreloader.preloadGardenStates(
-    '/images/garden-states/',
-    nearbyStates,
-    onProgress
-  );
+  await imagePreloader.preloadGardenStates('/images/garden-states/', nearbyStates, onProgress);
 }
 
 export function cleanupImageCache(): void {

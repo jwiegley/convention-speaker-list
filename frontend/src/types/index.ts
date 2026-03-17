@@ -1,11 +1,12 @@
-// Re-export shared types
+// Re-export shared types with frontend-friendly aliases
 export type {
-  Delegate,
-  QueueEntry,
-  Session,
-  SpeakingInstance,
-  SocketEvents,
+  IDelegate as Delegate,
+  IQueueItem as QueueEntry,
+  ISession as Session,
+  SocketEventNames as SocketEvents,
 } from '@shared/types';
+
+export type { SpeakingInstance } from '@shared/types';
 
 // Frontend-specific types
 export interface Speaker {
@@ -38,6 +39,10 @@ export interface QueueState {
   followingSpeaker?: Speaker;
   totalInQueue: number;
 }
+
+// Need to import the type to use it
+import type { IQueueItem } from '@shared/types';
+type QueueEntry = IQueueItem;
 
 export interface AdminCredentials {
   username: string;

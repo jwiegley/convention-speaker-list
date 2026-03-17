@@ -100,7 +100,7 @@ export class TimeAnalytics {
     includeDelegateList: boolean = false
   ): Promise<TimeHistogram[]> {
     const cacheKey = `time_histogram:${bucketSizeSeconds}:${sessionId || 'all'}:${includeDelegateList}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -112,9 +112,9 @@ export class TimeAnalytics {
           FLOOR(sh.duration / $1) * $1 as bucket_start,
           FLOOR(sh.duration / $1) * $1 + $1 - 1 as bucket_end,
           COUNT(*) as count,
-          ${includeDelegateList ? "ARRAY_AGG(DISTINCT d.name ORDER BY d.name) as delegates" : "ARRAY[]::text[] as delegates"}
+          ${includeDelegateList ? 'ARRAY_AGG(DISTINCT d.name ORDER BY d.name) as delegates' : 'ARRAY[]::text[] as delegates'}
         FROM speaker_history sh
-        ${includeDelegateList ? "JOIN delegates d ON sh.delegate_id = d.id" : ""}
+        ${includeDelegateList ? 'JOIN delegates d ON sh.delegate_id = d.id' : ''}
         ${sessionId ? 'WHERE sh.session_id = $2' : ''}
         GROUP BY FLOOR(sh.duration / $1)
       ),
@@ -163,7 +163,7 @@ export class TimeAnalytics {
    */
   async calculateTimeStatistics(sessionId?: string): Promise<TimeStatistics> {
     const cacheKey = `time_statistics:${sessionId || 'all'}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -250,12 +250,9 @@ export class TimeAnalytics {
   /**
    * Analyze peak speaking hours
    */
-  async analyzePeakHours(
-    date?: Date,
-    sessionId?: string
-  ): Promise<PeakHourAnalysis[]> {
+  async analyzePeakHours(date?: Date, sessionId?: string): Promise<PeakHourAnalysis[]> {
     const cacheKey = `peak_hours:${date?.toISOString() || 'all'}:${sessionId || 'all'}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
@@ -272,7 +269,7 @@ export class TimeAnalytics {
         FROM speaker_history sh
         ${sessionId ? 'JOIN sessions s ON sh.session_id = s.id' : ''}
         WHERE 1=1
-        ${date ? "AND DATE(sh.start_time) = $1" : ""}
+        ${date ? 'AND DATE(sh.start_time) = $1' : ''}
         ${sessionId ? `AND sh.session_id = ${date ? '$2' : '$1'}` : ''}
         GROUP BY EXTRACT(HOUR FROM sh.start_time)
       ),
@@ -411,14 +408,16 @@ export class TimeAnalytics {
     `;
 
     const result = await this.db.query(query, [sessionId]);
-    return result.rows[0]?.result || {
-      averageWaitTime: 0,
-      medianWaitTime: 0,
-      maxWaitTime: 0,
-      abandonmentRate: 0,
-      waitTimeByPosition: [],
-      details: []
-    };
+    return (
+      result.rows[0]?.result || {
+        averageWaitTime: 0,
+        medianWaitTime: 0,
+        maxWaitTime: 0,
+        abandonmentRate: 0,
+        waitTimeByPosition: [],
+        details: [],
+      }
+    );
   }
 
   /**
@@ -429,15 +428,15 @@ export class TimeAnalytics {
     periods: number = 7
   ): Promise<TimeTrend[]> {
     const cacheKey = `time_trends:${periodType}:${periods}`;
-    
+
     if (this.cacheEnabled && this.redis) {
       const cached = await this.redis.get(cacheKey);
       if (cached) return JSON.parse(cached);
     }
 
-    const dateFormat = periodType === 'day' ? 'YYYY-MM-DD' :
-                      periodType === 'week' ? 'YYYY-WW' : 'YYYY-MM';
-    
+    const dateFormat =
+      periodType === 'day' ? 'YYYY-MM-DD' : periodType === 'week' ? 'YYYY-WW' : 'YYYY-MM';
+
     const query = `
       WITH period_stats AS (
         SELECT 
@@ -567,13 +566,15 @@ export class TimeAnalytics {
   async getCumulativeTimeByDemographic(
     demographic: 'gender' | 'age_group' | 'race',
     sessionId?: string
-  ): Promise<{
-    value: string;
-    totalTime: number;
-    averageTime: number;
-    percentage: number;
-    cumulativePercentage: number;
-  }[]> {
+  ): Promise<
+    {
+      value: string;
+      totalTime: number;
+      averageTime: number;
+      percentage: number;
+      cumulativePercentage: number;
+    }[]
+  > {
     const query = `
       WITH demographic_times AS (
         SELECT 
@@ -622,13 +623,15 @@ export class TimeAnalytics {
   async detectUnusualPatterns(
     sessionId?: string,
     threshold: number = 2 // z-score threshold
-  ): Promise<{
-    type: string;
-    description: string;
-    severity: 'high' | 'medium' | 'low';
-    affectedDelegates: string[];
-    metrics: any;
-  }[]> {
+  ): Promise<
+    {
+      type: string;
+      description: string;
+      severity: 'high' | 'medium' | 'low';
+      affectedDelegates: string[];
+      metrics: any;
+    }[]
+  > {
     const patterns: any[] = [];
 
     // Detect monopolization (speakers taking too much time)
@@ -661,7 +664,7 @@ export class TimeAnalytics {
     `;
 
     const monopolizationResult = await this.db.query(
-      monopolizationQuery, 
+      monopolizationQuery,
       sessionId ? [sessionId] : []
     );
 
@@ -670,15 +673,15 @@ export class TimeAnalytics {
         type: 'monopolization',
         description: 'Delegates taking significantly more speaking time than average',
         severity: monopolizationResult.rows[0].z_score > 3 ? 'high' : 'medium',
-        affectedDelegates: monopolizationResult.rows.map(r => r.name),
+        affectedDelegates: monopolizationResult.rows.map((r) => r.name),
         metrics: {
-          delegates: monopolizationResult.rows.map(r => ({
+          delegates: monopolizationResult.rows.map((r) => ({
             name: r.name,
             totalTime: r.total_time,
             speakingCount: r.speaking_count,
-            zScore: r.z_score
-          }))
-        }
+            zScore: r.z_score,
+          })),
+        },
       });
     }
 
@@ -710,20 +713,17 @@ export class TimeAnalytics {
       SELECT * FROM repeat_patterns
     `;
 
-    const clusteringResult = await this.db.query(
-      clusteringQuery,
-      sessionId ? [sessionId] : []
-    );
+    const clusteringResult = await this.db.query(clusteringQuery, sessionId ? [sessionId] : []);
 
     if (clusteringResult.rows.length > 0) {
       patterns.push({
         type: 'clustering',
         description: 'Delegates speaking multiple times in succession',
         severity: 'medium',
-        affectedDelegates: clusteringResult.rows.map(r => r.name),
+        affectedDelegates: clusteringResult.rows.map((r) => r.name),
         metrics: {
-          repeatingDelegates: clusteringResult.rows
-        }
+          repeatingDelegates: clusteringResult.rows,
+        },
       });
     }
 
@@ -749,10 +749,7 @@ export class TimeAnalytics {
       ORDER BY gap_seconds DESC
     `;
 
-    const deadZoneResult = await this.db.query(
-      deadZoneQuery,
-      sessionId ? [sessionId] : []
-    );
+    const deadZoneResult = await this.db.query(deadZoneQuery, sessionId ? [sessionId] : []);
 
     if (deadZoneResult.rows.length > 0) {
       patterns.push({
@@ -761,13 +758,13 @@ export class TimeAnalytics {
         severity: deadZoneResult.rows[0].gap_seconds > 600 ? 'high' : 'low',
         affectedDelegates: [],
         metrics: {
-          gaps: deadZoneResult.rows.map(r => ({
+          gaps: deadZoneResult.rows.map((r) => ({
             startTime: r.prev_end,
             endTime: r.start_time,
             gapSeconds: r.gap_seconds,
-            gapMinutes: Math.round(r.gap_seconds / 60)
-          }))
-        }
+            gapMinutes: Math.round(r.gap_seconds / 60),
+          })),
+        },
       });
     }
 
@@ -781,18 +778,18 @@ export class TimeAnalytics {
     const indexes = [
       `CREATE INDEX IF NOT EXISTS idx_speaker_history_duration 
        ON speaker_history(duration)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_speaker_history_start_time 
        ON speaker_history(start_time)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_speaker_history_session_duration 
        ON speaker_history(session_id, duration)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_queue_session_status 
        ON queue(session_id, status)`,
-      
+
       `CREATE INDEX IF NOT EXISTS idx_queue_joined_at 
-       ON queue(joined_at)`
+       ON queue(joined_at)`,
     ];
 
     for (const index of indexes) {
@@ -808,12 +805,9 @@ export class TimeAnalytics {
       return;
     }
 
-    const patterns = pattern ? [pattern] : [
-      'time_histogram:*',
-      'time_statistics:*',
-      'peak_hours:*',
-      'time_trends:*'
-    ];
+    const patterns = pattern
+      ? [pattern]
+      : ['time_histogram:*', 'time_statistics:*', 'peak_hours:*', 'time_trends:*'];
 
     for (const p of patterns) {
       const keys = await this.redis.keys(p);

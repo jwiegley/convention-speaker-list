@@ -7,16 +7,16 @@ dotenv.config();
 
 async function createDatabase() {
   const env = process.env.NODE_ENV || 'development';
-  
+
   // Database names for different environments
   const dbNames: Record<string, string> = {
     development: process.env.DB_NAME || 'convention_dev',
     test: process.env.TEST_DB_NAME || 'convention_test',
     production: process.env.DB_NAME!,
   };
-  
+
   const dbName = dbNames[env];
-  
+
   // Connect to postgres database to create the target database
   const client = new Client({
     host: process.env.DB_HOST || 'localhost',
@@ -25,16 +25,13 @@ async function createDatabase() {
     password: process.env.DB_PASSWORD || 'convention_pass',
     database: 'postgres', // Connect to default postgres database
   });
-  
+
   try {
     await client.connect();
-    
+
     // Check if database exists
-    const result = await client.query(
-      `SELECT 1 FROM pg_database WHERE datname = $1`,
-      [dbName]
-    );
-    
+    const result = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
+
     if (result.rows.length === 0) {
       // Create database if it doesn't exist
       await client.query(`CREATE DATABASE ${dbName}`);

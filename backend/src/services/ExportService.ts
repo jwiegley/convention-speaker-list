@@ -73,11 +73,11 @@ export class ExportService {
    */
   async exportDelegateStats(options: ExportOptions): Promise<string | Readable> {
     const query = this.buildDelegateStatsQuery(options);
-    
+
     if (options.streaming) {
       return this.streamCSV(query.text, query.params, this.getDelegateFields(options));
     }
-    
+
     const result = await this.db.query(query.text, query.params);
     return this.convertToCSV(result.rows, this.getDelegateFields(options));
   }
@@ -87,11 +87,11 @@ export class ExportService {
    */
   async exportSessionStats(options: ExportOptions): Promise<string | Readable> {
     const query = this.buildSessionStatsQuery(options);
-    
+
     if (options.streaming) {
       return this.streamCSV(query.text, query.params, this.getSessionFields());
     }
-    
+
     const result = await this.db.query(query.text, query.params);
     return this.convertToCSV(result.rows, this.getSessionFields());
   }
@@ -101,11 +101,11 @@ export class ExportService {
    */
   async exportSpeakingHistory(options: ExportOptions): Promise<string | Readable> {
     const query = this.buildSpeakingHistoryQuery(options);
-    
+
     if (options.streaming) {
       return this.streamCSV(query.text, query.params, this.getSpeakingHistoryFields(options));
     }
-    
+
     const result = await this.db.query(query.text, query.params);
     return this.convertToCSV(result.rows, this.getSpeakingHistoryFields(options));
   }
@@ -120,11 +120,15 @@ export class ExportService {
           d.id as delegate_id,
           d.name as delegate_name,
           d.delegate_number,
-          ${options.includeDemographics ? `
+          ${
+            options.includeDemographics
+              ? `
             d.gender,
             d.age_group as age_range,
             d.race,
-          ` : ''}
+          `
+              : ''
+          }
           COUNT(sh.id) as speaking_instances,
           COALESCE(SUM(sh.duration), 0) as total_duration_seconds,
           COALESCE(AVG(sh.duration), 0) as average_duration_seconds,
@@ -304,11 +308,15 @@ export class ExportService {
         sh.duration as duration_seconds,
         q.position as queue_position,
         EXTRACT(EPOCH FROM (sh.start_time - q.joined_at)) as wait_time_seconds
-        ${options.includeDemographics ? `,
+        ${
+          options.includeDemographics
+            ? `,
         d.gender,
         d.age_group as age_range,
         d.race
-        ` : ''}
+        `
+            : ''
+        }
       FROM speaker_history sh
       JOIN delegates d ON sh.delegate_id = d.id
       JOIN sessions s ON sh.session_id = s.id
@@ -354,16 +362,20 @@ export class ExportService {
 
     // Add UTF-8 BOM for Excel compatibility
     const BOM = '\uFEFF';
-    
+
     // Sanitize data to prevent CSV injection
-    const sanitizedRows = rows.map(row => {
+    const sanitizedRows = rows.map((row) => {
       const sanitized: any = {};
       for (const key in row) {
         let value = row[key];
         if (typeof value === 'string') {
           // Prevent CSV injection
-          if (value.startsWith('=') || value.startsWith('+') || 
-              value.startsWith('-') || value.startsWith('@')) {
+          if (
+            value.startsWith('=') ||
+            value.startsWith('+') ||
+            value.startsWith('-') ||
+            value.startsWith('@')
+          ) {
             value = `'${value}`;
           }
         }
@@ -374,7 +386,7 @@ export class ExportService {
 
     const parser = new Parser({ fields });
     const csv = parser.parse(sanitizedRows);
-    
+
     return BOM + csv;
   }
 
@@ -390,18 +402,22 @@ export class ExportService {
         for (const key in chunk) {
           let value = chunk[key];
           if (typeof value === 'string') {
-            if (value.startsWith('=') || value.startsWith('+') || 
-                value.startsWith('-') || value.startsWith('@')) {
+            if (
+              value.startsWith('=') ||
+              value.startsWith('+') ||
+              value.startsWith('-') ||
+              value.startsWith('@')
+            ) {
               value = `'${value}`;
             }
           }
           sanitized[key] = value;
         }
-        
+
         const parser = new Parser({ fields, header: false });
         const csv = parser.parse([sanitized]);
         callback(null, csv + '\n');
-      }
+      },
     });
 
     // Write UTF-8 BOM and headers
@@ -419,10 +435,11 @@ export class ExportService {
    */
   private async streamQuery(query: string, params: any[], stream: Transform) {
     const client = await this.db.connect();
-    
+
     try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const cursor = client.query(new (require('pg-cursor'))(query, params));
-      
+
       const readBatch = () => {
         cursor.read(this.batchSize, (err: any, rows: any[]) => {
           if (err) {
@@ -435,7 +452,7 @@ export class ExportService {
             return;
           }
 
-          rows.forEach(row => stream.write(row));
+          rows.forEach((row) => stream.write(row));
           readBatch();
         });
       };
@@ -452,11 +469,7 @@ export class ExportService {
    * Get field names for delegate export
    */
   private getDelegateFields(options: ExportOptions): string[] {
-    const fields = [
-      'delegate_id',
-      'delegate_name',
-      'delegate_number'
-    ];
+    const fields = ['delegate_id', 'delegate_name', 'delegate_number'];
 
     if (options.includeDemographics) {
       fields.push('gender', 'age_range', 'race');
@@ -492,7 +505,7 @@ export class ExportService {
       'participation_rate',
       'gender_balance_score',
       'age_balance_score',
-      'race_balance_score'
+      'race_balance_score',
     ];
   }
 
@@ -509,7 +522,7 @@ export class ExportService {
       'end_time',
       'duration_seconds',
       'queue_position',
-      'wait_time_seconds'
+      'wait_time_seconds',
     ];
 
     if (options.includeDemographics) {

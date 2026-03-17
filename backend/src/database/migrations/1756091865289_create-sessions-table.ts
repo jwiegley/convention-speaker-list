@@ -45,12 +45,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       default: pgm.func('current_timestamp'),
     },
   });
-  
+
   // Create indexes for performance
   pgm.createIndex('sessions', 'is_tracked');
   pgm.createIndex('sessions', 'start_time');
   pgm.createIndex('sessions', 'garden_state');
-  
+
   // Create trigger for updated_at
   pgm.createTrigger('sessions', 'update_updated_at_column', {
     when: 'BEFORE',
@@ -58,7 +58,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     function: 'update_updated_at_column',
     level: 'ROW',
   });
-  
+
   // Add constraint for end_time > start_time
   pgm.addConstraint('sessions', 'check_session_times', {
     check: '(start_time IS NULL OR end_time IS NULL OR end_time > start_time)',
@@ -68,15 +68,15 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 export async function down(pgm: MigrationBuilder): Promise<void> {
   // Drop constraints
   pgm.dropConstraint('sessions', 'check_session_times');
-  
+
   // Drop trigger
   pgm.dropTrigger('sessions', 'update_updated_at_column');
-  
+
   // Drop indexes
   pgm.dropIndex('sessions', 'garden_state');
   pgm.dropIndex('sessions', 'start_time');
   pgm.dropIndex('sessions', 'is_tracked');
-  
+
   // Drop table
   pgm.dropTable('sessions');
 }

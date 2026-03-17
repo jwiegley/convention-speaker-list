@@ -6,27 +6,25 @@ export class SessionController {
   async startSession(req: Request, res: Response) {
     try {
       const { name, initial_garden_state } = req.body;
-      
+
       if (!name) {
         return res.status(400).json({ error: 'Session name is required' });
       }
-      
+
       const client = await getClient();
       try {
         await client.query('BEGIN');
-        
+
         // Check for active sessions
-        const activeCheck = await client.query(
-          'SELECT id FROM sessions WHERE ended_at IS NULL'
-        );
-        
+        const activeCheck = await client.query('SELECT id FROM sessions WHERE ended_at IS NULL');
+
         if (activeCheck.rows.length > 0) {
           await client.query('ROLLBACK');
-          return res.status(409).json({ 
-            error: 'Another session is already active. Please end it before starting a new one.' 
+          return res.status(409).json({
+            error: 'Another session is already active. Please end it before starting a new one.',
           });
         }
-        
+
         // Create new session
         const result = await client.query(
           `INSERT INTO sessions (name, started_at, initial_garden_state) 
@@ -34,7 +32,7 @@ export class SessionController {
            RETURNING *`,
           [name, initial_garden_state || 'garden']
         );
-        
+
         await client.query('COMMIT');
         return res.status(201).json(result.rows[0]);
       } catch (error) {
@@ -48,12 +46,12 @@ export class SessionController {
       return res.status(500).json({ error: 'Failed to start session' });
     }
   }
-  
+
   // End a session
   async endSession(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      
+
       const result = await query(
         `UPDATE sessions 
          SET ended_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
@@ -61,20 +59,20 @@ export class SessionController {
          RETURNING *`,
         [id]
       );
-      
+
       if (result.rows.length === 0) {
-        return res.status(404).json({ 
-          error: 'Session not found or already ended' 
+        return res.status(404).json({
+          error: 'Session not found or already ended',
         });
       }
-      
+
       return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error ending session:', error);
       return res.status(500).json({ error: 'Failed to end session' });
     }
   }
-  
+
   // Get current active session
   async getCurrentSession(req: Request, res: Response) {
     try {
@@ -87,57 +85,54 @@ export class SessionController {
          WHERE s.ended_at IS NULL
          GROUP BY s.id`
       );
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ error: 'No active session found' });
       }
-      
+
       return res.json(result.rows[0]);
     } catch (error) {
       console.error('Error fetching current session:', error);
       return res.status(500).json({ error: 'Failed to fetch current session' });
     }
   }
-  
+
   // Get all sessions with filtering
   async getAllSessions(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = (page - 1) * limit;
-      
+
       // Build filter conditions
       const filters: string[] = [];
       const params: any[] = [];
       let paramCount = 1;
-      
+
       if (req.query.start_date) {
         filters.push(`started_at >= $${paramCount}`);
         params.push(req.query.start_date);
         paramCount++;
       }
-      
+
       if (req.query.end_date) {
         filters.push(`started_at <= $${paramCount}`);
         params.push(req.query.end_date);
         paramCount++;
       }
-      
+
       if (req.query.status === 'active') {
         filters.push('ended_at IS NULL');
       } else if (req.query.status === 'completed') {
         filters.push('ended_at IS NOT NULL');
       }
-      
+
       const whereClause = filters.length > 0 ? `WHERE ${filters.join(' AND ')}` : '';
-      
+
       // Get total count
-      const countResult = await query(
-        `SELECT COUNT(*) FROM sessions ${whereClause}`,
-        params
-      );
+      const countResult = await query(`SELECT COUNT(*) FROM sessions ${whereClause}`, params);
       const totalCount = parseInt(countResult.rows[0].count);
-      
+
       // Get paginated results with statistics
       params.push(limit);
       params.push(offset);
@@ -154,27 +149,27 @@ export class SessionController {
          LIMIT $${paramCount} OFFSET $${paramCount + 1}`,
         params
       );
-      
+
       return res.json({
         data: result.rows,
         pagination: {
           page,
           limit,
           total: totalCount,
-          totalPages: Math.ceil(totalCount / limit)
-        }
+          totalPages: Math.ceil(totalCount / limit),
+        },
       });
     } catch (error) {
       console.error('Error fetching sessions:', error);
       return res.status(500).json({ error: 'Failed to fetch sessions' });
     }
   }
-  
+
   // Get session by ID with full details
   async getSessionById(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      
+
       const sessionResult = await query(
         `SELECT s.*, 
          COUNT(DISTINCT si.id) as total_speakers,
@@ -186,11 +181,11 @@ export class SessionController {
          GROUP BY s.id`,
         [id]
       );
-      
+
       if (sessionResult.rows.length === 0) {
         return res.status(404).json({ error: 'Session not found' });
       }
-      
+
       // Get speaking instances for this session
       const speakersResult = await query(
         `SELECT si.*, d.name, d.number, d.location 
@@ -200,10 +195,10 @@ export class SessionController {
          ORDER BY si.started_at`,
         [id]
       );
-      
+
       return res.json({
         ...sessionResult.rows[0],
-        speakers: speakersResult.rows
+        speakers: speakersResult.rows,
       });
     } catch (error) {
       console.error('Error fetching session:', error);

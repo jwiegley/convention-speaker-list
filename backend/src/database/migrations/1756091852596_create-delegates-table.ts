@@ -7,7 +7,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
   pgm.createType('gender_enum', ['Male', 'Female', 'Other']);
   pgm.createType('age_bracket_enum', ['20s', '30s', '40s', '50s', '60s', '70s+']);
   pgm.createType('race_category_enum', ['White_Persian', 'Non_White_Non_Persian']);
-  
+
   // Create delegates table
   pgm.createTable('delegates', {
     id: {
@@ -57,12 +57,12 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
       default: pgm.func('current_timestamp'),
     },
   });
-  
+
   // Create indexes
   pgm.createIndex('delegates', 'delegate_number');
   pgm.createIndex('delegates', 'has_spoken');
   pgm.createIndex('delegates', ['gender', 'age_bracket', 'race_category']);
-  
+
   // Create trigger for updated_at
   pgm.createTrigger('delegates', 'update_updated_at_column', {
     when: 'BEFORE',
@@ -70,7 +70,7 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
     function: 'update_updated_at_column',
     level: 'ROW',
   });
-  
+
   // Create the function for updating updated_at if it doesn't exist
   pgm.sql(`
     CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -86,15 +86,15 @@ export async function up(pgm: MigrationBuilder): Promise<void> {
 export async function down(pgm: MigrationBuilder): Promise<void> {
   // Drop trigger first
   pgm.dropTrigger('delegates', 'update_updated_at_column');
-  
+
   // Drop indexes
   pgm.dropIndex('delegates', ['gender', 'age_bracket', 'race_category']);
   pgm.dropIndex('delegates', 'has_spoken');
   pgm.dropIndex('delegates', 'delegate_number');
-  
+
   // Drop table
   pgm.dropTable('delegates');
-  
+
   // Drop enum types
   pgm.dropType('race_category_enum');
   pgm.dropType('age_bracket_enum');
